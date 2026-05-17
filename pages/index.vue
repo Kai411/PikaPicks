@@ -26,10 +26,11 @@
       v-else
       class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-4"
     >
-      <div
+      <NuxtLink
         v-for="card in availableCards"
         :key="card.id"
-        class="bg-white rounded-xl overflow-hidden border border-gray-200 hover:border-pokemon-blue hover:shadow-md transition-all group"
+        :to="`/cards/${card.id}`"
+        class="bg-white rounded-xl overflow-hidden border border-gray-200 hover:border-pokemon-blue hover:shadow-md transition-all group block"
       >
         <div
           class="aspect-[4/3] bg-gray-100 flex items-center justify-center overflow-hidden"
@@ -47,29 +48,19 @@
           <p class="text-xs text-gray-500 truncate">
             {{ card.cardSet }} · {{ card.condition }}
           </p>
-          <NuxtLink
-            :to="`/profile/${card.sellerUid}`"
-            class="text-xs text-pokemon-blue hover:underline truncate block mt-0.5"
-          >
+          <p class="text-xs text-gray-400 truncate mt-0.5">
             {{ card.seller }}
-          </NuxtLink>
+          </p>
           <div class="flex items-center justify-between mt-2">
             <p class="text-pokemon-red font-bold text-sm">
               RM {{ card.price.toFixed(2) }}
             </p>
-            <button
-              v-if="!isInCart(card.id)"
-              @click="handleAddToCart(card)"
-              class="bg-pokemon-blue text-white text-xs px-2 py-1 rounded hover:bg-blue-700 transition-colors"
-            >
-              + Cart
-            </button>
-            <span v-else class="text-xs text-green-600 font-medium"
-              >✓ In Cart</span
-            >
+            <span v-if="card.interestedCount > 0" class="text-xs text-gray-400">
+              🔥 {{ card.interestedCount }}
+            </span>
           </div>
         </div>
-      </div>
+      </NuxtLink>
     </div>
   </div>
 </template>
@@ -79,22 +70,10 @@ import type { Card } from "~/composables/useCards";
 
 const { user } = useAuth();
 const { cards, loading } = useCards();
-const { addToCart, isInCart } = useCart();
 
 const availableCards = computed(() =>
-  cards.value.filter((c) => !c.sold).sort((a, b) => b.createdAt - a.createdAt),
+  cards.value
+    .filter((c: Card) => !c.sold)
+    .sort((a: Card, b: Card) => b.createdAt - a.createdAt),
 );
-
-const handleAddToCart = (card: Card) => {
-  addToCart({
-    id: card.id,
-    cardName: card.cardName,
-    cardSet: card.cardSet,
-    condition: card.condition,
-    price: card.price,
-    imageUrl: card.imageUrls?.[0] || card.imageUrl || "",
-    seller: card.seller,
-    sellerUid: card.sellerUid,
-  });
-};
 </script>

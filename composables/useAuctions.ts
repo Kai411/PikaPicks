@@ -1,4 +1,5 @@
 import { ref as dbRef, push, onValue, update, get } from "firebase/database";
+import { doc, getDoc } from "firebase/firestore";
 import { ref, onUnmounted } from "vue";
 
 export interface Auction {
@@ -116,6 +117,16 @@ export const useAuctionDetail = (auctionId: string) => {
   ) => {
     if (!auction.value) return;
 
+    // Require phone number to bid
+    const { firestore: fs } = useFirebase();
+    const userDoc = await getDoc(doc(fs!, "users", bidderUid));
+    const userData = userDoc.exists() ? userDoc.data() : null;
+    if (!userData?.phone && !userData?.whatsappNumber) {
+      throw new Error(
+        "Please add your contact number in your Profile before bidding.",
+      );
+    }
+
     const minIncrement = auction.value.minIncrement || 1;
     const minBid = auction.value.currentPrice + minIncrement;
 
@@ -151,6 +162,16 @@ export const useAuctionDetail = (auctionId: string) => {
     maxAmount: number,
   ) => {
     if (!auction.value) return;
+
+    // Require phone number to bid
+    const { firestore: fs } = useFirebase();
+    const userDoc = await getDoc(doc(fs!, "users", bidderUid));
+    const userData = userDoc.exists() ? userDoc.data() : null;
+    if (!userData?.phone && !userData?.whatsappNumber) {
+      throw new Error(
+        "Please add your contact number in your Profile before bidding.",
+      );
+    }
 
     const minIncrement = auction.value.minIncrement || 1;
     const minBid = auction.value.currentPrice + minIncrement;

@@ -1,8 +1,10 @@
 import { initializeApp, getApps, type FirebaseApp } from "firebase/app";
 import { getDatabase, type Database } from "firebase/database";
+import { getFirestore, type Firestore } from "firebase/firestore";
 
 let app: FirebaseApp | undefined;
 let db: Database | undefined;
+let firestore: Firestore | undefined;
 
 export const useFirebase = () => {
   const config = useRuntimeConfig();
@@ -25,5 +27,9 @@ export const useFirebase = () => {
     db = getDatabase(app);
   }
 
-  return { app, db };
+  if (!firestore) {
+    firestore = getFirestore(app);
+  }
+
+  return { app, db, firestore };
 };

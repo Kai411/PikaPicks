@@ -1,4 +1,14 @@
-import { ref as dbRef, push, onValue, update, remove } from "firebase/database";
+import {
+  collection,
+  addDoc,
+  updateDoc,
+  doc,
+  onSnapshot,
+  query,
+  orderBy,
+  increment,
+  type Unsubscribe,
+} from "firebase/firestore";
 import { ref, onUnmounted } from "vue";
 
 export interface Card {
@@ -15,25 +25,22 @@ export interface Card {
   sellerUid: string;
   createdAt: number;
   sold: boolean;
+  interestedCount: number;
 }
 
 export const useCards = () => {
-  const { db } = useFirebase();
+  const { firestore } = useFirebase();
   const cards = ref<Card[]>([]);
   const loading = ref(true);
 
-  const cardsRef = dbRef(db!, "cards");
+  const cardsCollection = collection(firestore!, "cards");
+  const q = query(cardsCollection, orderBy("createdAt", "desc"));
 
-  const unsubscribe = onValue(cardsRef, (snapshot) => {
-    const data = snapshot.val();
-    if (data) {
-      cards.value = Object.entries(data).map(([id, card]) => ({
-        ...(card as Omit<Card, "id">),
-        id,
-      }));
-    } else {
-      cards.value = [];
-    }
+  const unsubscribe: Unsubscribe = onSnapshot(q, (snapshot) => {
+    cards.value = snapshot.docs.map((doc) => ({
+      ...(doc.data() as Omit<Card, "id">),
+      id: doc.id,
+    }));
     loading.value = false;
   });
 
@@ -41,20 +48,28 @@ export const useCards = () => {
     unsubscribe();
   });
 
-  const createCard = async (card: Omit<Card, "id" | "createdAt" | "sold">) => {
+  const createCard = async (
+    card: Omit<Card, "id" | "createdAt" | "sold" | "interestedCount">,
+  ) => {
     const newCard = {
       ...card,
       createdAt: Date.now(),
       sold: false,
+      interestedCount: 0,
     };
-    const result = await push(cardsRef, newCard);
-    return result.key;
+    const docRef = await addDoc(cardsCollection, newCard);
+    return docRef.id;
   };
 
   const markAsSold = async (cardId: string) => {
-    const cardRef = dbRef(db!, `cards/${cardId}`);
-    await update(cardRef, { sold: true });
+    const cardDoc = doc(firestore!, "cards", cardId);
+    await updateDoc(cardDoc, { sold: true });
   };
 
-  return { cards, loading, createCard, markAsSold };
+  const markInterested = async (cardId: string) => {
+    const cardDoc = doc(firestore!, "cards", cardId);
+    await updateDoc(cardDoc, { interestedCount: increment(1) });
+  };
+
+  return { cards, loading, createCard, markAsSold, markInterested };
 };

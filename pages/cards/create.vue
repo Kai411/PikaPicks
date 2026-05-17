@@ -280,6 +280,13 @@ const removeFile = (index: number) => {
 
 const handleSubmit = async () => {
   error.value = "";
+
+  if (!profile.value?.phone && !profile.value?.whatsappNumber) {
+    error.value =
+      "Please add your contact number in your Profile before listing a card.";
+    return;
+  }
+
   submitting.value = true;
 
   try {
@@ -319,7 +326,7 @@ const handleSubmit = async () => {
       sellerUid: user.value!.uid,
     });
 
-    selectedFiles.value.forEach((f) => URL.revokeObjectURL(f.preview));
+    selectedFiles.value.forEach((f: any) => URL.revokeObjectURL(f.preview));
     await router.push("/");
   } catch (e: any) {
     error.value = e.message || "Failed to list card";

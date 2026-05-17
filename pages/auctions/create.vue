@@ -320,6 +320,13 @@ const removeFile = (index: number) => {
 
 const handleSubmit = async () => {
   error.value = "";
+
+  if (!profile.value?.phone && !profile.value?.whatsappNumber) {
+    error.value =
+      "Please add your contact number in your Profile before creating an auction.";
+    return;
+  }
+
   submitting.value = true;
 
   try {
@@ -363,7 +370,7 @@ const handleSubmit = async () => {
       endsAt: Date.now() + form.duration,
     });
 
-    selectedFiles.value.forEach((f) => URL.revokeObjectURL(f.preview));
+    selectedFiles.value.forEach((f: any) => URL.revokeObjectURL(f.preview));
     await router.push(`/auctions/${auctionId}`);
   } catch (e: any) {
     error.value = e.message || "Failed to create auction";

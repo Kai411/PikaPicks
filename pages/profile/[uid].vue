@@ -26,9 +26,46 @@
               class="w-16 h-16 rounded-full border-2 border-gray-200"
             />
             <div>
-              <h1 class="text-2xl font-bold">
-                {{ profile.customName || profile.displayName }}
-              </h1>
+              <div class="flex items-center gap-2">
+                <h1 class="text-2xl font-bold">
+                  {{ profile.customName || profile.displayName }}
+                </h1>
+                <span
+                  v-if="profile.whatsappVerified"
+                  class="inline-flex items-center gap-1 bg-green-100 text-green-700 text-xs font-medium px-2 py-0.5 rounded-full"
+                >
+                  <svg
+                    class="w-3.5 h-3.5"
+                    fill="currentColor"
+                    viewBox="0 0 20 20"
+                  >
+                    <path
+                      fill-rule="evenodd"
+                      d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z"
+                      clip-rule="evenodd"
+                    />
+                  </svg>
+                  Verified Contact
+                </span>
+
+                <span
+                  v-if="profile.whatsappNumber"
+                  class="inline-flex items-center gap-1 bg-blue-100 text-blue-700 text-xs font-medium px-2 py-0.5 rounded-full"
+                >
+                  <svg
+                    class="w-3.5 h-3.5"
+                    fill="currentColor"
+                    viewBox="0 0 20 20"
+                  >
+                    <path
+                      fill-rule="evenodd"
+                      d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z"
+                      clip-rule="evenodd"
+                    />
+                  </svg>
+                  Contact Added
+                </span>
+              </div>
               <p class="text-sm text-gray-500">
                 Member since {{ formatDate(profile.createdAt) }}
               </p>
@@ -204,14 +241,14 @@ const activeTab = ref<"cards" | "auctions">("cards");
 
 const userCards = computed(() =>
   cards.value
-    .filter((c) => c.sellerUid === uid)
-    .sort((a, b) => b.createdAt - a.createdAt),
+    .filter((c: any) => c.sellerUid === uid)
+    .sort((a: any, b: any) => b.createdAt - a.createdAt),
 );
 
 const userAuctions = computed(() =>
   auctions.value
-    .filter((a) => a.sellerUid === uid)
-    .sort((a, b) => b.createdAt - a.createdAt),
+    .filter((a: any) => a.sellerUid === uid)
+    .sort((a: any, b: any) => b.createdAt - a.createdAt),
 );
 
 const isActive = (auction: Auction) => auction.endsAt > Date.now();
