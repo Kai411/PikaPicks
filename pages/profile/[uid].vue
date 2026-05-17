@@ -17,25 +17,29 @@
     </div>
 
     <template v-else>
-      <div class="bg-white rounded-xl p-6 border border-gray-200 mb-8">
-        <div class="flex items-center justify-between">
-          <div class="flex items-center gap-4">
+      <div
+        class="bg-white rounded-xl p-4 sm:p-6 border border-gray-200 mb-8 overflow-hidden"
+      >
+        <div
+          class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3"
+        >
+          <div class="flex items-center gap-3 min-w-0">
             <img
               :src="profile.photoURL || ''"
               :alt="profile.customName"
-              class="w-16 h-16 rounded-full border-2 border-gray-200"
+              class="w-12 h-12 sm:w-16 sm:h-16 flex-shrink-0 rounded-full border-2 border-gray-200 object-cover"
             />
-            <div>
-              <div class="flex items-center gap-2">
-                <h1 class="text-2xl font-bold">
-                  {{ profile.customName || profile.displayName }}
-                </h1>
+            <div class="min-w-0 flex-1">
+              <h1 class="text-base sm:text-2xl font-bold truncate">
+                {{ profile.customName || profile.displayName }}
+              </h1>
+              <div class="flex flex-wrap gap-1 mt-0.5">
                 <span
                   v-if="profile.whatsappVerified"
-                  class="inline-flex items-center gap-1 bg-green-100 text-green-700 text-xs font-medium px-2 py-0.5 rounded-full"
+                  class="inline-flex items-center gap-0.5 bg-green-100 text-green-700 text-[10px] sm:text-xs font-medium px-1.5 py-0.5 rounded-full"
                 >
                   <svg
-                    class="w-3.5 h-3.5"
+                    class="w-2.5 h-2.5 sm:w-3 sm:h-3"
                     fill="currentColor"
                     viewBox="0 0 20 20"
                   >
@@ -45,15 +49,14 @@
                       clip-rule="evenodd"
                     />
                   </svg>
-                  Verified Contact
+                  Verified
                 </span>
-
                 <span
-                  v-if="profile.whatsappNumber"
-                  class="inline-flex items-center gap-1 bg-blue-100 text-blue-700 text-xs font-medium px-2 py-0.5 rounded-full"
+                  v-else-if="profile.whatsappNumber"
+                  class="inline-flex items-center gap-0.5 bg-blue-100 text-blue-700 text-[10px] sm:text-xs font-medium px-1.5 py-0.5 rounded-full"
                 >
                   <svg
-                    class="w-3.5 h-3.5"
+                    class="w-2.5 h-2.5 sm:w-3 sm:h-3"
                     fill="currentColor"
                     viewBox="0 0 20 20"
                   >
@@ -66,7 +69,7 @@
                   Contact Added
                 </span>
               </div>
-              <p class="text-sm text-gray-500">
+              <p class="text-xs sm:text-sm text-gray-500 mt-0.5 truncate">
                 Member since {{ formatDate(profile.createdAt) }}
               </p>
             </div>
@@ -74,12 +77,12 @@
           <NuxtLink
             v-if="isOwnProfile"
             to="/profile"
-            class="text-sm bg-gray-100 hover:bg-gray-200 px-4 py-2 rounded-lg text-gray-700 transition-colors"
+            class="self-start text-xs sm:text-sm bg-gray-100 hover:bg-gray-200 px-3 py-1.5 rounded-lg text-gray-700 transition-colors whitespace-nowrap"
           >
             Edit Profile
           </NuxtLink>
         </div>
-        <div class="flex gap-6 mt-4 text-sm text-gray-500">
+        <div class="flex gap-4 sm:gap-6 mt-3 text-xs sm:text-sm text-gray-500">
           <span>{{ userCards.length }} card(s) for sale</span>
           <span>{{ userAuctions.length }} auction(s)</span>
         </div>

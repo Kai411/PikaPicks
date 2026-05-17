@@ -485,7 +485,11 @@ watch(
   bids,
   (newBids: any[]) => {
     if (prevBidCount.value > 0 && newBids.length > prevBidCount.value) {
-      playBidSound();
+      // Only play sound if the new bid is NOT from the current user
+      const latestBid = newBids[0]; // bids are sorted by amount desc
+      if (!user.value || latestBid.bidderUid !== user.value.uid) {
+        playBidSound();
+      }
     }
     prevBidCount.value = newBids.length;
   },

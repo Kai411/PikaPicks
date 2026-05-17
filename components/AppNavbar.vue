@@ -5,7 +5,9 @@
         <NuxtLink to="/" class="text-xl font-bold text-pokemon-red">
           TCGo Marketplace
         </NuxtLink>
-        <div class="flex items-center gap-5">
+
+        <!-- Desktop nav -->
+        <div class="hidden lg:flex items-center gap-5">
           <NuxtLink
             to="/"
             class="text-gray-600 hover:text-gray-900 transition-colors text-sm font-medium"
@@ -84,12 +86,190 @@
             Sign In
           </button>
         </div>
+
+        <!-- Mobile menu button -->
+        <button
+          class="lg:hidden p-2 text-gray-600 hover:text-gray-900 transition-colors"
+          @click="mobileMenuOpen = true"
+        >
+          <svg
+            class="w-6 h-6"
+            fill="none"
+            stroke="currentColor"
+            viewBox="0 0 24 24"
+          >
+            <path
+              stroke-linecap="round"
+              stroke-linejoin="round"
+              stroke-width="2"
+              d="M4 6h16M4 12h16M4 18h16"
+            />
+          </svg>
+        </button>
       </div>
     </div>
+
+    <!-- Mobile fullscreen menu -->
+    <Teleport to="body">
+      <Transition
+        enter-active-class="transition-opacity duration-200"
+        enter-from-class="opacity-0"
+        enter-to-class="opacity-100"
+        leave-active-class="transition-opacity duration-200"
+        leave-from-class="opacity-100"
+        leave-to-class="opacity-0"
+      >
+        <div
+          v-if="mobileMenuOpen"
+          class="fixed inset-0 z-50 bg-white flex flex-col"
+        >
+          <!-- Header -->
+          <div
+            class="flex items-center justify-between px-4 h-16 border-b border-gray-200"
+          >
+            <NuxtLink
+              to="/"
+              class="text-xl font-bold text-pokemon-red"
+              @click="mobileMenuOpen = false"
+            >
+              PikaPicks
+            </NuxtLink>
+            <button
+              class="p-2 text-gray-600 hover:text-gray-900 transition-colors"
+              @click="mobileMenuOpen = false"
+            >
+              <svg
+                class="w-6 h-6"
+                fill="none"
+                stroke="currentColor"
+                viewBox="0 0 24 24"
+              >
+                <path
+                  stroke-linecap="round"
+                  stroke-linejoin="round"
+                  stroke-width="2"
+                  d="M6 18L18 6M6 6l12 12"
+                />
+              </svg>
+            </button>
+          </div>
+
+          <!-- Nav links -->
+          <div class="flex-1 flex flex-col px-6 py-6 gap-1">
+            <NuxtLink
+              to="/"
+              class="text-lg font-medium text-gray-700 hover:text-pokemon-red py-3 border-b border-gray-100 transition-colors"
+              active-class="!text-pokemon-red"
+              @click="mobileMenuOpen = false"
+            >
+              Shop
+            </NuxtLink>
+            <NuxtLink
+              to="/auctions"
+              class="text-lg font-medium text-gray-700 hover:text-pokemon-red py-3 border-b border-gray-100 transition-colors"
+              active-class="!text-pokemon-red"
+              @click="mobileMenuOpen = false"
+            >
+              Auctions
+            </NuxtLink>
+            <NuxtLink
+              v-if="user"
+              to="/dashboard/seller"
+              class="text-lg font-medium text-gray-700 hover:text-pokemon-red py-3 border-b border-gray-100 transition-colors"
+              active-class="!text-pokemon-red"
+              @click="mobileMenuOpen = false"
+            >
+              My Listings
+            </NuxtLink>
+            <NuxtLink
+              v-if="user"
+              to="/dashboard/buyer"
+              class="text-lg font-medium text-gray-700 hover:text-pokemon-red py-3 border-b border-gray-100 transition-colors"
+              active-class="!text-pokemon-red"
+              @click="mobileMenuOpen = false"
+            >
+              My Bids
+            </NuxtLink>
+
+            <!-- Sell buttons -->
+            <div v-if="user" class="flex gap-3 mt-4">
+              <NuxtLink
+                to="/cards/create"
+                class="flex-1 text-center bg-pokemon-blue text-white px-4 py-2.5 rounded-lg text-sm font-medium hover:bg-blue-700 transition-colors"
+                @click="mobileMenuOpen = false"
+              >
+                Sell Card
+              </NuxtLink>
+              <NuxtLink
+                to="/auctions/create"
+                class="flex-1 text-center bg-pokemon-red text-white px-4 py-2.5 rounded-lg text-sm font-medium hover:bg-red-700 transition-colors"
+                @click="mobileMenuOpen = false"
+              >
+                Auction
+              </NuxtLink>
+            </div>
+          </div>
+
+          <!-- User section at bottom -->
+          <div class="px-6 py-6 border-t border-gray-200">
+            <div v-if="authLoading" class="flex items-center gap-3">
+              <div
+                class="w-10 h-10 rounded-full bg-gray-200 animate-pulse"
+              ></div>
+              <div class="h-4 w-24 bg-gray-200 rounded animate-pulse"></div>
+            </div>
+            <div v-else-if="user" class="flex items-center justify-between">
+              <NuxtLink
+                :to="`/profile/${user.uid}`"
+                class="flex items-center gap-3 hover:opacity-80 transition-opacity"
+                @click="mobileMenuOpen = false"
+              >
+                <img
+                  :src="profile?.photoURL || user.photoURL || ''"
+                  :alt="profile?.customName || user.displayName || 'User'"
+                  class="w-10 h-10 rounded-full border border-gray-200 object-cover"
+                />
+                <div>
+                  <p class="font-medium text-gray-900 text-sm">
+                    {{ profile?.customName || user.displayName }}
+                  </p>
+                  <p class="text-xs text-gray-400">View profile</p>
+                </div>
+              </NuxtLink>
+              <button
+                @click="handleSignOut"
+                class="text-gray-400 hover:text-gray-600 text-sm font-medium transition-colors"
+              >
+                Logout
+              </button>
+            </div>
+            <button
+              v-else
+              @click="handleSignIn"
+              class="w-full bg-gray-900 text-white py-3 rounded-lg text-sm font-medium hover:bg-gray-700 transition-colors"
+            >
+              Sign In with Google
+            </button>
+          </div>
+        </div>
+      </Transition>
+    </Teleport>
   </nav>
 </template>
 
 <script setup lang="ts">
 const { user, authLoading, signInWithGoogle, signOut } = useAuth();
 const { profile } = useMyProfile();
+
+const mobileMenuOpen = ref(false);
+
+const handleSignOut = () => {
+  signOut();
+  mobileMenuOpen.value = false;
+};
+
+const handleSignIn = () => {
+  signInWithGoogle();
+  mobileMenuOpen.value = false;
+};
 </script>
