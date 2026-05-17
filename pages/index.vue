@@ -1,0 +1,100 @@
+<template>
+  <div>
+    <div class="flex items-center justify-between mb-6">
+      <h1 class="text-2xl font-bold">Shop Cards</h1>
+      <NuxtLink
+        v-if="user"
+        to="/cards/create"
+        class="bg-pokemon-blue text-white px-4 py-2 rounded-lg text-sm font-medium hover:bg-blue-700 transition-colors"
+      >
+        + List Card for Sale
+      </NuxtLink>
+    </div>
+
+    <div v-if="loading" class="flex justify-center py-12">
+      <div
+        class="animate-spin rounded-full h-6 w-6 border-b-2 border-pokemon-red"
+      ></div>
+    </div>
+
+    <div v-else-if="availableCards.length === 0" class="text-center py-12">
+      <p class="text-gray-500 text-lg">No cards for sale yet.</p>
+      <p class="text-gray-400 mt-1 text-sm">Be the first to list a card!</p>
+    </div>
+
+    <div
+      v-else
+      class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-4"
+    >
+      <div
+        v-for="card in availableCards"
+        :key="card.id"
+        class="bg-white rounded-xl overflow-hidden border border-gray-200 hover:border-pokemon-blue hover:shadow-md transition-all group"
+      >
+        <div
+          class="aspect-[4/3] bg-gray-100 flex items-center justify-center overflow-hidden"
+        >
+          <img
+            v-if="card.imageUrls?.length || card.imageUrl"
+            :src="card.imageUrls?.[0] || card.imageUrl"
+            :alt="card.cardName"
+            class="w-full h-full object-cover group-hover:scale-105 transition-transform"
+          />
+          <span v-else class="text-gray-400 text-xs">No Image</span>
+        </div>
+        <div class="p-3">
+          <h3 class="font-semibold text-sm truncate">{{ card.cardName }}</h3>
+          <p class="text-xs text-gray-500 truncate">
+            {{ card.cardSet }} · {{ card.condition }}
+          </p>
+          <NuxtLink
+            :to="`/profile/${card.sellerUid}`"
+            class="text-xs text-pokemon-blue hover:underline truncate block mt-0.5"
+          >
+            {{ card.seller }}
+          </NuxtLink>
+          <div class="flex items-center justify-between mt-2">
+            <p class="text-pokemon-red font-bold text-sm">
+              RM {{ card.price.toFixed(2) }}
+            </p>
+            <button
+              v-if="!isInCart(card.id)"
+              @click="handleAddToCart(card)"
+              class="bg-pokemon-blue text-white text-xs px-2 py-1 rounded hover:bg-blue-700 transition-colors"
+            >
+              + Cart
+            </button>
+            <span v-else class="text-xs text-green-600 font-medium"
+              >✓ In Cart</span
+            >
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</template>
+
+<script setup lang="ts">
+import type { Card } from "~/composables/useCards";
+
+const { user } = useAuth();
+const { cards, loading } = useCards();
+const { addToCart, isInCart } = useCart();
+
+const availableCards = computed(() =>
+  cards.value.filter((c) => !c.sold).sort((a, b) => b.createdAt - a.createdAt),
+);
+
+const handleAddToCart = (card: Card) => {
+  addToCart({
+    id: card.id,
+    cardName: card.cardName,
+    cardSet: card.cardSet,
+    condition: card.condition,
+    price: card.price,
+    imageUrl: card.imageUrls?.[0] || card.imageUrl || "",
+    seller: card.seller,
+    sellerUid: card.sellerUid,
+  });
+};
+</script>

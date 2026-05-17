@@ -1,0 +1,476 @@
+<template>
+  <div>
+    <div v-if="loading" class="flex justify-center py-12">
+      <div
+        class="animate-spin rounded-full h-6 w-6 border-b-2 border-pokemon-red"
+      ></div>
+    </div>
+
+    <div v-else-if="!auction" class="text-center py-12">
+      <p class="text-gray-500 text-lg">Auction not found.</p>
+      <NuxtLink
+        to="/auctions"
+        class="text-pokemon-red hover:underline mt-2 inline-block text-sm"
+      >
+        ← Back to auctions
+      </NuxtLink>
+    </div>
+
+    <div v-else>
+      <NuxtLink
+        to="/auctions"
+        class="text-gray-500 hover:text-gray-700 text-sm inline-block mb-4"
+      >
+        ← Back to auctions
+      </NuxtLink>
+
+      <div class="grid grid-cols-1 lg:grid-cols-12 gap-6 items-start">
+        <!-- Image Gallery -->
+        <div class="lg:col-span-4">
+          <div
+            class="bg-white rounded-xl overflow-hidden border border-gray-200 sticky top-8"
+          >
+            <div
+              class="aspect-[3/4] bg-gray-100 flex items-center justify-center relative"
+            >
+              <img
+                v-if="activeImage"
+                :src="activeImage"
+                :alt="auction.cardName"
+                class="w-full h-full object-cover"
+              />
+              <span v-else class="text-gray-400">No Image</span>
+
+              <template v-if="allImages.length > 1">
+                <button
+                  @click="prevImage"
+                  class="absolute left-2 top-1/2 -translate-y-1/2 bg-black/50 hover:bg-black/70 text-white rounded-full w-7 h-7 flex items-center justify-center text-sm"
+                >
+                  ‹
+                </button>
+                <button
+                  @click="nextImage"
+                  class="absolute right-2 top-1/2 -translate-y-1/2 bg-black/50 hover:bg-black/70 text-white rounded-full w-7 h-7 flex items-center justify-center text-sm"
+                >
+                  ›
+                </button>
+              </template>
+            </div>
+
+            <div
+              v-if="allImages.length > 1"
+              class="flex gap-2 p-2 overflow-x-auto"
+            >
+              <button
+                v-for="(img, index) in allImages"
+                :key="index"
+                @click="activeImageIndex = index"
+                class="flex-shrink-0 w-12 h-12 rounded-lg overflow-hidden border-2 transition-colors"
+                :class="
+                  activeImageIndex === index
+                    ? 'border-pokemon-red'
+                    : 'border-gray-200 hover:border-gray-400'
+                "
+              >
+                <img
+                  :src="img"
+                  :alt="`Photo ${index + 1}`"
+                  class="w-full h-full object-cover"
+                />
+              </button>
+            </div>
+          </div>
+        </div>
+
+        <!-- Card Info -->
+        <div class="lg:col-span-4 space-y-4">
+          <div class="bg-white rounded-xl p-5 border border-gray-200">
+            <h1 class="text-xl font-bold mb-2">{{ auction.title }}</h1>
+            <div class="flex flex-wrap gap-2 mb-3">
+              <span
+                class="bg-gray-100 text-gray-700 px-2.5 py-0.5 rounded-full text-xs"
+                >{{ auction.cardName }}</span
+              >
+              <span
+                class="bg-gray-100 text-gray-700 px-2.5 py-0.5 rounded-full text-xs"
+                >{{ auction.cardSet }}</span
+              >
+              <span
+                class="bg-gray-100 text-gray-700 px-2.5 py-0.5 rounded-full text-xs"
+                >{{ auction.condition }}</span
+              >
+            </div>
+            <p v-if="auction.description" class="text-gray-600 text-sm">
+              {{ auction.description }}
+            </p>
+            <div class="flex gap-4 mt-4 text-xs text-gray-500">
+              <p>
+                Seller:
+                <NuxtLink
+                  :to="`/profile/${auction.sellerUid}`"
+                  class="text-pokemon-blue hover:underline"
+                  >{{ auction.seller }}</NuxtLink
+                >
+              </p>
+              <p>
+                Min increment:
+                <span class="text-gray-700"
+                  >RM {{ (auction.minIncrement || 1).toFixed(2) }}</span
+                >
+              </p>
+            </div>
+          </div>
+          <!-- Bid History -->
+          <div class="bg-white rounded-xl p-6 border border-gray-200">
+            <h3 class="font-bold text-sm mb-4">
+              Bid History ({{ bids.length }})
+            </h3>
+            <div
+              v-if="bids.length === 0"
+              class="text-gray-400 text-sm text-center py-4"
+            >
+              No bids yet. Be the first!
+            </div>
+            <div v-else class="space-y-2 max-h-64 overflow-y-auto">
+              <div
+                v-for="(bid, index) in bids"
+                :key="bid.id"
+                class="flex items-center justify-between py-2 border-b border-gray-100 last:border-0"
+              >
+                <div>
+                  <p
+                    class="text-sm font-medium"
+                    :class="index === 0 ? 'text-pokemon-red' : 'text-gray-700'"
+                  >
+                    {{ bid.bidder }}
+                    <span
+                      v-if="bid.isAutoBid"
+                      class="text-xs text-gray-400 ml-1"
+                      >(auto)</span
+                    >
+                  </p>
+                  <p class="text-xs text-gray-400">
+                    {{ formatTime(bid.timestamp) }}
+                  </p>
+                </div>
+                <p
+                  class="font-bold text-sm"
+                  :class="index === 0 ? 'text-pokemon-red' : 'text-gray-700'"
+                >
+                  RM {{ bid.amount.toFixed(2) }}
+                </p>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Bidding Panel -->
+        <div class="lg:col-span-4 space-y-4">
+          <div class="bg-white rounded-xl p-6 border border-gray-200">
+            <div class="text-center mb-4">
+              <p class="text-xs text-gray-500">Current Price</p>
+              <p class="text-3xl font-bold text-pokemon-red">
+                RM {{ auction.currentPrice.toFixed(2) }}
+              </p>
+              <p class="text-xs text-gray-400 mt-1">
+                Started at RM {{ auction.startingPrice.toFixed(2) }}
+              </p>
+            </div>
+
+            <div
+              class="text-center py-2 rounded-lg"
+              :class="isEnded ? 'bg-red-50' : 'bg-gray-100'"
+            >
+              <p
+                class="text-sm"
+                :class="isEnded ? 'text-red-600' : 'text-gray-600'"
+              >
+                {{ isEnded ? "Auction Ended" : `Ends in ${timeLeft}` }}
+              </p>
+            </div>
+
+            <!-- Must be logged in -->
+            <div v-if="!user && !isEnded" class="mt-4 text-center">
+              <p class="text-gray-500 text-sm mb-3">Sign in to place a bid</p>
+              <button
+                @click="signInWithGoogle"
+                class="bg-gray-900 text-white px-6 py-2 rounded-lg text-sm font-medium hover:bg-gray-700 transition-colors"
+              >
+                Sign in with Google
+              </button>
+            </div>
+
+            <!-- Seller cannot bid -->
+            <div
+              v-else-if="user && !isEnded && isSeller"
+              class="mt-4 text-center"
+            >
+              <p class="text-gray-500 text-sm">
+                You cannot bid on your own listing.
+              </p>
+            </div>
+
+            <!-- Bid Form -->
+            <div
+              v-else-if="user && !isEnded && !isSeller"
+              class="mt-4 space-y-4"
+            >
+              <div
+                class="flex rounded-lg overflow-hidden border border-gray-300"
+              >
+                <button
+                  @click="bidMode = 'manual'"
+                  class="flex-1 py-2 text-sm font-medium transition-colors"
+                  :class="
+                    bidMode === 'manual'
+                      ? 'bg-pokemon-red text-white'
+                      : 'bg-gray-50 text-gray-600'
+                  "
+                >
+                  Manual Bid
+                </button>
+                <button
+                  @click="bidMode = 'auto'"
+                  class="flex-1 py-2 text-sm font-medium transition-colors"
+                  :class="
+                    bidMode === 'auto'
+                      ? 'bg-pokemon-red text-white'
+                      : 'bg-gray-50 text-gray-600'
+                  "
+                >
+                  Auto Bid
+                </button>
+              </div>
+
+              <!-- Manual -->
+              <div v-if="bidMode === 'manual'" class="space-y-3">
+                <div>
+                  <label class="block text-xs text-gray-500 mb-1"
+                    >Your Bid (min RM {{ minBidAmount.toFixed(2) }})</label
+                  >
+                  <input
+                    v-model.number="bidAmount"
+                    type="number"
+                    :min="minBidAmount"
+                    step="0.01"
+                    :placeholder="minBidAmount.toFixed(2)"
+                    class="w-full border border-gray-300 rounded-lg px-4 py-2 text-gray-900 placeholder-gray-400 focus:border-pokemon-red focus:outline-none focus:ring-1 focus:ring-pokemon-red"
+                  />
+                </div>
+                <button
+                  @click="handleBid"
+                  :disabled="bidding"
+                  class="w-full bg-pokemon-red text-white py-3 rounded-lg font-bold hover:bg-red-700 transition-colors disabled:opacity-50"
+                >
+                  {{ bidding ? "Placing Bid..." : "Place Bid" }}
+                </button>
+              </div>
+
+              <!-- Auto -->
+              <div v-else class="space-y-3">
+                <div class="bg-blue-50 rounded-lg p-3 text-xs text-gray-600">
+                  Set your maximum. The system bids the minimum increment on
+                  your behalf up to your max.
+                </div>
+                <div>
+                  <label class="block text-xs text-gray-500 mb-1"
+                    >Max Bid (min RM {{ minBidAmount.toFixed(2) }})</label
+                  >
+                  <input
+                    v-model.number="autoBidMax"
+                    type="number"
+                    :min="minBidAmount"
+                    step="0.01"
+                    :placeholder="(minBidAmount + 10).toFixed(2)"
+                    class="w-full border border-gray-300 rounded-lg px-4 py-2 text-gray-900 placeholder-gray-400 focus:border-pokemon-blue focus:outline-none focus:ring-1 focus:ring-pokemon-blue"
+                  />
+                </div>
+                <button
+                  @click="handleAutoBid"
+                  :disabled="bidding"
+                  class="w-full bg-pokemon-blue text-white py-3 rounded-lg font-bold hover:bg-blue-700 transition-colors disabled:opacity-50"
+                >
+                  {{ bidding ? "Setting Auto Bid..." : "Set Auto Bid" }}
+                </button>
+              </div>
+
+              <p v-if="bidError" class="text-red-500 text-sm text-center">
+                {{ bidError }}
+              </p>
+              <p v-if="bidSuccess" class="text-green-600 text-sm text-center">
+                {{ bidSuccess }}
+              </p>
+            </div>
+
+            <!-- Winner -->
+            <div
+              v-if="isEnded && bids.length > 0"
+              class="mt-4 bg-amber-50 border border-amber-200 rounded-lg p-4 text-center"
+            >
+              <p class="text-xs text-gray-500">Winner</p>
+              <p class="font-bold text-amber-700 text-lg">
+                {{ bids[0].bidder }}
+              </p>
+              <p class="text-sm text-gray-600">
+                Final: RM {{ bids[0].amount.toFixed(2) }}
+              </p>
+              <div
+                v-if="isSeller"
+                class="mt-3 pt-3 border-t border-amber-200 text-left"
+              >
+                <p class="text-xs text-gray-500 mb-1">
+                  Buyer Details (visible to you)
+                </p>
+                <p class="text-sm text-gray-700">Name: {{ bids[0].bidder }}</p>
+                <p class="text-sm text-gray-700">
+                  User ID: {{ bids[0].bidderUid }}
+                </p>
+                <p class="text-sm text-gray-700">
+                  Winning Bid: RM {{ bids[0].amount.toFixed(2) }}
+                </p>
+                <p class="text-sm text-gray-700">
+                  Time: {{ formatTime(bids[0].timestamp) }}
+                </p>
+              </div>
+            </div>
+
+            <div
+              v-if="isEnded && bids.length === 0"
+              class="mt-4 bg-gray-100 rounded-lg p-3 text-center"
+            >
+              <p class="text-sm text-gray-500">Auction ended with no bids.</p>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</template>
+
+<script setup lang="ts">
+const route = useRoute();
+const auctionId = route.params.id as string;
+
+const { auction, bids, loading, placeBid, setAutoBid } =
+  useAuctionDetail(auctionId);
+const { user, signInWithGoogle } = useAuth();
+const { profile: myProfile } = useMyProfile();
+
+// Image gallery
+const activeImageIndex = ref(0);
+const allImages = computed(() => {
+  if (!auction.value) return [];
+  if (auction.value.imageUrls && auction.value.imageUrls.length > 0)
+    return auction.value.imageUrls;
+  return auction.value.imageUrl ? [auction.value.imageUrl] : [];
+});
+const activeImage = computed(
+  () => allImages.value[activeImageIndex.value] || "",
+);
+const prevImage = () => {
+  activeImageIndex.value =
+    (activeImageIndex.value - 1 + allImages.value.length) %
+    allImages.value.length;
+};
+const nextImage = () => {
+  activeImageIndex.value =
+    (activeImageIndex.value + 1) % allImages.value.length;
+};
+
+const isSeller = computed(
+  () =>
+    user.value && auction.value && auction.value.sellerUid === user.value.uid,
+);
+
+const bidMode = ref<"manual" | "auto">("manual");
+const bidAmount = ref<number | null>(null);
+const autoBidMax = ref<number | null>(null);
+const bidding = ref(false);
+const bidError = ref("");
+const bidSuccess = ref("");
+
+const minBidAmount = computed(() => {
+  if (!auction.value) return 0;
+  return auction.value.currentPrice + (auction.value.minIncrement || 1);
+});
+
+const timeLeft = ref("");
+const isEnded = ref(false);
+let timer: ReturnType<typeof setInterval>;
+
+const updateTimer = () => {
+  if (!auction.value) return;
+  const diff = auction.value.endsAt - Date.now();
+  if (diff <= 0) {
+    isEnded.value = true;
+    timeLeft.value = "Ended";
+    clearInterval(timer);
+    return;
+  }
+  const hours = Math.floor(diff / 3600000);
+  const minutes = Math.floor((diff % 3600000) / 60000);
+  const seconds = Math.floor((diff % 60000) / 1000);
+  if (hours > 24) {
+    const days = Math.floor(hours / 24);
+    timeLeft.value = `${days}d ${hours % 24}h ${minutes}m`;
+  } else {
+    timeLeft.value = `${hours}h ${minutes}m ${seconds}s`;
+  }
+};
+
+watch(auction, () => updateTimer(), { immediate: true });
+onMounted(() => {
+  timer = setInterval(updateTimer, 1000);
+});
+onUnmounted(() => {
+  clearInterval(timer);
+});
+
+const handleBid = async () => {
+  bidError.value = "";
+  bidSuccess.value = "";
+  if (!bidAmount.value || bidAmount.value < minBidAmount.value) {
+    bidError.value = `Bid must be at least RM ${minBidAmount.value.toFixed(2)}`;
+    return;
+  }
+  bidding.value = true;
+  try {
+    await placeBid(
+      user.value!.uid,
+      myProfile.value?.customName || user.value!.displayName || "Anonymous",
+      bidAmount.value,
+    );
+    bidSuccess.value = "Bid placed successfully!";
+    bidAmount.value = null;
+  } catch (e: any) {
+    bidError.value = e.message || "Failed to place bid";
+  } finally {
+    bidding.value = false;
+  }
+};
+
+const handleAutoBid = async () => {
+  bidError.value = "";
+  bidSuccess.value = "";
+  if (!autoBidMax.value || autoBidMax.value < minBidAmount.value) {
+    bidError.value = `Max bid must be at least RM ${minBidAmount.value.toFixed(2)}`;
+    return;
+  }
+  bidding.value = true;
+  try {
+    await setAutoBid(
+      user.value!.uid,
+      myProfile.value?.customName || user.value!.displayName || "Anonymous",
+      autoBidMax.value,
+    );
+    bidSuccess.value = `Auto bid set! Max: RM ${autoBidMax.value.toFixed(2)}`;
+    autoBidMax.value = null;
+  } catch (e: any) {
+    bidError.value = e.message || "Failed to set auto bid";
+  } finally {
+    bidding.value = false;
+  }
+};
+
+const formatTime = (timestamp: number) => new Date(timestamp).toLocaleString();
+</script>

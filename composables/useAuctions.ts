@@ -1,0 +1,275 @@
+import { ref as dbRef, push, onValue, update, get } from "firebase/database";
+import { ref, onUnmounted } from "vue";
+
+export interface Auction {
+  id: string;
+  title: string;
+  description: string;
+  imageUrl: string;
+  imageUrls: string[];
+  cardName: string;
+  cardSet: string;
+  condition: string;
+  startingPrice: number;
+  currentPrice: number;
+  minIncrement: number;
+  seller: string;
+  sellerUid: string;
+  endsAt: number;
+  createdAt: number;
+  bids: Record<string, Bid>;
+  autoBids: Record<string, AutoBid>;
+}
+
+export interface Bid {
+  id?: string;
+  bidder: string;
+  bidderUid: string;
+  amount: number;
+  timestamp: number;
+  isAutoBid: boolean;
+}
+
+export interface AutoBid {
+  id?: string;
+  bidderUid: string;
+  bidder: string;
+  maxAmount: number;
+  createdAt: number;
+}
+
+export const useAuctions = () => {
+  const { db } = useFirebase();
+  const auctions = ref<Auction[]>([]);
+  const loading = ref(true);
+
+  const auctionsRef = dbRef(db!, "auctions");
+
+  const unsubscribe = onValue(auctionsRef, (snapshot) => {
+    const data = snapshot.val();
+    if (data) {
+      auctions.value = Object.entries(data).map(([id, auction]) => ({
+        ...(auction as Omit<Auction, "id">),
+        id,
+      }));
+    } else {
+      auctions.value = [];
+    }
+    loading.value = false;
+  });
+
+  onUnmounted(() => {
+    unsubscribe();
+  });
+
+  const createAuction = async (
+    auction: Omit<
+      Auction,
+      "id" | "bids" | "autoBids" | "currentPrice" | "createdAt"
+    >,
+  ) => {
+    const newAuction = {
+      ...auction,
+      currentPrice: auction.startingPrice,
+      createdAt: Date.now(),
+      bids: {},
+      autoBids: {},
+    };
+    const result = await push(auctionsRef, newAuction);
+    return result.key;
+  };
+
+  return { auctions, loading, createAuction };
+};
+
+export const useAuctionDetail = (auctionId: string) => {
+  const { db } = useFirebase();
+  const auction = ref<Auction | null>(null);
+  const bids = ref<Bid[]>([]);
+  const loading = ref(true);
+
+  const auctionRef = dbRef(db!, `auctions/${auctionId}`);
+
+  const unsubscribe = onValue(auctionRef, (snapshot) => {
+    const data = snapshot.val();
+    if (data) {
+      auction.value = { ...data, id: auctionId };
+      if (data.bids) {
+        bids.value = Object.entries(data.bids)
+          .map(([id, bid]) => ({ ...(bid as Bid), id }))
+          .sort((a, b) => b.amount - a.amount);
+      } else {
+        bids.value = [];
+      }
+    }
+    loading.value = false;
+  });
+
+  onUnmounted(() => {
+    unsubscribe();
+  });
+
+  const placeBid = async (
+    bidderUid: string,
+    bidder: string,
+    amount: number,
+  ) => {
+    if (!auction.value) return;
+
+    const minIncrement = auction.value.minIncrement || 1;
+    const minBid = auction.value.currentPrice + minIncrement;
+
+    if (amount < minBid) {
+      throw new Error(
+        `Bid must be at least RM ${minBid.toFixed(2)} (current + RM ${minIncrement.toFixed(2)} increment)`,
+      );
+    }
+
+    if (Date.now() > auction.value.endsAt) {
+      throw new Error("Auction has ended");
+    }
+
+    // Place the bid
+    const bidsRef = dbRef(db!, `auctions/${auctionId}/bids`);
+    const newBid: Bid = {
+      bidder,
+      bidderUid,
+      amount,
+      timestamp: Date.now(),
+      isAutoBid: false,
+    };
+    await push(bidsRef, newBid);
+    await update(dbRef(db!, `auctions/${auctionId}`), { currentPrice: amount });
+
+    // Trigger auto-bid responses
+    await processAutoBids(auctionId, bidderUid, amount);
+  };
+
+  const setAutoBid = async (
+    bidderUid: string,
+    bidder: string,
+    maxAmount: number,
+  ) => {
+    if (!auction.value) return;
+
+    const minIncrement = auction.value.minIncrement || 1;
+    const minBid = auction.value.currentPrice + minIncrement;
+
+    if (maxAmount < minBid) {
+      throw new Error(`Max bid must be at least RM ${minBid.toFixed(2)}`);
+    }
+
+    if (Date.now() > auction.value.endsAt) {
+      throw new Error("Auction has ended");
+    }
+
+    // Save auto-bid config
+    const autoBidsRef = dbRef(db!, `auctions/${auctionId}/autoBids`);
+    await push(autoBidsRef, {
+      bidderUid,
+      bidder,
+      maxAmount,
+      createdAt: Date.now(),
+    });
+
+    // Immediately place a bid at the minimum required amount
+    const bidsRef = dbRef(db!, `auctions/${auctionId}/bids`);
+    const bidAmount = Math.min(maxAmount, minBid);
+
+    const newBid: Bid = {
+      bidder,
+      bidderUid,
+      amount: bidAmount,
+      timestamp: Date.now(),
+      isAutoBid: true,
+    };
+    await push(bidsRef, newBid);
+    await update(dbRef(db!, `auctions/${auctionId}`), {
+      currentPrice: bidAmount,
+    });
+
+    // Process other auto-bids in response
+    await processAutoBids(auctionId, bidderUid, bidAmount);
+  };
+
+  const processAutoBids = async (
+    auctionId: string,
+    triggerUid: string,
+    currentAmount: number,
+  ) => {
+    // Fetch latest auction state
+    const snapshot = await get(dbRef(db!, `auctions/${auctionId}`));
+    const data = snapshot.val();
+    if (!data || !data.autoBids) return;
+
+    const minIncrement = data.minIncrement || 1;
+    let price = currentAmount;
+
+    // Get all auto-bids sorted by maxAmount descending
+    const allAutoBids = Object.values(data.autoBids) as AutoBid[];
+
+    // Group by user, keep highest max for each user
+    const userMaxBids = new Map<string, AutoBid>();
+    for (const ab of allAutoBids) {
+      const existing = userMaxBids.get(ab.bidderUid);
+      if (!existing || ab.maxAmount > existing.maxAmount) {
+        userMaxBids.set(ab.bidderUid, ab);
+      }
+    }
+
+    // Find competing auto-bidders (not the one who just bid)
+    const competitors = Array.from(userMaxBids.values())
+      .filter((ab) => ab.bidderUid !== triggerUid && ab.maxAmount > price)
+      .sort((a, b) => b.maxAmount - a.maxAmount);
+
+    if (competitors.length === 0) return;
+
+    // The highest competing auto-bidder responds
+    const topCompetitor = competitors[0];
+    const triggerAutoBid = userMaxBids.get(triggerUid);
+
+    let newPrice: number;
+
+    if (triggerAutoBid && triggerAutoBid.maxAmount > price) {
+      // Both have auto-bids — bid up to the loser's max + increment
+      const lowerMax = Math.min(
+        topCompetitor.maxAmount,
+        triggerAutoBid.maxAmount,
+      );
+      const higherBidder =
+        topCompetitor.maxAmount >= triggerAutoBid.maxAmount
+          ? topCompetitor
+          : triggerAutoBid;
+      newPrice = Math.min(lowerMax + minIncrement, higherBidder.maxAmount);
+
+      const bidsRef = dbRef(db!, `auctions/${auctionId}/bids`);
+      await push(bidsRef, {
+        bidder: higherBidder.bidder,
+        bidderUid: higherBidder.bidderUid,
+        amount: newPrice,
+        timestamp: Date.now(),
+        isAutoBid: true,
+      });
+      await update(dbRef(db!, `auctions/${auctionId}`), {
+        currentPrice: newPrice,
+      });
+    } else {
+      // Only competitor has auto-bid, respond with minimum increment
+      newPrice = Math.min(price + minIncrement, topCompetitor.maxAmount);
+
+      const bidsRef = dbRef(db!, `auctions/${auctionId}/bids`);
+      await push(bidsRef, {
+        bidder: topCompetitor.bidder,
+        bidderUid: topCompetitor.bidderUid,
+        amount: newPrice,
+        timestamp: Date.now(),
+        isAutoBid: true,
+      });
+      await update(dbRef(db!, `auctions/${auctionId}`), {
+        currentPrice: newPrice,
+      });
+    }
+  };
+
+  return { auction, bids, loading, placeBid, setAutoBid };
+};
