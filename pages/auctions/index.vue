@@ -74,6 +74,17 @@
 </template>
 
 <script setup lang="ts">
+useHead({
+  title: "Live Pokemon Card Auctions | TCGo Marketplace",
+  meta: [
+    {
+      name: "description",
+      content:
+        "Bid on live Pokemon TCG card auctions. Real-time bidding, anti-snipe protection, and auto-bid features. Find rare cards in Malaysia's top TCG marketplace.",
+    },
+  ],
+});
+
 const { auctions, loading } = useAuctions();
 const { user } = useAuth();
 

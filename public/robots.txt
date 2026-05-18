@@ -1,2 +1,8 @@
-User-Agent: *
-Disallow:
+User-agent: *
+Allow: /
+Disallow: /dashboard/
+Disallow: /profile/setup
+Disallow: /cards/create
+Disallow: /auctions/create
+
+Sitemap: https://tcgo-marketplace.com/sitemap.xml

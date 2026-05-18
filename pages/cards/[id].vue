@@ -70,20 +70,58 @@
               </div>
 
               <p class="text-gray-500 text-sm mt-1">
-                {{ card.cardSet }} · {{ card.condition }}
+                <span v-if="card.cardSet">{{ card.cardSet }}</span>
+                <span v-if="card.cardSet && card.condition"> · </span>
+                <span
+                  v-if="card.productType === 'Ungraded' && card.condition"
+                  >{{ card.condition }}</span
+                >
+                <span v-else-if="card.productType === 'Graded'">
+                  {{
+                    card.gradingProvider === "Others"
+                      ? card.customGradingProvider
+                      : card.gradingProvider
+                  }}
+                  {{ card.grade }}
+                </span>
+                <span v-else-if="card.productType === 'Sealed'">Sealed</span>
               </p>
+
+              <div class="flex flex-wrap gap-1.5 mt-2">
+                <span
+                  v-if="card.cardNumber"
+                  class="bg-gray-100 text-gray-700 text-xs font-medium px-2 py-0.5 rounded-full"
+                >
+                  {{ card.cardNumber }}
+                </span>
+                <span
+                  v-if="card.productType"
+                  class="text-xs font-medium px-2 py-0.5 rounded-full"
+                  :class="{
+                    'bg-blue-100 text-blue-700':
+                      card.productType === 'Ungraded',
+                    'bg-purple-100 text-purple-700':
+                      card.productType === 'Graded',
+                    'bg-amber-100 text-amber-700':
+                      card.productType === 'Sealed',
+                  }"
+                >
+                  {{ card.productType }}
+                </span>
+              </div>
 
               <p class="text-pokemon-red text-2xl font-bold mt-4">
                 RM {{ card.price.toFixed(2) }}
               </p>
+              <p
+                v-if="card.shippingWM || card.shippingEM"
+                class="text-xs text-gray-500 mt-1"
+              >
+                Shipping: WM RM {{ (card.shippingWM ?? 0).toFixed(2) }} · EM RM
+                {{ (card.shippingEM ?? 0).toFixed(2) }}
+              </p>
 
-              <div v-if="card.title" class="mt-4">
-                <h3 class="text-sm font-medium text-gray-700">
-                  {{ card.title }}
-                </h3>
-              </div>
-
-              <div v-if="card.description" class="mt-3">
+              <div v-if="card.description" class="mt-4">
                 <p class="text-sm text-gray-600 whitespace-pre-line">
                   {{ card.description }}
                 </p>
@@ -95,7 +133,14 @@
                   :to="`/profile/${card.sellerUid}`"
                   class="flex items-center gap-3 hover:opacity-80 transition-opacity"
                 >
+                  <img
+                    v-if="sellerPhotoURL"
+                    :src="sellerPhotoURL"
+                    :alt="card.seller"
+                    class="w-8 h-8 rounded-full object-cover border border-gray-200"
+                  />
                   <div
+                    v-else
                     class="w-8 h-8 bg-gray-200 rounded-full flex items-center justify-center text-gray-500 text-xs font-bold"
                   >
                     {{ card.seller.charAt(0).toUpperCase() }}
@@ -177,6 +222,34 @@ const isOwnListing = computed(
   () => user.value && card.value && card.value.sellerUid === user.value.uid,
 );
 
+// Per-page SEO
+useHead(() => ({
+  title: card.value
+    ? `${card.value.cardName} - RM ${card.value.price.toFixed(2)} | TCGo Marketplace`
+    : "Card Details | TCGo Marketplace",
+  meta: card.value
+    ? [
+        {
+          name: "description",
+          content: `${card.value.cardName} from ${card.value.cardSet} (${card.value.condition}) for RM ${card.value.price.toFixed(2)}. ${card.value.description || "Available on TCGo Marketplace."}`,
+        },
+        {
+          property: "og:title",
+          content: `${card.value.cardName} - RM ${card.value.price.toFixed(2)}`,
+        },
+        {
+          property: "og:description",
+          content: `${card.value.cardSet} · ${card.value.condition} · Sold by ${card.value.seller}`,
+        },
+        {
+          property: "og:image",
+          content:
+            card.value.imageUrls?.[0] || card.value.imageUrl || "/og.webp",
+        },
+      ]
+    : [],
+}));
+
 const activeImageIndex = ref(0);
 
 const allImages = computed(() => {
@@ -194,6 +267,7 @@ const activeImage = computed(
 
 // Fetch seller phone for WhatsApp link
 const sellerPhone = ref("");
+const sellerPhotoURL = ref("");
 
 const fetchSellerPhone = async () => {
   if (!card.value) return;
@@ -205,6 +279,7 @@ const fetchSellerPhone = async () => {
     if (userDoc.exists()) {
       const data = userDoc.data();
       sellerPhone.value = (data.whatsappNumber || data.phone || "") as string;
+      sellerPhotoURL.value = (data.photoURL || "") as string;
     }
   } catch {}
 };
@@ -221,7 +296,7 @@ const whatsappLink = computed(() => {
   if (!card.value) return "#";
   const cleanPhone = sellerPhone.value.replace(/[^0-9]/g, "");
   const message = encodeURIComponent(
-    `Hi, I'm interested in your card: ${card.value.cardName} (${card.value.cardSet}, ${card.value.condition}) listed at RM ${card.value.price.toFixed(2)} on PikaPicks.`,
+    `Hi, I'm interested in your card: ${card.value.cardName} (${card.value.cardSet}, ${card.value.condition}) listed at RM ${card.value.price.toFixed(2)} on TCGo Marketplace.`,
   );
   if (cleanPhone) {
     return `https://wa.me/${cleanPhone}?text=${message}`;
