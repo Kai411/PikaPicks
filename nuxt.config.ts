@@ -20,14 +20,21 @@ export default defineNuxtConfig({
       icons: [
         {
           src: "/tcgo.png",
-          sizes: "512x512",
+          sizes: "192x192",
           type: "image/png",
+          purpose: "any",
         },
         {
           src: "/tcgo.png",
           sizes: "512x512",
           type: "image/png",
-          purpose: "any maskable",
+          purpose: "any",
+        },
+        {
+          src: "/tcgo.png",
+          sizes: "512x512",
+          type: "image/png",
+          purpose: "maskable",
         },
       ],
     },

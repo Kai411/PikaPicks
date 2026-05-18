@@ -2,11 +2,11 @@
   <nav class="bg-white border-b border-gray-200 shadow-sm">
     <div class="container mx-auto px-4">
       <div class="flex items-center justify-between h-16">
-        <NuxtLink to="/" class="flex items-center">
+        <NuxtLink to="/" class="flex items-center h-full">
           <img
-            src="~/assets/images/tcgo-text.png"
+            src="~/assets/images/tcgo_sprites.png"
             alt="TCGo"
-            class="h-8 w-auto"
+            class="h-full w-[100px] object-cover w-auto"
           />
         </NuxtLink>
 
@@ -133,13 +133,13 @@
           >
             <NuxtLink
               to="/"
-              class="flex items-center"
+              class="flex items-center h-full"
               @click="mobileMenuOpen = false"
             >
               <img
-                src="~/assets/images/tcgo-text.png"
+                src="~/assets/images/tcgo_sprites.png"
                 alt="TCGo"
-                class="h-8 w-auto"
+                class="h-full w-[100px] object-cover"
               />
             </NuxtLink>
             <button
