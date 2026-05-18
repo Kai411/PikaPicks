@@ -1,8 +1,8 @@
 <template>
-  <div class="max-w-2xl mx-auto">
+  <div class="max-w-5xl mx-auto">
     <div v-if="!user" class="text-center py-12">
       <p class="text-gray-500 text-lg mb-4">
-        You need to sign in to list a card.
+        You need to sign in to create an auction.
       </p>
       <button
         @click="signInWithGoogle"
@@ -13,209 +13,180 @@
     </div>
 
     <template v-else>
-      <h1 class="text-2xl font-bold mb-6">List a Card for Auction</h1>
+      <h1 class="text-2xl font-bold mb-6">Create an Auction</h1>
 
-      <form @submit.prevent="handleSubmit" class="space-y-5">
-        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-          <div>
-            <label class="block text-sm font-medium text-gray-700 mb-1"
-              >Card Name *</label
-            >
-            <input
-              v-model="form.cardName"
-              type="text"
-              required
-              placeholder="e.g. Charizard VMAX"
-              class="w-full border border-gray-300 rounded-lg px-4 py-2 text-gray-900 placeholder-gray-400 focus:border-pokemon-red focus:outline-none focus:ring-1 focus:ring-pokemon-red"
-            />
-          </div>
-          <div>
-            <label class="block text-sm font-medium text-gray-700 mb-1"
-              >Card Set *</label
-            >
-            <input
-              v-model="form.cardSet"
-              type="text"
-              required
-              placeholder="e.g. Darkness Ablaze"
-              class="w-full border border-gray-300 rounded-lg px-4 py-2 text-gray-900 placeholder-gray-400 focus:border-pokemon-red focus:outline-none focus:ring-1 focus:ring-pokemon-red"
-            />
-          </div>
-        </div>
+      <form @submit.prevent="handleSubmit" class="space-y-4">
+        <div class="grid grid-cols-1 lg:grid-cols-2 gap-4">
+          <CardFormFields v-model="cardForm" />
 
-        <div>
-          <label class="block text-sm font-medium text-gray-700 mb-1"
-            >Title *</label
-          >
-          <input
-            v-model="form.title"
-            type="text"
-            required
-            placeholder="e.g. Charizard VMAX Rainbow Rare - Mint Condition"
-            class="w-full border border-gray-300 rounded-lg px-4 py-2 text-gray-900 placeholder-gray-400 focus:border-pokemon-red focus:outline-none focus:ring-1 focus:ring-pokemon-red"
-          />
-        </div>
-
-        <div>
-          <label class="block text-sm font-medium text-gray-700 mb-1"
-            >Description</label
-          >
-          <textarea
-            v-model="form.description"
-            rows="3"
-            placeholder="Describe the card condition, any notable features..."
-            class="w-full border border-gray-300 rounded-lg px-4 py-2 text-gray-900 placeholder-gray-400 focus:border-pokemon-red focus:outline-none focus:ring-1 focus:ring-pokemon-red resize-none"
-          ></textarea>
-        </div>
-
-        <!-- Image Upload -->
-        <div>
-          <label class="block text-sm font-medium text-gray-700 mb-2"
-            >Photos</label
-          >
+          <!-- Card: Photos (full width) -->
           <div
-            class="border-2 border-dashed border-gray-300 rounded-lg p-6 text-center hover:border-pokemon-red transition-colors cursor-pointer"
-            @click="triggerFileInput"
-            @dragover.prevent="dragOver = true"
-            @dragleave="dragOver = false"
-            @drop.prevent="handleDrop"
-            :class="{ 'border-pokemon-red bg-red-50': dragOver }"
+            class="bg-white rounded-xl border border-gray-200 p-5 space-y-3 lg:col-span-2"
           >
-            <input
-              ref="fileInput"
-              type="file"
-              accept="image/*"
-              multiple
-              class="hidden"
-              @change="handleFileSelect"
-            />
-            <div class="text-gray-400">
-              <svg
-                class="mx-auto h-8 w-8 mb-2"
-                fill="none"
-                stroke="currentColor"
-                viewBox="0 0 24 24"
-              >
-                <path
-                  stroke-linecap="round"
-                  stroke-linejoin="round"
-                  stroke-width="2"
-                  d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"
-                />
-              </svg>
-              <p class="text-sm">Click or drag photos here</p>
-              <p class="text-xs text-gray-400 mt-1">
-                PNG, JPG, WEBP up to 5MB each
-              </p>
-            </div>
-          </div>
-
-          <div
-            v-if="selectedFiles.length > 0"
-            class="mt-3 grid grid-cols-4 gap-2"
-          >
+            <h3 class="text-sm font-semibold text-gray-900">
+              Photos <span class="text-pokemon-red">*</span>
+            </h3>
             <div
-              v-for="(file, index) in selectedFiles"
-              :key="index"
-              class="relative group"
+              class="border-2 border-dashed border-gray-300 rounded-lg p-6 text-center hover:border-pokemon-red transition-colors cursor-pointer"
+              @click="triggerFileInput"
+              @dragover.prevent="dragOver = true"
+              @dragleave="dragOver = false"
+              @drop.prevent="handleDrop"
+              :class="{ 'border-pokemon-red bg-red-50': dragOver }"
             >
-              <img
-                :src="file.preview"
-                class="w-full aspect-square object-cover rounded-lg border border-gray-200"
+              <input
+                ref="fileInput"
+                type="file"
+                accept="image/*"
+                multiple
+                class="hidden"
+                @change="handleFileSelect"
               />
-              <button
-                type="button"
-                @click="removeFile(index)"
-                class="absolute top-1 right-1 bg-red-500 text-white rounded-full w-5 h-5 flex items-center justify-center text-xs opacity-0 group-hover:opacity-100 transition-opacity"
-              >
-                ✕
-              </button>
+              <div class="text-gray-400">
+                <svg
+                  class="mx-auto h-8 w-8 mb-2"
+                  fill="none"
+                  stroke="currentColor"
+                  viewBox="0 0 24 24"
+                >
+                  <path
+                    stroke-linecap="round"
+                    stroke-linejoin="round"
+                    stroke-width="2"
+                    d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"
+                  />
+                </svg>
+                <p class="text-sm">Click or drag photos here</p>
+                <p class="text-xs text-gray-400 mt-1">
+                  PNG, JPG, WEBP up to 5MB each
+                </p>
+              </div>
+            </div>
+
+            <div v-if="selectedFiles.length > 0" class="grid grid-cols-4 gap-2">
               <div
-                v-if="index === 0"
-                class="absolute bottom-1 left-1 bg-pokemon-yellow text-gray-900 text-xs px-1.5 py-0.5 rounded"
+                v-for="(file, index) in selectedFiles"
+                :key="index"
+                class="relative group"
               >
-                Cover
+                <img
+                  :src="file.preview"
+                  class="w-full aspect-square object-cover rounded-lg border border-gray-200"
+                />
+                <button
+                  type="button"
+                  @click="removeFile(index)"
+                  class="absolute top-1 right-1 bg-red-500 text-white rounded-full w-5 h-5 flex items-center justify-center text-xs opacity-0 group-hover:opacity-100 transition-opacity"
+                >
+                  ✕
+                </button>
+                <div
+                  v-if="index === 0"
+                  class="absolute bottom-1 left-1 bg-pokemon-yellow text-gray-900 text-xs px-1.5 py-0.5 rounded"
+                >
+                  Cover
+                </div>
               </div>
             </div>
           </div>
 
-          <div class="mt-2">
-            <input
-              v-model="form.imageUrl"
-              type="url"
-              placeholder="Or paste image URL"
-              class="w-full border border-gray-300 rounded-lg px-4 py-2 text-gray-900 placeholder-gray-400 focus:border-pokemon-red focus:outline-none focus:ring-1 focus:ring-pokemon-red text-sm"
-            />
-          </div>
-        </div>
-
-        <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
-          <div>
-            <label class="block text-sm font-medium text-gray-700 mb-1"
-              >Condition *</label
-            >
-            <select
-              v-model="form.condition"
-              required
-              class="w-full border border-gray-300 rounded-lg px-4 py-2 text-gray-900 focus:border-pokemon-red focus:outline-none focus:ring-1 focus:ring-pokemon-red"
-            >
-              <option value="">Select condition</option>
-              <option value="Mint">Mint</option>
-              <option value="Near Mint">Near Mint</option>
-              <option value="Excellent">Excellent</option>
-              <option value="Good">Good</option>
-              <option value="Light Play">Light Play</option>
-              <option value="Moderate Play">Moderate Play</option>
-              <option value="Heavy Play">Heavy Play</option>
-              <option value="Damaged">Damaged</option>
-            </select>
-          </div>
-          <div>
-            <label class="block text-sm font-medium text-gray-700 mb-1"
-              >Starting Price (RM) *</label
-            >
-            <input
-              v-model.number="form.startingPrice"
-              type="number"
-              min="0.01"
-              step="0.01"
-              required
-              placeholder="1.00"
-              class="w-full border border-gray-300 rounded-lg px-4 py-2 text-gray-900 placeholder-gray-400 focus:border-pokemon-red focus:outline-none focus:ring-1 focus:ring-pokemon-red"
-            />
-          </div>
-          <div>
-            <label class="block text-sm font-medium text-gray-700 mb-1"
-              >Min Increment (RM) *</label
-            >
-            <input
-              v-model.number="form.minIncrement"
-              type="number"
-              min="0.01"
-              step="0.01"
-              required
-              placeholder="1.00"
-              class="w-full border border-gray-300 rounded-lg px-4 py-2 text-gray-900 placeholder-gray-400 focus:border-pokemon-red focus:outline-none focus:ring-1 focus:ring-pokemon-red"
-            />
-          </div>
-        </div>
-
-        <div>
-          <label class="block text-sm font-medium text-gray-700 mb-1"
-            >Auction Duration *</label
+          <!-- Card: Auction Settings (full width) -->
+          <div
+            class="bg-white rounded-xl border border-gray-200 p-5 space-y-4 lg:col-span-2"
           >
-          <select
-            v-model.number="form.duration"
-            required
-            class="w-full border border-gray-300 rounded-lg px-4 py-2 text-gray-900 focus:border-pokemon-red focus:outline-none focus:ring-1 focus:ring-pokemon-red"
+            <h3 class="text-sm font-semibold text-gray-900">
+              Auction Settings
+            </h3>
+
+            <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+              <div>
+                <label class="block text-sm font-medium text-gray-700 mb-1">
+                  Starting Price (RM) <span class="text-pokemon-red">*</span>
+                </label>
+                <input
+                  v-model.number="startingPrice"
+                  type="number"
+                  min="0.01"
+                  step="0.01"
+                  required
+                  placeholder="1.00"
+                  class="w-full border border-gray-300 rounded-lg px-4 py-2.5 text-gray-900 placeholder-gray-400 focus:border-pokemon-red focus:outline-none focus:ring-1 focus:ring-pokemon-red"
+                />
+              </div>
+              <div>
+                <label class="block text-sm font-medium text-gray-700 mb-1">
+                  Min Increment (RM) <span class="text-pokemon-red">*</span>
+                </label>
+                <input
+                  v-model.number="minIncrement"
+                  type="number"
+                  min="0.01"
+                  step="0.01"
+                  required
+                  placeholder="1.00"
+                  class="w-full border border-gray-300 rounded-lg px-4 py-2.5 text-gray-900 placeholder-gray-400 focus:border-pokemon-red focus:outline-none focus:ring-1 focus:ring-pokemon-red"
+                />
+              </div>
+            </div>
+
+            <div>
+              <label class="block text-sm font-medium text-gray-700 mb-2">
+                Duration <span class="text-pokemon-red">*</span>
+              </label>
+              <div class="grid grid-cols-3 sm:grid-cols-6 gap-2">
+                <button
+                  v-for="opt in durationOptions"
+                  :key="opt.value"
+                  type="button"
+                  @click="duration = opt.value"
+                  class="py-2 px-2 rounded-lg text-xs font-medium border-2 transition-all"
+                  :class="
+                    duration === opt.value
+                      ? 'border-pokemon-red bg-red-50 text-pokemon-red'
+                      : 'border-gray-200 bg-white text-gray-600 hover:border-gray-300'
+                  "
+                >
+                  {{ opt.label }}
+                </button>
+              </div>
+            </div>
+          </div>
+
+          <!-- Card: Shipping -->
+          <div
+            class="bg-white rounded-xl border border-gray-200 p-5 space-y-3 lg:col-span-2"
           >
-            <option :value="3600000">1 Hour</option>
-            <option :value="21600000">6 Hours</option>
-            <option :value="43200000">12 Hours</option>
-            <option :value="86400000">1 Day</option>
-            <option :value="259200000">3 Days</option>
-            <option :value="604800000">7 Days</option>
-          </select>
+            <div class="flex items-center justify-between">
+              <h3 class="text-sm font-semibold text-gray-900">Shipping</h3>
+              <span class="text-xs text-gray-400">Profile defaults</span>
+            </div>
+            <div class="grid grid-cols-2 gap-3">
+              <div>
+                <label class="block text-xs text-gray-600 mb-1"
+                  >West Malaysia (RM)</label
+                >
+                <input
+                  v-model.number="cardForm.shippingWM"
+                  type="number"
+                  min="0"
+                  step="0.01"
+                  class="w-full bg-white border border-gray-300 rounded-lg px-4 py-2.5 text-gray-900 focus:border-pokemon-red focus:outline-none focus:ring-1 focus:ring-pokemon-red"
+                />
+              </div>
+              <div>
+                <label class="block text-xs text-gray-600 mb-1"
+                  >East Malaysia (RM)</label
+                >
+                <input
+                  v-model.number="cardForm.shippingEM"
+                  type="number"
+                  min="0"
+                  step="0.01"
+                  class="w-full bg-white border border-gray-300 rounded-lg px-4 py-2.5 text-gray-900 focus:border-pokemon-red focus:outline-none focus:ring-1 focus:ring-pokemon-red"
+                />
+              </div>
+            </div>
+          </div>
         </div>
 
         <div
@@ -233,11 +204,11 @@
             <div
               class="animate-spin rounded-full h-4 w-4 border-b-2 border-pokemon-red"
             ></div>
-            <span class="text-sm text-gray-600"
-              >Uploading photos... {{ uploadProgress }}/{{
+            <span class="text-sm text-gray-600">
+              Uploading photos... {{ uploadProgress }}/{{
                 selectedFiles.length
-              }}</span
-            >
+              }}
+            </span>
           </div>
         </div>
 
@@ -254,6 +225,8 @@
 </template>
 
 <script setup lang="ts">
+import type { CardFormData } from "~/components/CardFormFields.vue";
+
 const router = useRouter();
 const { createAuction } = useAuctions();
 const { uploadAuctionImages } = useStorage();
@@ -271,20 +244,46 @@ const dragOver = ref(false);
 const uploading = ref(false);
 const uploadProgress = ref(0);
 
-const form = reactive({
+const cardForm = ref<CardFormData>({
+  productType: "Ungraded",
   cardName: "",
   cardSet: "",
-  title: "",
-  description: "",
-  imageUrl: "",
+  cardNumber: "",
   condition: "",
-  startingPrice: null as number | null,
-  minIncrement: 1,
-  duration: 86400000,
+  gradingProvider: "",
+  grade: "",
+  customGradingProvider: "",
+  description: "",
+  shippingWM: 8,
+  shippingEM: 12,
 });
 
+const startingPrice = ref<number | null>(null);
+const minIncrement = ref(1);
+const duration = ref(86400000);
 const submitting = ref(false);
 const error = ref("");
+
+const durationOptions = [
+  { value: 3600000, label: "1 Hour" },
+  { value: 21600000, label: "6 Hours" },
+  { value: 43200000, label: "12 Hours" },
+  { value: 86400000, label: "1 Day" },
+  { value: 259200000, label: "3 Days" },
+  { value: 604800000, label: "7 Days" },
+];
+
+// Pre-fill shipping from profile
+watch(
+  profile,
+  (p: any) => {
+    if (p) {
+      cardForm.value.shippingWM = p.shippingWM ?? 8;
+      cardForm.value.shippingEM = p.shippingEM ?? 12;
+    }
+  },
+  { immediate: true },
+);
 
 const triggerFileInput = () => fileInput.value?.click();
 
@@ -330,44 +329,53 @@ const handleSubmit = async () => {
   submitting.value = true;
 
   try {
-    if (!form.startingPrice || form.startingPrice <= 0)
+    if (!cardForm.value.cardName) throw new Error("Card name is required");
+    if (cardForm.value.productType === "Ungraded" && !cardForm.value.condition)
+      throw new Error("Please select a condition");
+    if (cardForm.value.productType === "Graded") {
+      if (!cardForm.value.gradingProvider)
+        throw new Error("Please select a grading provider");
+      if (!cardForm.value.grade) throw new Error("Please enter a grade");
+    }
+    if (!startingPrice.value || startingPrice.value <= 0)
       throw new Error("Starting price must be greater than 0");
-    if (!form.minIncrement || form.minIncrement <= 0)
+    if (!minIncrement.value || minIncrement.value <= 0)
       throw new Error("Minimum increment must be greater than 0");
-    if (selectedFiles.value.length === 0 && !form.imageUrl)
-      throw new Error(
-        "Please upload at least one photo or provide an image URL",
-      );
+    if (selectedFiles.value.length === 0)
+      throw new Error("Please upload at least one photo");
 
     let imageUrls: string[] = [];
 
-    if (selectedFiles.value.length > 0) {
-      uploading.value = true;
-      uploadProgress.value = 0;
-      for (let i = 0; i < selectedFiles.value.length; i++) {
-        const urls = await uploadAuctionImages([selectedFiles.value[i].file]);
-        imageUrls.push(...urls);
-        uploadProgress.value = i + 1;
-      }
-      uploading.value = false;
+    uploading.value = true;
+    uploadProgress.value = 0;
+    for (let i = 0; i < selectedFiles.value.length; i++) {
+      const urls = await uploadAuctionImages([selectedFiles.value[i].file]);
+      imageUrls.push(...urls);
+      uploadProgress.value = i + 1;
     }
-
-    if (form.imageUrl) imageUrls.push(form.imageUrl);
+    uploading.value = false;
 
     const auctionId = await createAuction({
-      title: form.title,
-      description: form.description,
+      title: cardForm.value.cardName,
+      description: cardForm.value.description,
+      cardName: cardForm.value.cardName,
+      cardSet: cardForm.value.cardSet,
+      cardNumber: cardForm.value.cardNumber,
+      productType: cardForm.value.productType,
+      condition: cardForm.value.condition,
+      gradingProvider: cardForm.value.gradingProvider,
+      grade: cardForm.value.grade,
+      customGradingProvider: cardForm.value.customGradingProvider,
+      shippingWM: cardForm.value.shippingWM,
+      shippingEM: cardForm.value.shippingEM,
       imageUrl: imageUrls[0] || "",
       imageUrls,
-      cardName: form.cardName,
-      cardSet: form.cardSet,
-      condition: form.condition,
-      startingPrice: form.startingPrice,
-      minIncrement: form.minIncrement,
+      startingPrice: startingPrice.value,
+      minIncrement: minIncrement.value,
       seller:
         profile.value?.customName || user.value!.displayName || "Anonymous",
       sellerUid: user.value!.uid,
-      endsAt: Date.now() + form.duration,
+      endsAt: Date.now() + duration.value,
     });
 
     selectedFiles.value.forEach((f: any) => URL.revokeObjectURL(f.preview));

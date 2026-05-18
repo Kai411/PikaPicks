@@ -15,10 +15,16 @@ export interface Card {
   id: string;
   cardName: string;
   cardSet: string;
+  cardNumber: string;
+  productType: string;
   condition: string;
-  title: string;
+  gradingProvider: string;
+  grade: string;
+  customGradingProvider: string;
   description: string;
   price: number;
+  shippingWM: number;
+  shippingEM: number;
   imageUrl: string;
   imageUrls: string[];
   seller: string;

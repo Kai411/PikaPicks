@@ -10,7 +10,14 @@ export interface Auction {
   imageUrls: string[];
   cardName: string;
   cardSet: string;
+  cardNumber: string;
+  productType: string;
   condition: string;
+  gradingProvider: string;
+  grade: string;
+  customGradingProvider: string;
+  shippingWM: number;
+  shippingEM: number;
   startingPrice: number;
   currentPrice: number;
   minIncrement: number;

@@ -16,6 +16,8 @@ export interface UserProfile {
   whatsappNumber: string;
   usePhoneAsWhatsapp: boolean;
   whatsappVerified: boolean;
+  shippingWM: number;
+  shippingEM: number;
   createdAt: number;
 }
 
@@ -83,6 +85,8 @@ export const useMyProfile = () => {
                 whatsappNumber: "",
                 usePhoneAsWhatsapp: true,
                 whatsappVerified: false,
+                shippingWM: 8,
+                shippingEM: 12,
                 createdAt: Date.now(),
               };
               setDoc(profileDoc, newProfile);

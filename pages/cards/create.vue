@@ -1,5 +1,5 @@
 <template>
-  <div class="max-w-2xl mx-auto">
+  <div class="max-w-5xl mx-auto">
     <div v-if="!user" class="text-center py-12">
       <p class="text-gray-500 text-lg mb-4">
         You need to sign in to list a card.
@@ -15,168 +15,123 @@
     <template v-else>
       <h1 class="text-2xl font-bold mb-6">List Card for Sale</h1>
 
-      <form @submit.prevent="handleSubmit" class="space-y-5">
-        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-          <div>
-            <label class="block text-sm font-medium text-gray-700 mb-1"
-              >Card Name *</label
-            >
-            <input
-              v-model="form.cardName"
-              type="text"
-              required
-              placeholder="e.g. Charizard VMAX"
-              class="w-full border border-gray-300 rounded-lg px-4 py-2 text-gray-900 placeholder-gray-400 focus:border-pokemon-blue focus:outline-none focus:ring-1 focus:ring-pokemon-blue"
-            />
-          </div>
-          <div>
-            <label class="block text-sm font-medium text-gray-700 mb-1"
-              >Card Set *</label
-            >
-            <input
-              v-model="form.cardSet"
-              type="text"
-              required
-              placeholder="e.g. Darkness Ablaze"
-              class="w-full border border-gray-300 rounded-lg px-4 py-2 text-gray-900 placeholder-gray-400 focus:border-pokemon-blue focus:outline-none focus:ring-1 focus:ring-pokemon-blue"
-            />
-          </div>
-        </div>
+      <form @submit.prevent="handleSubmit" class="space-y-4">
+        <div class="grid grid-cols-1 lg:grid-cols-2 gap-4">
+          <CardFormFields v-model="cardForm" />
 
-        <div>
-          <label class="block text-sm font-medium text-gray-700 mb-1"
-            >Title *</label
-          >
-          <input
-            v-model="form.title"
-            type="text"
-            required
-            placeholder="e.g. Charizard VMAX Rainbow Rare - Mint"
-            class="w-full border border-gray-300 rounded-lg px-4 py-2 text-gray-900 placeholder-gray-400 focus:border-pokemon-blue focus:outline-none focus:ring-1 focus:ring-pokemon-blue"
-          />
-        </div>
-
-        <div>
-          <label class="block text-sm font-medium text-gray-700 mb-1"
-            >Description</label
-          >
-          <textarea
-            v-model="form.description"
-            rows="3"
-            placeholder="Describe the card..."
-            class="w-full border border-gray-300 rounded-lg px-4 py-2 text-gray-900 placeholder-gray-400 focus:border-pokemon-blue focus:outline-none focus:ring-1 focus:ring-pokemon-blue resize-none"
-          ></textarea>
-        </div>
-
-        <!-- Image Upload -->
-        <div>
-          <label class="block text-sm font-medium text-gray-700 mb-2"
-            >Photos</label
-          >
+          <!-- Card: Photos (full width) -->
           <div
-            class="border-2 border-dashed border-gray-300 rounded-lg p-6 text-center hover:border-pokemon-blue transition-colors cursor-pointer"
-            @click="triggerFileInput"
-            @dragover.prevent="dragOver = true"
-            @dragleave="dragOver = false"
-            @drop.prevent="handleDrop"
-            :class="{ 'border-pokemon-blue bg-blue-50': dragOver }"
+            class="bg-white rounded-xl border border-gray-200 p-5 space-y-3 lg:col-span-2"
           >
-            <input
-              ref="fileInput"
-              type="file"
-              accept="image/*"
-              multiple
-              class="hidden"
-              @change="handleFileSelect"
-            />
-            <div class="text-gray-400">
-              <svg
-                class="mx-auto h-8 w-8 mb-2"
-                fill="none"
-                stroke="currentColor"
-                viewBox="0 0 24 24"
-              >
-                <path
-                  stroke-linecap="round"
-                  stroke-linejoin="round"
-                  stroke-width="2"
-                  d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"
-                />
-              </svg>
-              <p class="text-sm">Click or drag photos here</p>
-              <p class="text-xs text-gray-400 mt-1">
-                PNG, JPG, WEBP up to 5MB each
-              </p>
-            </div>
-          </div>
-
-          <div
-            v-if="selectedFiles.length > 0"
-            class="mt-3 grid grid-cols-4 gap-2"
-          >
+            <h3 class="text-sm font-semibold text-gray-900">
+              Photos <span class="text-pokemon-red">*</span>
+            </h3>
             <div
-              v-for="(file, index) in selectedFiles"
-              :key="index"
-              class="relative group"
+              class="border-2 border-dashed border-gray-300 rounded-lg p-6 text-center hover:border-pokemon-blue transition-colors cursor-pointer"
+              @click="triggerFileInput"
+              @dragover.prevent="dragOver = true"
+              @dragleave="dragOver = false"
+              @drop.prevent="handleDrop"
+              :class="{ 'border-pokemon-blue bg-blue-50': dragOver }"
             >
-              <img
-                :src="file.preview"
-                class="w-full aspect-square object-cover rounded-lg border border-gray-200"
+              <input
+                ref="fileInput"
+                type="file"
+                accept="image/*"
+                multiple
+                class="hidden"
+                @change="handleFileSelect"
               />
-              <button
-                type="button"
-                @click="removeFile(index)"
-                class="absolute top-1 right-1 bg-red-500 text-white rounded-full w-5 h-5 flex items-center justify-center text-xs opacity-0 group-hover:opacity-100 transition-opacity"
+              <div class="text-gray-400">
+                <svg
+                  class="mx-auto h-8 w-8 mb-2"
+                  fill="none"
+                  stroke="currentColor"
+                  viewBox="0 0 24 24"
+                >
+                  <path
+                    stroke-linecap="round"
+                    stroke-linejoin="round"
+                    stroke-width="2"
+                    d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"
+                  />
+                </svg>
+                <p class="text-sm">Click or drag photos here</p>
+                <p class="text-xs text-gray-400 mt-1">
+                  PNG, JPG, WEBP up to 5MB each
+                </p>
+              </div>
+            </div>
+
+            <div v-if="selectedFiles.length > 0" class="grid grid-cols-4 gap-2">
+              <div
+                v-for="(file, index) in selectedFiles"
+                :key="index"
+                class="relative group"
               >
-                ✕
-              </button>
+                <img
+                  :src="file.preview"
+                  class="w-full aspect-square object-cover rounded-lg border border-gray-200"
+                />
+                <button
+                  type="button"
+                  @click="removeFile(index)"
+                  class="absolute top-1 right-1 bg-red-500 text-white rounded-full w-5 h-5 flex items-center justify-center text-xs opacity-0 group-hover:opacity-100 transition-opacity"
+                >
+                  ✕
+                </button>
+              </div>
             </div>
           </div>
 
-          <div class="mt-2">
+          <!-- Card: Price -->
+          <div class="bg-white rounded-xl border border-gray-200 p-5">
+            <label class="block text-sm font-semibold text-gray-900 mb-2">
+              Price (RM) <span class="text-pokemon-red">*</span>
+            </label>
             <input
-              v-model="form.imageUrl"
-              type="url"
-              placeholder="Or paste image URL"
-              class="w-full border border-gray-300 rounded-lg px-4 py-2 text-gray-900 placeholder-gray-400 focus:border-pokemon-blue focus:outline-none focus:ring-1 focus:ring-pokemon-blue text-sm"
-            />
-          </div>
-        </div>
-
-        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-          <div>
-            <label class="block text-sm font-medium text-gray-700 mb-1"
-              >Condition *</label
-            >
-            <select
-              v-model="form.condition"
-              required
-              class="w-full border border-gray-300 rounded-lg px-4 py-2 text-gray-900 focus:border-pokemon-blue focus:outline-none focus:ring-1 focus:ring-pokemon-blue"
-            >
-              <option value="">Select condition</option>
-              <option value="Mint">Mint</option>
-              <option value="Near Mint">Near Mint</option>
-              <option value="Excellent">Excellent</option>
-              <option value="Good">Good</option>
-              <option value="Light Play">Light Play</option>
-              <option value="Moderate Play">Moderate Play</option>
-              <option value="Heavy Play">Heavy Play</option>
-              <option value="Damaged">Damaged</option>
-            </select>
-          </div>
-          <div>
-            <label class="block text-sm font-medium text-gray-700 mb-1"
-              >Price (RM) *</label
-            >
-            <input
-              v-model.number="form.price"
+              v-model.number="price"
               type="number"
               min="0.01"
               step="0.01"
               required
               placeholder="10.00"
-              class="w-full border border-gray-300 rounded-lg px-4 py-2 text-gray-900 placeholder-gray-400 focus:border-pokemon-blue focus:outline-none focus:ring-1 focus:ring-pokemon-blue"
+              class="w-full border border-gray-300 rounded-lg px-4 py-2.5 text-gray-900 placeholder-gray-400 focus:border-pokemon-blue focus:outline-none focus:ring-1 focus:ring-pokemon-blue"
             />
+          </div>
+
+          <!-- Card: Shipping -->
+          <div class="bg-white rounded-xl border border-gray-200 p-5 space-y-3">
+            <div class="flex items-center justify-between">
+              <h3 class="text-sm font-semibold text-gray-900">Shipping</h3>
+              <span class="text-xs text-gray-400">Profile defaults</span>
+            </div>
+            <div class="grid grid-cols-2 gap-3">
+              <div>
+                <label class="block text-xs text-gray-600 mb-1"
+                  >West Malaysia (RM)</label
+                >
+                <input
+                  v-model.number="cardForm.shippingWM"
+                  type="number"
+                  min="0"
+                  step="0.01"
+                  class="w-full bg-white border border-gray-300 rounded-lg px-4 py-2.5 text-gray-900 focus:border-pokemon-red focus:outline-none focus:ring-1 focus:ring-pokemon-red"
+                />
+              </div>
+              <div>
+                <label class="block text-xs text-gray-600 mb-1"
+                  >East Malaysia (RM)</label
+                >
+                <input
+                  v-model.number="cardForm.shippingEM"
+                  type="number"
+                  min="0"
+                  step="0.01"
+                  class="w-full bg-white border border-gray-300 rounded-lg px-4 py-2.5 text-gray-900 focus:border-pokemon-red focus:outline-none focus:ring-1 focus:ring-pokemon-red"
+                />
+              </div>
+            </div>
           </div>
         </div>
 
@@ -195,11 +150,11 @@
             <div
               class="animate-spin rounded-full h-4 w-4 border-b-2 border-pokemon-blue"
             ></div>
-            <span class="text-sm text-gray-600"
-              >Uploading photos... {{ uploadProgress }}/{{
+            <span class="text-sm text-gray-600">
+              Uploading photos... {{ uploadProgress }}/{{
                 selectedFiles.length
-              }}</span
-            >
+              }}
+            </span>
           </div>
         </div>
 
@@ -216,6 +171,8 @@
 </template>
 
 <script setup lang="ts">
+import type { CardFormData } from "~/components/CardFormFields.vue";
+
 const router = useRouter();
 const { createCard } = useCards();
 const { uploadAuctionImages } = useStorage();
@@ -233,18 +190,35 @@ const dragOver = ref(false);
 const uploading = ref(false);
 const uploadProgress = ref(0);
 
-const form = reactive({
+const cardForm = ref<CardFormData>({
+  productType: "Ungraded",
   cardName: "",
   cardSet: "",
-  title: "",
-  description: "",
-  imageUrl: "",
+  cardNumber: "",
   condition: "",
-  price: null as number | null,
+  gradingProvider: "",
+  grade: "",
+  customGradingProvider: "",
+  description: "",
+  shippingWM: 8,
+  shippingEM: 12,
 });
 
+const price = ref<number | null>(null);
 const submitting = ref(false);
 const error = ref("");
+
+// Pre-fill shipping from profile
+watch(
+  profile,
+  (p: any) => {
+    if (p) {
+      cardForm.value.shippingWM = p.shippingWM ?? 8;
+      cardForm.value.shippingEM = p.shippingEM ?? 12;
+    }
+  },
+  { immediate: true },
+);
 
 const triggerFileInput = () => fileInput.value?.click();
 
@@ -290,37 +264,45 @@ const handleSubmit = async () => {
   submitting.value = true;
 
   try {
-    if (!form.price || form.price <= 0)
+    if (!cardForm.value.cardName) throw new Error("Card name is required");
+    if (cardForm.value.productType === "Ungraded" && !cardForm.value.condition)
+      throw new Error("Please select a condition");
+    if (cardForm.value.productType === "Graded") {
+      if (!cardForm.value.gradingProvider)
+        throw new Error("Please select a grading provider");
+      if (!cardForm.value.grade) throw new Error("Please enter a grade");
+    }
+    if (!price.value || price.value <= 0)
       throw new Error("Price must be greater than 0");
-    if (selectedFiles.value.length === 0 && !form.imageUrl)
-      throw new Error(
-        "Please upload at least one photo or provide an image URL",
-      );
+    if (selectedFiles.value.length === 0)
+      throw new Error("Please upload at least one photo");
 
     let imageUrls: string[] = [];
 
-    if (selectedFiles.value.length > 0) {
-      uploading.value = true;
-      uploadProgress.value = 0;
-      for (let i = 0; i < selectedFiles.value.length; i++) {
-        const urls = await uploadAuctionImages([selectedFiles.value[i].file]);
-        imageUrls.push(...urls);
-        uploadProgress.value = i + 1;
-      }
-      uploading.value = false;
+    uploading.value = true;
+    uploadProgress.value = 0;
+    for (let i = 0; i < selectedFiles.value.length; i++) {
+      const urls = await uploadAuctionImages([selectedFiles.value[i].file]);
+      imageUrls.push(...urls);
+      uploadProgress.value = i + 1;
     }
-
-    if (form.imageUrl) imageUrls.push(form.imageUrl);
+    uploading.value = false;
 
     await createCard({
-      title: form.title,
-      description: form.description,
+      cardName: cardForm.value.cardName,
+      cardSet: cardForm.value.cardSet,
+      cardNumber: cardForm.value.cardNumber,
+      productType: cardForm.value.productType,
+      condition: cardForm.value.condition,
+      gradingProvider: cardForm.value.gradingProvider,
+      grade: cardForm.value.grade,
+      customGradingProvider: cardForm.value.customGradingProvider,
+      description: cardForm.value.description,
+      price: price.value,
+      shippingWM: cardForm.value.shippingWM,
+      shippingEM: cardForm.value.shippingEM,
       imageUrl: imageUrls[0] || "",
       imageUrls,
-      cardName: form.cardName,
-      cardSet: form.cardSet,
-      condition: form.condition,
-      price: form.price,
       seller:
         profile.value?.customName || user.value!.displayName || "Anonymous",
       sellerUid: user.value!.uid,

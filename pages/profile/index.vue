@@ -131,6 +131,53 @@
           </p>
         </div>
 
+        <!-- Shipping Defaults -->
+        <div>
+          <label class="block text-sm font-medium text-gray-700 mb-2">
+            Default Shipping (RM)
+          </label>
+          <div class="grid grid-cols-2 gap-3">
+            <div>
+              <label class="block text-xs text-gray-500 mb-1"
+                >West Malaysia</label
+              >
+              <input
+                v-model.number="editShippingWM"
+                type="number"
+                min="0"
+                step="0.01"
+                class="w-full border border-gray-300 rounded-lg px-4 py-2 text-gray-900 focus:border-pokemon-red focus:outline-none focus:ring-1 focus:ring-pokemon-red"
+              />
+            </div>
+            <div>
+              <label class="block text-xs text-gray-500 mb-1"
+                >East Malaysia</label
+              >
+              <input
+                v-model.number="editShippingEM"
+                type="number"
+                min="0"
+                step="0.01"
+                class="w-full border border-gray-300 rounded-lg px-4 py-2 text-gray-900 focus:border-pokemon-red focus:outline-none focus:ring-1 focus:ring-pokemon-red"
+              />
+            </div>
+          </div>
+          <button
+            v-if="
+              editShippingWM !== profile?.shippingWM ||
+              editShippingEM !== profile?.shippingEM
+            "
+            @click="saveShipping"
+            :disabled="savingShipping"
+            class="mt-2 bg-pokemon-red text-white text-sm px-4 py-1.5 rounded-lg font-medium hover:bg-red-700 transition-colors disabled:opacity-50"
+          >
+            {{ savingShipping ? "Saving..." : "Save Shipping" }}
+          </button>
+          <p class="text-xs text-gray-400 mt-1">
+            Used as default when creating new listings.
+          </p>
+        </div>
+
         <!-- Success Messages -->
         <div v-if="saveSuccess" class="text-green-600 text-sm">
           Profile updated!
@@ -161,8 +208,11 @@ const { uploadImage } = useStorage();
 
 const editName = ref("");
 const editPhone = ref("");
+const editShippingWM = ref(8);
+const editShippingEM = ref(12);
 const saving = ref(false);
 const savingPhone = ref(false);
+const savingShipping = ref(false);
 const saveSuccess = ref(false);
 const uploadingPhoto = ref(false);
 
@@ -172,6 +222,8 @@ watch(
     if (p) {
       editName.value = p.customName || p.displayName;
       editPhone.value = p.whatsappNumber || p.phone || "";
+      editShippingWM.value = p.shippingWM ?? 8;
+      editShippingEM.value = p.shippingEM ?? 12;
     }
   },
   { immediate: true },
@@ -207,6 +259,23 @@ const savePhone = async () => {
     }, 3000);
   } finally {
     savingPhone.value = false;
+  }
+};
+
+const saveShipping = async () => {
+  savingShipping.value = true;
+  saveSuccess.value = false;
+  try {
+    await updateProfile({
+      shippingWM: editShippingWM.value,
+      shippingEM: editShippingEM.value,
+    });
+    saveSuccess.value = true;
+    setTimeout(() => {
+      saveSuccess.value = false;
+    }, 3000);
+  } finally {
+    savingShipping.value = false;
   }
 };
 

@@ -46,7 +46,9 @@
         <div class="p-3">
           <h3 class="font-semibold text-sm truncate">{{ card.cardName }}</h3>
           <p class="text-xs text-gray-500 truncate">
-            {{ card.cardSet }} · {{ card.condition }}
+            <span v-if="card.cardSet">{{ card.cardSet }}</span>
+            <span v-if="card.cardSet && conditionLabel(card)"> · </span>
+            <span>{{ conditionLabel(card) }}</span>
           </p>
           <p class="text-xs text-gray-400 truncate mt-0.5">
             {{ card.seller }}
@@ -68,6 +70,17 @@
 <script setup lang="ts">
 import type { Card } from "~/composables/useCards";
 
+useHead({
+  title: "Shop Pokemon Cards | TCGo Marketplace",
+  meta: [
+    {
+      name: "description",
+      content:
+        "Browse and buy Pokemon TCG cards from collectors across Malaysia. Find rare cards, vintage sets, and modern releases at fair prices.",
+    },
+  ],
+});
+
 const { user } = useAuth();
 const { cards, loading } = useCards();
 
@@ -76,4 +89,16 @@ const availableCards = computed(() =>
     .filter((c: Card) => !c.sold)
     .sort((a: Card, b: Card) => b.createdAt - a.createdAt),
 );
+
+const conditionLabel = (card: Card): string => {
+  if (card.productType === "Graded") {
+    const provider =
+      card.gradingProvider === "Others"
+        ? card.customGradingProvider
+        : card.gradingProvider;
+    return `${provider || ""} ${card.grade || ""}`.trim();
+  }
+  if (card.productType === "Sealed") return "Sealed";
+  return card.condition || "";
+};
 </script>
