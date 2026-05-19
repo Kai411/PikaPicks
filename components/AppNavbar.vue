@@ -2,14 +2,14 @@
   <!-- Top bar (sticky, glassy) -->
   <nav class="sticky top-0 z-40 glass">
     <div
-      class="container mx-auto px-4 sm:px-6 h-16 lg:h-20 flex items-center justify-between gap-4"
+      class="container mx-auto px-4 sm:px-6 h-16 flex items-center justify-between gap-4"
     >
-      <!-- Logo -->
-      <NuxtLink to="/landing" class="flex items-center shrink-0">
+      <!-- Logo (matches LandingNavbar: square sprite cropped to wordmark slice) -->
+      <NuxtLink to="/landing" class="flex items-center h-full shrink-0">
         <img
-          src="~/assets/images/tcgo-text.png"
+          src="~/assets/images/tcgo_sprites.png"
           alt="TCGo"
-          class="h-7 lg:h-9 w-auto dark:invert dark:opacity-95"
+          class="h-full w-[110px] object-cover dark:[filter:drop-shadow(0_0_8px_rgba(255,255,255,0.7))]"
         />
       </NuxtLink>
 

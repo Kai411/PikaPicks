@@ -1,48 +1,56 @@
 <template>
   <div>
-    <div v-if="profileLoading" class="flex justify-center py-12">
+    <!-- Loading -->
+    <div v-if="profileLoading" class="flex justify-center py-24">
       <div
-        class="animate-spin rounded-full h-6 w-6 border-b-2 border-pokemon-red"
-      ></div>
+        class="animate-spin rounded-full h-8 w-8 border-2 border-ink/10 border-t-pokemon-red"
+      />
     </div>
 
-    <div v-else-if="!profile" class="text-center py-12">
-      <p class="text-gray-500 text-lg">User not found.</p>
+    <!-- Not found -->
+    <div
+      v-else-if="!profile"
+      class="surface rounded-2xl py-20 text-center"
+    >
+      <p class="text-lg font-semibold text-ink dark:text-white">
+        User not found
+      </p>
+      <p class="mt-1 text-sm text-ink-muted dark:text-zinc-400">
+        This profile doesn't exist or was removed.
+      </p>
       <NuxtLink
-        to="/auctions"
-        class="text-pokemon-red hover:underline mt-2 inline-block text-sm"
+        to="/"
+        class="mt-6 inline-flex items-center gap-1 text-sm text-pokemon-red font-semibold hover:underline"
       >
-        ← Back to auctions
+        ← Back to shop
       </NuxtLink>
     </div>
 
     <template v-else>
-      <div
-        class="bg-white rounded-xl p-4 sm:p-6 border border-gray-200 mb-8 overflow-hidden"
-      >
+      <!-- Hero -->
+      <section class="pt-2 pb-8 lg:pb-10">
         <div
-          class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3"
+          class="flex flex-col sm:flex-row sm:items-end sm:justify-between gap-6"
         >
-          <div class="flex items-center gap-3 min-w-0">
+          <div class="flex items-center gap-4 sm:gap-6 min-w-0">
             <img
               :src="profile.photoURL || ''"
-              :alt="profile.customName"
-              class="w-12 h-12 sm:w-16 sm:h-16 flex-shrink-0 rounded-full border-2 border-gray-200 object-cover"
+              :alt="profile.customName || profile.displayName"
+              class="w-20 h-20 sm:w-28 sm:h-28 rounded-full ring-4 ring-white dark:ring-canvas-inverse shadow-card object-cover shrink-0"
             />
-            <div class="min-w-0 flex-1">
-              <h1 class="text-base sm:text-2xl font-bold truncate">
+            <div class="min-w-0">
+              <span class="eyebrow">Profile</span>
+              <h1
+                class="mt-1 font-display text-3xl sm:text-display font-extrabold tracking-tightest text-ink dark:text-white truncate"
+              >
                 {{ profile.customName || profile.displayName }}
               </h1>
-              <div class="flex flex-wrap gap-1 mt-0.5">
+              <div class="mt-2 flex flex-wrap items-center gap-1.5">
                 <span
                   v-if="profile.whatsappVerified"
-                  class="inline-flex items-center gap-0.5 bg-green-100 text-green-700 text-[10px] sm:text-xs font-medium px-1.5 py-0.5 rounded-full"
+                  class="inline-flex items-center gap-1 px-2 py-0.5 rounded-md text-[10px] font-semibold tracking-wide uppercase bg-emerald-500/10 text-emerald-700 dark:text-emerald-300"
                 >
-                  <svg
-                    class="w-2.5 h-2.5 sm:w-3 sm:h-3"
-                    fill="currentColor"
-                    viewBox="0 0 20 20"
-                  >
+                  <svg class="w-3 h-3" fill="currentColor" viewBox="0 0 20 20">
                     <path
                       fill-rule="evenodd"
                       d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z"
@@ -53,279 +61,232 @@
                 </span>
                 <span
                   v-else-if="profile.whatsappNumber"
-                  class="inline-flex items-center gap-0.5 bg-blue-100 text-blue-700 text-[10px] sm:text-xs font-medium px-1.5 py-0.5 rounded-full"
+                  class="chip"
                 >
-                  <svg
-                    class="w-2.5 h-2.5 sm:w-3 sm:h-3"
-                    fill="currentColor"
-                    viewBox="0 0 20 20"
-                  >
-                    <path
-                      fill-rule="evenodd"
-                      d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z"
-                      clip-rule="evenodd"
-                    />
-                  </svg>
-                  Contact Added
-                </span>
-              </div>
-              <p class="text-xs sm:text-sm text-gray-500 mt-0.5 truncate">
-                Member since {{ formatDate(profile.createdAt) }}
-              </p>
-              <!-- Trust Score -->
-              <div class="flex items-center gap-2 mt-1">
-                <span
-                  class="text-xs font-medium"
-                  :class="getScoreColor(profile.trustScore ?? 100)"
-                >
-                  Trust: {{ profile.trustScore ?? 100 }}/100
+                  Contact added
                 </span>
                 <span
                   v-if="getScoreBadge(profile.trustScore ?? 100)"
-                  class="text-[10px] font-medium px-1.5 py-0.5 rounded-full"
-                  :class="getScoreBadge(profile.trustScore ?? 100)?.class"
+                  class="chip"
+                  :class="badgeChipVariant(profile.trustScore ?? 100)"
                 >
                   {{ getScoreBadge(profile.trustScore ?? 100)?.label }}
                 </span>
-                <button
-                  @click="showTrustInfo = true"
-                  class="text-gray-400 hover:text-gray-600 transition-colors"
-                  title="How trust score works"
-                >
-                  <svg
-                    class="w-3.5 h-3.5"
-                    fill="none"
-                    stroke="currentColor"
-                    viewBox="0 0 24 24"
-                  >
-                    <path
-                      stroke-linecap="round"
-                      stroke-linejoin="round"
-                      stroke-width="2"
-                      d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"
-                    />
-                  </svg>
-                </button>
               </div>
+              <p class="mt-2 text-xs text-ink-soft dark:text-zinc-500">
+                Member since {{ formatDate(profile.createdAt) }}
+              </p>
             </div>
           </div>
-          <div class="self-start flex sm:flex-col gap-2" v-if="isOwnProfile">
+
+          <!-- Actions -->
+          <div v-if="isOwnProfile" class="flex gap-2 sm:self-end">
             <NuxtLink
               to="/profile"
-              class="text-xs sm:text-sm bg-gray-100 hover:bg-gray-200 px-3 py-1.5 rounded-lg text-gray-700 transition-colors whitespace-nowrap"
+              class="inline-flex items-center gap-1.5 px-4 py-2 rounded-full text-sm font-semibold border border-black/[0.08] dark:border-white/[0.08] text-ink dark:text-white hover:bg-black/[0.04] dark:hover:bg-white/[0.06] transition-colors"
             >
+              <svg
+                class="w-4 h-4"
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                stroke-width="2"
+                stroke-linecap="round"
+                stroke-linejoin="round"
+              >
+                <circle cx="12" cy="12" r="3" />
+                <path
+                  d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 1 1-4 0v-.09a1.65 1.65 0 0 0-1-1.51 1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 1 1 0-4h.09a1.65 1.65 0 0 0 1.51-1 1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06a1.65 1.65 0 0 0 1.82.33h0a1.65 1.65 0 0 0 1-1.51V3a2 2 0 1 1 4 0v.09a1.65 1.65 0 0 0 1 1.51h0a1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82v0a1.65 1.65 0 0 0 1.51 1H21a2 2 0 1 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"
+                />
+              </svg>
               Settings
             </NuxtLink>
             <button
               @click="handleSignOut"
-              class="text-xs sm:text-sm bg-red-100 hover:bg-red-200 px-3 py-1.5 rounded-lg text-red-700 transition-colors whitespace-nowrap"
+              class="inline-flex items-center px-4 py-2 rounded-full text-sm font-semibold text-pokemon-red border border-pokemon-red/30 hover:bg-pokemon-red/[0.06] transition-colors"
             >
-              Logout
+              Log out
             </button>
           </div>
           <button
             v-else-if="user"
             @click="showReportForm = true"
-            class="self-start text-xs sm:text-sm bg-red-50 hover:bg-red-100 text-red-600 px-3 py-1.5 rounded-lg transition-colors whitespace-nowrap"
+            class="self-start sm:self-end inline-flex items-center px-4 py-2 rounded-full text-sm font-semibold text-pokemon-red border border-pokemon-red/30 hover:bg-pokemon-red/[0.06] transition-colors"
           >
-            Report
+            Report user
           </button>
         </div>
-        <div class="flex gap-4 sm:gap-6 mt-3 text-xs sm:text-sm text-gray-500">
-          <span>{{ userCards.length }} card(s) for sale</span>
-          <span>{{ userAuctions.length }} auction(s)</span>
+      </section>
+
+      <!-- Stat row -->
+      <section class="grid grid-cols-3 gap-3 sm:gap-6 mb-10">
+        <div class="surface rounded-2xl px-5 py-4">
+          <span class="eyebrow">Listed</span>
+          <p
+            class="mt-1.5 tabular-price text-2xl sm:text-3xl font-extrabold text-ink dark:text-white"
+          >
+            {{ userCards.length.toLocaleString() }}
+          </p>
+        </div>
+        <div class="surface rounded-2xl px-5 py-4">
+          <span class="eyebrow">Auctions</span>
+          <p
+            class="mt-1.5 tabular-price text-2xl sm:text-3xl font-extrabold text-ink dark:text-white"
+          >
+            {{ userAuctions.length.toLocaleString() }}
+          </p>
+        </div>
+        <button
+          type="button"
+          @click="showTrustInfo = true"
+          class="surface rounded-2xl px-5 py-4 text-left hover:shadow-card-hover transition-shadow ease-premium"
+        >
+          <span class="eyebrow flex items-center gap-1">
+            Trust
+            <svg
+              class="w-3 h-3 text-ink-soft"
+              fill="none"
+              stroke="currentColor"
+              stroke-width="2"
+              viewBox="0 0 24 24"
+            >
+              <circle cx="12" cy="12" r="10" />
+              <path d="M12 16v-4M12 8h.01" />
+            </svg>
+          </span>
+          <p
+            class="mt-1.5 tabular-price text-2xl sm:text-3xl font-extrabold"
+            :class="trustScoreColor(profile.trustScore ?? 100)"
+          >
+            {{ profile.trustScore ?? 100 }}
+            <span class="text-base text-ink-soft dark:text-zinc-500 font-semibold">/ 100</span>
+          </p>
+        </button>
+      </section>
+
+      <!-- Underline tabs -->
+      <div class="hairline mb-8">
+        <div class="flex items-center gap-6 -mb-px">
+          <button
+            v-for="tab in tabs"
+            :key="tab.id"
+            @click="activeTab = tab.id"
+            class="relative pb-3 pt-1 text-sm font-semibold transition-colors ease-premium"
+            :class="
+              activeTab === tab.id
+                ? 'text-ink dark:text-white'
+                : 'text-ink-soft hover:text-ink-muted dark:text-zinc-500 dark:hover:text-zinc-300'
+            "
+          >
+            {{ tab.label }}
+            <span
+              class="ml-1.5 tabular-price text-[11px] font-bold"
+              :class="
+                activeTab === tab.id
+                  ? 'text-pokemon-red'
+                  : 'text-ink-soft dark:text-zinc-600'
+              "
+            >
+              {{ tab.count }}
+            </span>
+            <span
+              v-if="activeTab === tab.id"
+              class="absolute left-0 right-0 -bottom-px h-[2px] bg-pokemon-red rounded-full"
+            />
+          </button>
         </div>
       </div>
 
-      <!-- Toggle -->
-      <div
-        class="flex items-center gap-1 mb-6 bg-gray-100 rounded-lg p-1 w-fit overflow-x-auto"
-      >
-        <button
-          @click="activeTab = 'cards'"
-          class="px-4 py-2 rounded-md text-sm font-medium transition-colors whitespace-nowrap"
-          :class="
-            activeTab === 'cards'
-              ? 'bg-white text-gray-900 shadow-sm'
-              : 'text-gray-500 hover:text-gray-700'
-          "
-        >
-          Cards ({{ userCards.length }})
-        </button>
-        <button
-          @click="activeTab = 'auctions'"
-          class="px-4 py-2 rounded-md text-sm font-medium transition-colors whitespace-nowrap"
-          :class="
-            activeTab === 'auctions'
-              ? 'bg-white text-gray-900 shadow-sm'
-              : 'text-gray-500 hover:text-gray-700'
-          "
-        >
-          Auctions ({{ userAuctions.length }})
-        </button>
-        <button
-          v-if="showFavourites"
-          @click="activeTab = 'favourites'"
-          class="px-4 py-2 rounded-md text-sm font-medium transition-colors whitespace-nowrap"
-          :class="
-            activeTab === 'favourites'
-              ? 'bg-white text-gray-900 shadow-sm'
-              : 'text-gray-500 hover:text-gray-700'
-          "
-        >
-          ♥ Favourites
-        </button>
-      </div>
-
-      <!-- Cards for Sale -->
+      <!-- Cards tab -->
       <div v-if="activeTab === 'cards'">
-        <div v-if="userCards.length === 0" class="text-gray-400 text-sm py-4">
-          No cards for sale.
-        </div>
+        <EmptyState
+          v-if="userCards.length === 0"
+          headline="Nothing listed yet"
+          caption="When this collector lists a card, it'll show up here."
+        />
         <div
           v-else
-          class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-4"
+          class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-3 sm:gap-5"
         >
-          <NuxtLink
+          <ProfileItem
             v-for="card in userCards"
             :key="card.id"
             :to="`/cards/${card.id}`"
-            class="bg-white rounded-xl overflow-hidden border border-gray-200 hover:border-pokemon-blue hover:shadow-md transition-all group cursor-pointer block"
-          >
-            <div
-              class="aspect-[3/4] bg-gray-100 flex items-center justify-center overflow-hidden"
-            >
-              <img
-                v-if="card.imageUrls?.length || card.imageUrl"
-                :src="card.imageUrls?.[0] || card.imageUrl"
-                :alt="card.cardName"
-                class="w-full h-full object-cover group-hover:scale-105 transition-transform"
-              />
-              <span v-else class="text-gray-400 text-xs">No Image</span>
-            </div>
-            <div class="p-3">
-              <h3 class="font-semibold text-sm truncate">
-                {{ card.cardName }}
-              </h3>
-              <p class="text-xs text-gray-500 truncate">
-                {{ card.cardSet }} · {{ card.condition }}
-              </p>
-              <div class="flex items-center justify-between mt-2">
-                <p class="text-pokemon-red font-bold text-sm">
-                  RM {{ card.price.toFixed(2) }}
-                </p>
-                <span
-                  class="text-xs px-1.5 py-0.5 rounded-full"
-                  :class="
-                    card.sold
-                      ? 'bg-gray-100 text-gray-500'
-                      : 'bg-green-100 text-green-700'
-                  "
-                >
-                  {{ card.sold ? "Sold" : "Available" }}
-                </span>
-              </div>
-            </div>
-          </NuxtLink>
+            :image="card.imageUrls?.[0] || card.imageUrl"
+            :title="card.cardName"
+            :subtitle="card.cardSet || card.condition"
+            :price="card.price"
+            :status="card.sold ? 'sold' : 'available'"
+          />
         </div>
       </div>
 
-      <!-- Auctions -->
+      <!-- Auctions tab -->
       <div v-if="activeTab === 'auctions'">
-        <div
+        <EmptyState
           v-if="userAuctions.length === 0"
-          class="text-gray-400 text-sm py-4"
-        >
-          No auctions listed.
-        </div>
+          headline="No auctions yet"
+          caption="Auctions this user runs will appear here."
+        />
         <div
           v-else
-          class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-4"
+          class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-3 sm:gap-5"
         >
-          <NuxtLink
+          <ProfileItem
             v-for="auction in userAuctions"
             :key="auction.id"
             :to="`/auctions/${auction.id}`"
-            class="bg-white rounded-xl overflow-hidden border border-gray-200 hover:border-pokemon-red hover:shadow-md transition-all group cursor-pointer block"
-          >
-            <div
-              class="aspect-[3/4] bg-gray-100 flex items-center justify-center overflow-hidden"
-            >
-              <img
-                v-if="auction.imageUrls?.length || auction.imageUrl"
-                :src="auction.imageUrls?.[0] || auction.imageUrl"
-                :alt="auction.cardName"
-                class="w-full h-full object-cover group-hover:scale-105 transition-transform"
-              />
-              <span v-else class="text-gray-400 text-xs">No Image</span>
-            </div>
-            <div class="p-3">
-              <h3 class="font-semibold text-sm truncate">
-                {{ auction.cardName }}
-              </h3>
-              <p class="text-xs text-gray-500 truncate">
-                {{ auction.cardSet }}
-              </p>
-              <div class="flex items-center justify-between mt-2">
-                <p class="text-pokemon-red font-bold text-sm">
-                  RM {{ auction.currentPrice.toFixed(2) }}
-                </p>
-                <span
-                  class="text-xs px-1.5 py-0.5 rounded-full"
-                  :class="
-                    isActive(auction)
-                      ? 'bg-green-100 text-green-700'
-                      : 'bg-gray-100 text-gray-500'
-                  "
-                >
-                  {{ isActive(auction) ? "Active" : "Ended" }}
-                </span>
-              </div>
-            </div>
-          </NuxtLink>
+            :image="auction.imageUrls?.[0] || auction.imageUrl"
+            :title="auction.cardName"
+            :subtitle="auction.cardSet"
+            :price="auction.currentPrice"
+            :status="isActive(auction) ? 'active' : 'ended'"
+          />
         </div>
       </div>
 
-      <!-- Favourites -->
+      <!-- Favourites tab -->
       <div v-if="activeTab === 'favourites' && showFavourites">
-        <div
+        <EmptyState
           v-if="favouriteCards.length === 0 && favouriteAuctions.length === 0"
-          class="text-gray-400 text-sm py-4"
-        >
-          No favourites yet.
-        </div>
-        <div v-else class="space-y-4">
-          <div
-            v-if="favouriteCards.length > 0"
-            class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-4"
-          >
-            <NuxtLink
-              v-for="card in favouriteCards"
-              :key="card.id"
-              :to="`/cards/${card.id}`"
-              class="bg-white rounded-xl overflow-hidden border border-gray-200 hover:border-pokemon-blue hover:shadow-md transition-all group cursor-pointer block"
+          headline="No favourites yet"
+          :caption="emptyFavouritesCaption"
+        />
+        <div v-else class="space-y-10">
+          <section v-if="favouriteCards.length">
+            <span class="eyebrow mb-3 block">Cards</span>
+            <div
+              class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-3 sm:gap-5"
             >
-              <div
-                class="aspect-[3/4] bg-gray-100 flex items-center justify-center overflow-hidden"
-              >
-                <img
-                  v-if="card.imageUrls?.length || card.imageUrl"
-                  :src="card.imageUrls?.[0] || card.imageUrl"
-                  :alt="card.cardName"
-                  class="w-full h-full object-cover group-hover:scale-105 transition-transform"
-                />
-                <span v-else class="text-gray-400 text-xs">No Image</span>
-              </div>
-              <div class="p-3">
-                <h3 class="font-semibold text-sm truncate">
-                  {{ card.cardName }}
-                </h3>
-                <p class="text-pokemon-red font-bold text-sm mt-1">
-                  RM {{ card.price.toFixed(2) }}
-                </p>
-              </div>
-            </NuxtLink>
-          </div>
+              <ProfileItem
+                v-for="card in favouriteCards"
+                :key="card.id"
+                :to="`/cards/${card.id}`"
+                :image="card.imageUrls?.[0] || card.imageUrl"
+                :title="card.cardName"
+                :subtitle="card.cardSet"
+                :price="card.price"
+                :status="card.sold ? 'sold' : 'available'"
+              />
+            </div>
+          </section>
+          <section v-if="favouriteAuctions.length">
+            <span class="eyebrow mb-3 block">Auctions</span>
+            <div
+              class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-3 sm:gap-5"
+            >
+              <ProfileItem
+                v-for="auction in favouriteAuctions"
+                :key="auction.id"
+                :to="`/auctions/${auction.id}`"
+                :image="auction.imageUrls?.[0] || auction.imageUrl"
+                :title="auction.cardName"
+                :subtitle="auction.cardSet"
+                :price="auction.currentPrice"
+                :status="isActive(auction) ? 'active' : 'ended'"
+              />
+            </div>
+          </section>
         </div>
       </div>
     </template>
@@ -339,109 +300,125 @@
       @submitted="reportSubmitted = true"
     />
 
-    <!-- Trust Score Info Modal -->
-    <div
-      v-if="showTrustInfo"
-      class="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50"
-      @click.self="showTrustInfo = false"
-    >
+    <!-- Trust Score Modal -->
+    <Teleport to="body">
       <div
-        class="bg-white rounded-xl w-full max-w-md max-h-[80vh] overflow-y-auto p-6"
+        v-if="showTrustInfo"
+        class="fixed inset-0 z-50 flex items-end sm:items-center justify-center p-0 sm:p-4 bg-black/60 backdrop-blur-sm"
+        @click.self="showTrustInfo = false"
       >
-        <div class="flex items-center justify-between mb-4">
-          <h2 class="text-lg font-bold">Trust Score</h2>
-          <button
-            @click="showTrustInfo = false"
-            class="text-gray-400 hover:text-gray-600"
-          >
-            <svg
-              class="w-5 h-5"
-              fill="none"
-              stroke="currentColor"
-              viewBox="0 0 24 24"
+        <div
+          class="surface rounded-t-3xl sm:rounded-3xl w-full max-w-md max-h-[85vh] overflow-y-auto p-6 sm:p-7"
+        >
+          <div class="flex items-start justify-between mb-5">
+            <div>
+              <span class="eyebrow">How it works</span>
+              <h2
+                class="mt-1 text-xl font-bold tracking-tightest text-ink dark:text-white"
+              >
+                Trust Score
+              </h2>
+            </div>
+            <button
+              @click="showTrustInfo = false"
+              class="w-8 h-8 rounded-full flex items-center justify-center text-ink-soft hover:bg-black/[0.04] dark:hover:bg-white/[0.06] transition-colors"
             >
-              <path
-                stroke-linecap="round"
-                stroke-linejoin="round"
-                stroke-width="2"
-                d="M6 18L18 6M6 6l12 12"
-              />
-            </svg>
-          </button>
-        </div>
-
-        <div class="space-y-4 text-sm text-gray-700">
-          <p>
-            Every user starts with a trust score of <strong>100/100</strong>. It
-            reflects your reliability as a community member.
-          </p>
-
-          <div>
-            <h3 class="font-semibold text-gray-900 mb-1">How it decreases</h3>
-            <ul class="space-y-1 text-xs text-gray-600">
-              <li class="flex justify-between">
-                <span>Scam (buyer or seller)</span
-                ><span class="text-red-600 font-medium">-25</span>
-              </li>
-              <li class="flex justify-between">
-                <span>Auction bail (winner didn't pay)</span
-                ><span class="text-orange-600 font-medium">-10</span>
-              </li>
-              <li class="flex justify-between">
-                <span>Ghosted on agreed deal</span
-                ><span class="text-yellow-600 font-medium">-5</span>
-              </li>
-              <li class="flex justify-between">
-                <span>Other disruptive behaviour</span
-                ><span class="text-yellow-600 font-medium">-5</span>
-              </li>
-            </ul>
+              <svg
+                class="w-4 h-4"
+                fill="none"
+                stroke="currentColor"
+                stroke-width="2.5"
+                viewBox="0 0 24 24"
+              >
+                <path
+                  stroke-linecap="round"
+                  stroke-linejoin="round"
+                  d="M6 18L18 6M6 6l12 12"
+                />
+              </svg>
+            </button>
           </div>
 
-          <div>
-            <h3 class="font-semibold text-gray-900 mb-1">How it works</h3>
-            <ul class="space-y-1 text-xs text-gray-600 list-disc pl-4">
-              <li>
-                Reports are reviewed by admins before any penalty is applied
-              </li>
-              <li>Evidence (screenshots) is required when reporting</li>
-              <li>False reports will not result in penalties</li>
-              <li>Score recovers +2 per completed deal</li>
-            </ul>
-          </div>
+          <div class="space-y-5 text-sm text-ink-muted dark:text-zinc-300">
+            <p>
+              Every user starts at
+              <strong class="text-ink dark:text-white">100 / 100</strong>. The
+              score reflects how reliably they trade with the community.
+            </p>
 
-          <div>
-            <h3 class="font-semibold text-gray-900 mb-1">Restrictions</h3>
-            <ul class="space-y-1 text-xs text-gray-600">
-              <li class="flex justify-between">
-                <span>Below 80</span><span>⚠️ Warning badge shown</span>
-              </li>
-              <li class="flex justify-between">
-                <span>Below 60</span><span>🚫 Cannot bid on auctions</span>
-              </li>
-              <li class="flex justify-between">
-                <span>Below 40</span><span>🚫 Cannot list items</span>
-              </li>
-              <li class="flex justify-between">
-                <span>Below 20</span><span>🚫 Account suspended</span>
-              </li>
-            </ul>
-          </div>
+            <div>
+              <span class="eyebrow mb-2 block">Penalties</span>
+              <ul class="space-y-2">
+                <li class="flex items-center justify-between">
+                  <span>Scam (buyer or seller)</span>
+                  <span class="tabular-price text-pokemon-red font-bold">−25</span>
+                </li>
+                <li class="flex items-center justify-between">
+                  <span>Auction bail</span>
+                  <span class="tabular-price text-orange-500 font-bold">−10</span>
+                </li>
+                <li class="flex items-center justify-between">
+                  <span>Ghosted deal</span>
+                  <span class="tabular-price text-yellow-500 font-bold">−5</span>
+                </li>
+                <li class="flex items-center justify-between">
+                  <span>Disruptive behaviour</span>
+                  <span class="tabular-price text-yellow-500 font-bold">−5</span>
+                </li>
+              </ul>
+            </div>
 
-          <p class="text-xs text-gray-400 pt-2 border-t border-gray-100">
-            This system protects our community from bad actors. Trade
-            responsibly!
-          </p>
+            <div>
+              <span class="eyebrow mb-2 block">How it recovers</span>
+              <p class="text-xs text-ink-soft dark:text-zinc-500">
+                +2 per completed deal. All reports are reviewed by admins before
+                penalties apply, and evidence is required.
+              </p>
+            </div>
+
+            <div>
+              <span class="eyebrow mb-2 block">Restrictions</span>
+              <ul class="space-y-1.5 text-xs">
+                <li class="flex justify-between">
+                  <span class="text-ink-muted dark:text-zinc-400">Below 80</span>
+                  <span>Warning badge shown</span>
+                </li>
+                <li class="flex justify-between">
+                  <span class="text-ink-muted dark:text-zinc-400">Below 60</span>
+                  <span>Cannot bid on auctions</span>
+                </li>
+                <li class="flex justify-between">
+                  <span class="text-ink-muted dark:text-zinc-400">Below 40</span>
+                  <span>Cannot list items</span>
+                </li>
+                <li class="flex justify-between">
+                  <span class="text-ink-muted dark:text-zinc-400">Below 20</span>
+                  <span>Account suspended</span>
+                </li>
+              </ul>
+            </div>
+          </div>
         </div>
       </div>
-    </div>
+    </Teleport>
 
-    <div
-      v-if="reportSubmitted"
-      class="fixed bottom-4 right-4 bg-green-600 text-white px-4 py-2 rounded-lg text-sm shadow-lg z-50"
+    <!-- Report toast -->
+    <Transition
+      enter-active-class="transition duration-200"
+      enter-from-class="opacity-0 translate-y-2"
+      leave-active-class="transition duration-200"
+      leave-to-class="opacity-0 translate-y-2"
     >
-      Report submitted. We'll review it shortly.
-    </div>
+      <div
+        v-if="reportSubmitted"
+        class="fixed bottom-24 lg:bottom-6 right-4 sm:right-6 z-50 surface rounded-full pl-3 pr-4 py-2 flex items-center gap-2 shadow-card-hover"
+      >
+        <span class="w-2 h-2 rounded-full bg-emerald-500" />
+        <span class="text-sm font-medium text-ink dark:text-white">
+          Report submitted
+        </span>
+      </div>
+    </Transition>
   </div>
 </template>
 
@@ -456,6 +433,7 @@ const { user, signOut } = useAuth();
 const { auctions } = useAuctions();
 const { cards } = useCards();
 const { userFavourites } = useUserFavourites(uid);
+const { getScoreBadge } = useTrustScore();
 
 const isOwnProfile = computed(() => user.value?.uid === uid);
 
@@ -463,15 +441,13 @@ const showReportForm = ref(false);
 const reportSubmitted = ref(false);
 const showTrustInfo = ref(false);
 
-const { getScoreColor, getScoreBadge } = useTrustScore();
-
-// Show favourites tab if: it's own profile OR profile has favouritesPublic enabled
 const showFavourites = computed(() => {
   if (isOwnProfile.value) return true;
   return profile.value?.favouritesPublic ?? true;
 });
 
-const activeTab = ref<"cards" | "auctions" | "favourites">("cards");
+type TabId = "cards" | "auctions" | "favourites";
+const activeTab = ref<TabId>("cards");
 
 const userCards = computed(() =>
   cards.value
@@ -485,32 +461,63 @@ const userAuctions = computed(() =>
     .sort((a: any, b: any) => b.createdAt - a.createdAt),
 );
 
-// Get actual card objects for favourited items
 const favouriteCards = computed(() => {
-  const favCardIds = userFavourites.value
+  const ids = userFavourites.value
     .filter((f: any) => f.itemType === "card")
     .map((f: any) => f.itemId);
-  return cards.value.filter((c: any) => favCardIds.includes(c.id));
+  return cards.value.filter((c: any) => ids.includes(c.id));
 });
 
 const favouriteAuctions = computed(() => {
-  const favAuctionIds = userFavourites.value
+  const ids = userFavourites.value
     .filter((f: any) => f.itemType === "auction")
     .map((f: any) => f.itemId);
-  return auctions.value.filter((a: any) => favAuctionIds.includes(a.id));
+  return auctions.value.filter((a: any) => ids.includes(a.id));
 });
+
+const tabs = computed(() => {
+  const base: { id: TabId; label: string; count: number }[] = [
+    { id: "cards", label: "Cards", count: userCards.value.length },
+    { id: "auctions", label: "Auctions", count: userAuctions.value.length },
+  ];
+  if (showFavourites.value) {
+    base.push({
+      id: "favourites",
+      label: "Favourites",
+      count: favouriteCards.value.length + favouriteAuctions.value.length,
+    });
+  }
+  return base;
+});
+
+const emptyFavouritesCaption = computed(() =>
+  isOwnProfile.value
+    ? "Tap the heart on any card or auction to save it here."
+    : "This collector has no favourites yet.",
+);
 
 const isActive = (auction: Auction) => auction.endsAt > Date.now();
 
-const formatDate = (timestamp: number) => {
-  return new Date(timestamp).toLocaleDateString("en-MY", {
+const formatDate = (timestamp: number) =>
+  new Date(timestamp).toLocaleDateString("en-MY", {
     year: "numeric",
     month: "short",
     day: "numeric",
   });
+
+const trustScoreColor = (score: number) => {
+  if (score >= 80) return "text-emerald-600 dark:text-emerald-400";
+  if (score >= 60) return "text-amber-500 dark:text-amber-400";
+  if (score >= 40) return "text-orange-500 dark:text-orange-400";
+  return "text-pokemon-red";
 };
 
-const handleSignOut = () => {
-  signOut();
+const badgeChipVariant = (score: number) => {
+  if (score >= 80) return "bg-emerald-500/10 text-emerald-700 dark:text-emerald-300";
+  if (score >= 60) return "bg-amber-500/10 text-amber-700 dark:text-amber-300";
+  if (score >= 40) return "bg-orange-500/10 text-orange-700 dark:text-orange-300";
+  return "bg-pokemon-red/10 text-pokemon-red";
 };
+
+const handleSignOut = () => signOut();
 </script>

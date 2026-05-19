@@ -3,7 +3,12 @@ export default defineNuxtConfig({
   compatibilityDate: "2025-07-15",
   ssr: false,
   devtools: { enabled: true },
-  modules: ["@nuxtjs/tailwindcss", "@vite-pwa/nuxt"],
+  // PWA only enabled in production builds — in dev it floods the log with
+  // `manifest-route-rule already exists` warnings on every HMR cycle.
+  modules: [
+    "@nuxtjs/tailwindcss",
+    ...(process.env.NODE_ENV === "production" ? ["@vite-pwa/nuxt"] : []),
+  ],
   tailwindcss: {
     cssPath: "~/assets/css/tailwind.css",
   },
@@ -107,6 +112,18 @@ export default defineNuxtConfig({
           href: "/apple-touch-icon.png",
         },
         { rel: "canonical", href: "https://tcgo.shop/" },
+        // Inter font — preconnect + non-blocking link starts the fetch in
+        // parallel with HTML, not after CSS parses (much faster than @import).
+        { rel: "preconnect", href: "https://fonts.googleapis.com" },
+        {
+          rel: "preconnect",
+          href: "https://fonts.gstatic.com",
+          crossorigin: "",
+        },
+        {
+          rel: "stylesheet",
+          href: "https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap",
+        },
       ],
     },
   },

@@ -31,8 +31,9 @@ export default {
           DEFAULT: "#FAFAFA",
           raised: "#FFFFFF",
           sunken: "#F4F4F5",
-          inverse: "#0A0A0B",
-          "inverse-raised": "#141416",
+          // Slate-tinted dark, not pitch black — feels premium, lets shadows
+          // and surface elevation read.
+          inverse: "#111114",
         },
       },
       fontFamily: {

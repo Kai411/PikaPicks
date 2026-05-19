@@ -3,7 +3,6 @@
     <!-- Hero -->
     <section class="pt-2 pb-10 lg:pb-14">
       <div class="max-w-3xl">
-        <span class="eyebrow">Marketplace</span>
         <h1
           class="mt-3 font-display text-hero font-extrabold tracking-hero text-ink dark:text-white"
         >
@@ -106,7 +105,7 @@
         class="group block"
       >
         <article
-          class="surface rounded-2xl overflow-hidden hover:shadow-card-hover hover:-translate-y-1 transition-all duration-300 ease-premium"
+          class="surface rounded-2xl overflow-hidden hover:shadow-card-hover transition-shadow duration-300 ease-premium"
         >
           <div
             class="relative aspect-[3/4] bg-canvas-sunken dark:bg-white/[0.02] overflow-hidden"
@@ -116,7 +115,7 @@
               :src="card.imageUrls?.[0] || card.imageUrl"
               :alt="card.cardName"
               loading="lazy"
-              class="w-full h-full object-cover group-hover:scale-[1.04] transition-transform duration-500 ease-premium"
+              class="w-full h-full object-cover group-hover:scale-[1.02] transition-transform duration-300 ease-premium"
             />
             <div
               v-else
