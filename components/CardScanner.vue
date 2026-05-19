@@ -34,6 +34,10 @@
       <div
         v-if="stage === 'camera'"
         class="flex-1 flex flex-col items-center justify-center relative overflow-hidden"
+        @dragenter.prevent="dragOver = true"
+        @dragover.prevent="dragOver = true"
+        @dragleave.prevent="onDragLeave"
+        @drop.prevent="handleDrop"
       >
         <video
           ref="videoEl"
@@ -58,8 +62,29 @@
         <p
           class="absolute bottom-28 left-4 right-4 text-center text-white/80 text-xs"
         >
-          Line the card up inside the frame, then tap capture.
+          Line up the card and tap capture, or drag a photo anywhere.
         </p>
+
+        <!-- Drop overlay -->
+        <div
+          v-if="dragOver"
+          class="absolute inset-0 z-20 bg-black/80 border-4 border-dashed border-white/60 rounded-lg flex flex-col items-center justify-center pointer-events-none"
+        >
+          <svg
+            class="w-14 h-14 text-white/90 mb-3"
+            viewBox="0 0 24 24"
+            fill="none"
+            stroke="currentColor"
+            stroke-width="2"
+            stroke-linecap="round"
+            stroke-linejoin="round"
+          >
+            <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" />
+            <polyline points="17 8 12 3 7 8" />
+            <line x1="12" y1="3" x2="12" y2="15" />
+          </svg>
+          <p class="text-white text-lg font-semibold">Drop photo to scan</p>
+        </div>
         <!-- Capture button -->
         <div
           class="absolute bottom-0 left-0 right-0 flex items-center justify-center pb-8 pt-6 bg-gradient-to-t from-black/80 to-transparent"
@@ -219,6 +244,7 @@ const videoEl = ref<HTMLVideoElement | null>(null);
 const stream = ref<MediaStream | null>(null);
 const streamReady = ref(false);
 const cameraError = ref("");
+const dragOver = ref(false);
 
 const capturedBlob = ref<Blob | null>(null);
 const capturedPreview = ref("");
@@ -302,6 +328,61 @@ const handleFileUpload = async (event: Event) => {
   await processBlob(file);
 };
 
+const handleDrop = async (event: DragEvent) => {
+  dragOver.value = false;
+  const file = event.dataTransfer?.files?.[0];
+  if (file && file.type.startsWith("image/")) {
+    await processBlob(file);
+  }
+};
+
+// dragleave fires when crossing child element borders — only clear when the
+// pointer actually leaves the drop zone (relatedTarget outside).
+const onDragLeave = (event: DragEvent) => {
+  const current = event.currentTarget as HTMLElement | null;
+  const related = event.relatedTarget as Node | null;
+  if (current && related && current.contains(related)) return;
+  dragOver.value = false;
+};
+
+// Phone photos are 3-5 MB; base64-encoded that's ~7 MB up the wire and a
+// slow Gemini call. 1600px on the longest side keeps card text legible when
+// the card only fills part of the frame, while shrinking the payload to
+// ~350 KB.
+const MAX_DIM = 1600;
+const resizeBlob = (blob: Blob): Promise<Blob> =>
+  new Promise((resolve) => {
+    const img = new Image();
+    const url = URL.createObjectURL(blob);
+    img.onload = () => {
+      URL.revokeObjectURL(url);
+      let { width, height } = img;
+      if (width <= MAX_DIM && height <= MAX_DIM) {
+        resolve(blob);
+        return;
+      }
+      const ratio = Math.min(MAX_DIM / width, MAX_DIM / height);
+      width = Math.round(width * ratio);
+      height = Math.round(height * ratio);
+      const canvas = document.createElement("canvas");
+      canvas.width = width;
+      canvas.height = height;
+      const ctx = canvas.getContext("2d");
+      if (!ctx) {
+        resolve(blob);
+        return;
+      }
+      ctx.imageSmoothingQuality = "high";
+      ctx.drawImage(img, 0, 0, width, height);
+      canvas.toBlob((out) => resolve(out || blob), "image/jpeg", 0.85);
+    };
+    img.onerror = () => {
+      URL.revokeObjectURL(url);
+      resolve(blob);
+    };
+    img.src = url;
+  });
+
 const blobToBase64 = (blob: Blob): Promise<string> =>
   new Promise((resolve, reject) => {
     const reader = new FileReader();
@@ -325,12 +406,13 @@ const processBlob = async (blob: Blob) => {
 
   try {
     processingMessage.value = "Identifying card...";
-    const imageBase64 = await blobToBase64(blob);
+    const resized = await resizeBlob(blob);
+    const imageBase64 = await blobToBase64(resized);
     const { name, number } = await $fetch<{ name: string; number: string }>(
       "/api/identify-card",
       {
         method: "POST",
-        body: { imageBase64, mimeType: blob.type || "image/jpeg" },
+        body: { imageBase64, mimeType: "image/jpeg" },
       },
     );
 

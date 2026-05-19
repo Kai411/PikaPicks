@@ -4,14 +4,16 @@
 // return { name, number } back. The actual card lookup happens client-side
 // against api.pokemontcg.io using those two fields.
 
-const MODEL = "gemini-2.0-flash-lite";
+const MODEL = "gemini-2.5-flash";
 const ENDPOINT = `https://generativelanguage.googleapis.com/v1beta/models/${MODEL}:generateContent`;
 
 const PROMPT = `You are reading a single Pokemon TCG card from the image.
 
+The card may be rotated, tilted, partially obscured by a hand or sleeve, or have holo/glare reflections. Mentally rotate the image as needed and look past glare to read the printed text.
+
 Return ONLY a JSON object with two fields:
-- "name": the card's printed name as shown near the top (e.g. "Charizard ex", "Tyranitar", "Pikachu VMAX"). Use the main name only, no HP or attack text.
-- "number": the set number from the bottom corner, formatted exactly as "N/Total" (e.g. "20/189", "222/193"). Strip any leading zeros from N — write "20" not "020".
+- "name": the card's printed name as shown near the top of the card (e.g. "Charizard ex", "Tyranitar", "Chansey", "Pikachu VMAX"). Use the main name only — no HP, attack text, or trainer card descriptors.
+- "number": the set number printed near the bottom corner, formatted exactly as "N/Total" (e.g. "20/189", "187/167", "222/193"). Strip any leading zeros from N — write "20" not "020".
 
 If you genuinely cannot read a field, use null for that field. Do not guess.`;
 
@@ -70,6 +72,7 @@ export default defineEventHandler(async (event) => {
 
   if (!res.ok) {
     const errText = await res.text().catch(() => "");
+    console.error(`[identify-card] Gemini ${res.status}:`, errText.slice(0, 500));
     throw createError({
       statusCode: 502,
       message: `Gemini error (${res.status}): ${errText.slice(0, 200)}`,
@@ -79,6 +82,7 @@ export default defineEventHandler(async (event) => {
   const json: any = await res.json();
   const text: string =
     json?.candidates?.[0]?.content?.parts?.[0]?.text || "{}";
+  console.log("[identify-card] raw response:", text);
 
   let parsed: { name?: string | null; number?: string | null } = {};
   try {
