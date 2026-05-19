@@ -1,8 +1,21 @@
+@import url("https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap");
+
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
 
 @layer base {
+  html {
+    font-feature-settings: "cv02", "cv03", "cv04", "cv11";
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+    text-rendering: optimizeLegibility;
+  }
+
+  body {
+    @apply bg-canvas text-ink dark:bg-canvas-inverse dark:text-zinc-100;
+  }
+
   /* Custom select with consistent chevron */
   select {
     appearance: none;
@@ -16,5 +29,29 @@
 
   select::-ms-expand {
     display: none;
+  }
+
+  /* Price numerals line up vertically */
+  .tabular-price {
+    font-variant-numeric: tabular-nums;
+    letter-spacing: -0.01em;
+  }
+}
+
+@layer components {
+  /* Glassy elevated surface — used for navbar, dropdowns, hero cards */
+  .glass {
+    @apply bg-white/70 backdrop-blur-xl backdrop-saturate-150 border border-black/[0.06];
+  }
+  .dark .glass {
+    @apply bg-white/[0.04] border-white/[0.08];
+  }
+
+  /* Plain raised surface — used for cards, panels */
+  .surface {
+    @apply bg-canvas-raised border border-black/[0.06] shadow-card;
+  }
+  .dark .surface {
+    @apply bg-white/[0.03] border-white/[0.06] shadow-none;
   }
 }
