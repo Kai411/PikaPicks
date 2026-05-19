@@ -321,9 +321,9 @@ const processBlob = async (blob: Blob) => {
     // Top strip: card name. Bottom strip: set number.
     const nameCanvas = preprocessRegion(img, {
       x: 0,
-      y: 0.03,
+      y: 0.05,
       width: 1,
-      height: 0.15,
+      height: 0.14,
     });
     const numberCanvas = preprocessRegion(img, {
       x: 0,
@@ -343,8 +343,16 @@ const processBlob = async (blob: Blob) => {
     let nameText = "";
     let numberText = "";
     try {
+      // PSM 7 = single line. Both crops are single-line strips.
+      await worker.setParameters({ tessedit_pageseg_mode: "7" as any });
       const nameResult = await worker.recognize(nameCanvas);
       nameText = nameResult.data.text || "";
+
+      // Restrict number OCR to digits + slash so letters can't sneak in.
+      await worker.setParameters({
+        tessedit_pageseg_mode: "7" as any,
+        tessedit_char_whitelist: "0123456789/",
+      });
       const numberResult = await worker.recognize(numberCanvas);
       numberText = numberResult.data.text || "";
     } finally {
@@ -396,7 +404,34 @@ interface Region {
   height: number;
 }
 
-// Crop to region, upscale, grayscale, contrast-stretch, threshold.
+// Otsu's method: pick the threshold that maximizes between-class variance.
+// Works much better than a fixed mean for bimodal regions like text-on-art.
+const otsuThreshold = (hist: Uint32Array, total: number): number => {
+  let sumAll = 0;
+  for (let t = 0; t < 256; t++) sumAll += t * hist[t];
+  let sumB = 0;
+  let wB = 0;
+  let maxVar = 0;
+  let threshold = 127;
+  for (let t = 0; t < 256; t++) {
+    wB += hist[t];
+    if (wB === 0) continue;
+    const wF = total - wB;
+    if (wF === 0) break;
+    sumB += t * hist[t];
+    const mB = sumB / wB;
+    const mF = (sumAll - sumB) / wF;
+    const between = wB * wF * (mB - mF) * (mB - mF);
+    if (between > maxVar) {
+      maxVar = between;
+      threshold = t;
+    }
+  }
+  return threshold;
+};
+
+// Crop to region, upscale, grayscale, contrast-stretch, Otsu threshold,
+// then auto-invert so the text minority class always ends up black.
 // Strips out holo color noise and glare so Tesseract sees clean text.
 const preprocessRegion = (img: HTMLImageElement, region: Region): HTMLCanvasElement => {
   const sx = img.width * region.x;
@@ -418,25 +453,40 @@ const preprocessRegion = (img: HTMLImageElement, region: Region): HTMLCanvasElem
   const px = imgData.data;
   const gray = new Uint8Array(px.length / 4);
 
+  // Grayscale + contrast-stretch in one pass.
   let min = 255;
   let max = 0;
-  let sum = 0;
   for (let i = 0, j = 0; i < px.length; i += 4, j++) {
     const g = (px[i] * 299 + px[i + 1] * 587 + px[i + 2] * 114) / 1000;
     gray[j] = g;
     if (g < min) min = g;
     if (g > max) max = g;
-    sum += g;
+  }
+  const range = max - min || 1;
+
+  // Build histogram of contrast-stretched values for Otsu.
+  const hist = new Uint32Array(256);
+  for (let j = 0; j < gray.length; j++) {
+    const stretched = Math.round(((gray[j] - min) / range) * 255);
+    gray[j] = stretched;
+    hist[stretched]++;
   }
 
-  const range = max - min || 1;
-  const meanNorm = ((sum / gray.length - min) / range) * 255;
-  // Bias the threshold slightly above mean — text is darker than background.
-  const threshold = Math.max(90, Math.min(180, meanNorm * 0.95));
+  const threshold = otsuThreshold(hist, gray.length);
+
+  // First pass: threshold + count black pixels to detect polarity.
+  let blackCount = 0;
+  for (let j = 0; j < gray.length; j++) {
+    const v = gray[j] > threshold ? 255 : 0;
+    if (v === 0) blackCount++;
+    gray[j] = v;
+  }
+  // If most pixels are black, the text was originally light-on-dark — invert
+  // so the text (minority class) ends up black, which Tesseract expects.
+  const invert = blackCount > gray.length / 2;
 
   for (let j = 0; j < gray.length; j++) {
-    const stretched = ((gray[j] - min) / range) * 255;
-    const v = stretched > threshold ? 255 : 0;
+    const v = invert ? 255 - gray[j] : gray[j];
     const i = j * 4;
     px[i] = v;
     px[i + 1] = v;
