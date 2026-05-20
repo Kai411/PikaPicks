@@ -79,7 +79,7 @@
     style="padding-bottom: env(safe-area-inset-bottom)"
   >
     <div
-      class="grid h-[68px]"
+      class="grid h-16 px-1"
       :style="{
         gridTemplateColumns: `repeat(${mobileTabs.length}, minmax(0, 1fr))`,
       }"
@@ -88,29 +88,32 @@
         v-for="tab in mobileTabs"
         :key="tab.to"
         :to="tab.to"
-        class="relative flex flex-col items-center justify-center gap-1 text-[11px] font-semibold text-ink-soft dark:text-zinc-500 transition-colors duration-200 ease-premium"
+        class="relative flex flex-col items-center justify-center gap-0.5 text-[10px] font-semibold tracking-wide text-ink-soft dark:text-zinc-500 transition-colors duration-200 ease-premium"
         :active-class="
           tab.accent
-            ? '!text-pokemon-red'
-            : '!text-ink dark:!text-white [&_.tab-indicator]:!opacity-100'
+            ? ''
+            : '!text-pokemon-red [&_.tab-dot]:!opacity-100'
         "
       >
-        <!-- Top indicator bar -->
-        <span
-          v-if="!tab.accent"
-          class="tab-indicator absolute top-0 left-1/2 -translate-x-1/2 w-8 h-[3px] rounded-full bg-pokemon-red opacity-0 transition-opacity duration-200 ease-premium"
-        />
+        <!-- Sell: floating action button, sits above the bar line, no
+             label — the + glyph + red is self-evident. -->
+        <template v-if="tab.accent">
+          <span
+            class="absolute -top-5 w-14 h-14 rounded-full bg-pokemon-red text-white flex items-center justify-center shadow-[0_8px_20px_rgba(227,53,13,0.45),0_0_0_4px_rgba(255,255,255,0.95)] dark:shadow-[0_8px_20px_rgba(227,53,13,0.55),0_0_0_4px_rgba(17,17,20,1)]"
+          >
+            <component :is="tab.icon" class="w-6 h-6" />
+          </span>
+          <span class="mt-7 text-pokemon-red">{{ tab.label }}</span>
+        </template>
 
-        <div
-          :class="
-            tab.accent
-              ? 'w-12 h-12 -mt-3 rounded-full bg-pokemon-red text-white flex items-center justify-center shadow-glow'
-              : 'w-6 h-6 flex items-center justify-center'
-          "
-        >
-          <component :is="tab.icon" class="w-5 h-5" />
-        </div>
-        <span :class="tab.accent ? '-mt-0.5' : ''">{{ tab.label }}</span>
+        <!-- Regular tab: icon + label + tiny dot indicator below for active -->
+        <template v-else>
+          <component :is="tab.icon" class="w-6 h-6" />
+          <span>{{ tab.label }}</span>
+          <span
+            class="tab-dot absolute -bottom-0.5 w-1 h-1 rounded-full bg-pokemon-red opacity-0 transition-opacity duration-200 ease-premium"
+          />
+        </template>
       </NuxtLink>
     </div>
   </nav>
