@@ -3,12 +3,10 @@ export default defineNuxtConfig({
   compatibilityDate: "2025-07-15",
   ssr: false,
   devtools: { enabled: true },
-  // PWA only enabled in production builds — in dev it floods the log with
-  // `manifest-route-rule already exists` warnings on every HMR cycle.
-  modules: [
-    "@nuxtjs/tailwindcss",
-    ...(process.env.NODE_ENV === "production" ? ["@vite-pwa/nuxt"] : []),
-  ],
+  experimental: {
+    appManifest: false,
+  },
+  modules: ["@nuxtjs/tailwindcss"],
   tailwindcss: {
     cssPath: "~/assets/css/tailwind.css",
   },
