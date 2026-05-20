@@ -53,12 +53,42 @@
             style="aspect-ratio: 2.5 / 3.5; height: 65%"
           ></div>
         </div>
-        <p
-          v-if="cameraError"
-          class="absolute top-4 left-4 right-4 bg-red-600/90 text-white text-sm px-3 py-2 rounded"
+        <!-- Top stack: warning (if any) then the upload-photo button below it -->
+        <div
+          class="absolute top-4 left-0 right-0 flex flex-col items-center gap-3 px-4 z-10"
         >
-          {{ cameraError }}
-        </p>
+          <p
+            v-if="cameraError"
+            class="bg-red-600/90 text-white text-sm px-3 py-2 rounded w-full max-w-sm text-center"
+          >
+            {{ cameraError }}
+          </p>
+          <label
+            class="inline-flex items-center gap-1.5 px-3.5 py-2 rounded-full bg-white/95 text-ink text-xs font-semibold shadow-card cursor-pointer hover:bg-white transition-colors"
+          >
+            <svg
+              class="w-4 h-4"
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              stroke-width="2"
+              stroke-linecap="round"
+              stroke-linejoin="round"
+            >
+              <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" />
+              <polyline points="17 8 12 3 7 8" />
+              <line x1="12" y1="3" x2="12" y2="15" />
+            </svg>
+            Upload photo instead
+            <input
+              type="file"
+              accept="image/*"
+              class="hidden"
+              @change="handleFileUpload"
+            />
+          </label>
+        </div>
+
         <p
           class="absolute bottom-28 left-4 right-4 text-center text-white/80 text-xs"
         >
@@ -96,18 +126,6 @@
             aria-label="Capture"
           ></button>
         </div>
-        <!-- File fallback -->
-        <label
-          class="absolute bottom-10 right-6 text-xs text-white/70 underline cursor-pointer"
-        >
-          Upload photo instead
-          <input
-            type="file"
-            accept="image/*"
-            class="hidden"
-            @change="handleFileUpload"
-          />
-        </label>
       </div>
 
       <!-- Stage 2: Processing -->
