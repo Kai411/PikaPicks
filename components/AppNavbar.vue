@@ -2,7 +2,7 @@
   <!-- Top bar (sticky, glassy) -->
   <nav class="sticky top-0 z-40 glass">
     <div
-      class="container mx-auto px-4 sm:px-6 h-16 flex items-center justify-between gap-4"
+      class="container mx-auto px-4 h-16 flex items-center justify-between gap-4"
     >
       <!-- Logo (matches LandingNavbar: square sprite cropped to wordmark slice) -->
       <NuxtLink to="/landing" class="flex items-center h-full shrink-0">
@@ -14,7 +14,9 @@
       </NuxtLink>
 
       <!-- Desktop nav -->
-      <div class="hidden lg:flex items-center gap-1 flex-1 justify-center max-w-xl">
+      <div
+        class="hidden lg:flex items-center gap-1 flex-1 justify-center max-w-xl"
+      >
         <NuxtLink
           v-for="link in desktopLinks"
           :key="link.to"
@@ -80,7 +82,9 @@
   >
     <div
       class="grid h-[68px]"
-      :style="{ gridTemplateColumns: `repeat(${mobileTabs.length}, minmax(0, 1fr))` }"
+      :style="{
+        gridTemplateColumns: `repeat(${mobileTabs.length}, minmax(0, 1fr))`,
+      }"
     >
       <NuxtLink
         v-for="tab in mobileTabs"
