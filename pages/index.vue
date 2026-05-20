@@ -61,32 +61,19 @@
                 No image
               </div>
 
-              <!-- Bottom-left pills: seller name + condition. flex-nowrap +
-                   truncation keeps them on a single row so the image area
-                   is always the same height. -->
+              <!-- Full-width seller band at the bottom of the image -->
               <div
-                class="absolute left-1.5 right-1.5 bottom-1.5 flex items-end gap-1 flex-nowrap pointer-events-none"
+                v-if="card.seller"
+                class="absolute bottom-0 left-0 right-0 bg-pokemon-red text-white text-xs font-semibold px-3 py-1.5 truncate text-center"
               >
-                <span
-                  v-if="card.seller"
-                  class="inline-flex items-center min-w-0 max-w-[60%] truncate px-1.5 py-0.5 rounded-md text-[10px] font-semibold tracking-wide whitespace-nowrap bg-white/95 text-ink shadow-sm"
-                >
-                  {{ card.seller }}
-                </span>
-                <span
-                  v-if="conditionLabel(card)"
-                  class="inline-flex items-center min-w-0 truncate px-1.5 py-0.5 rounded-md text-[10px] font-semibold tracking-wide uppercase whitespace-nowrap bg-white/95 shadow-sm"
-                  :class="conditionPillTone(card)"
-                >
-                  {{ conditionLabel(card) }}
-                </span>
+                {{ card.seller }}
               </div>
             </div>
           </div>
 
           <!-- Body: flex-1 fills the rest of the cell, mt-auto on the price
-               row keeps prices aligned across tiles even when the subtitle
-               line is missing. -->
+               block keeps prices aligned across tiles. Condition chip sits
+               directly above the price. -->
           <div class="px-3.5 sm:px-4 pt-2 pb-3.5 sm:pb-4 flex-1 flex flex-col">
             <h3
               class="font-semibold text-[15px] leading-tight text-ink dark:text-white truncate"
@@ -100,30 +87,39 @@
               {{ card.cardSet }}
             </p>
 
-            <div class="mt-auto pt-3 flex items-end justify-between">
-              <div class="min-w-0">
-                <span class="text-[10px] font-semibold uppercase tracking-wider text-ink-soft dark:text-zinc-500">
-                  RM
-                </span>
-                <p
-                  class="tabular-price font-extrabold text-[17px] leading-none text-ink dark:text-white"
-                >
-                  {{ card.price.toFixed(2) }}
-                </p>
-              </div>
-              <div class="flex items-center gap-1.5 shrink-0">
-                <span
-                  v-if="card.interestedCount > 0"
-                  class="text-[10px] text-ink-soft dark:text-zinc-500"
-                >
-                  🔥 {{ card.interestedCount }}
-                </span>
-                <FavouriteButton
-                  :item-id="card.id"
-                  item-type="card"
-                  :count="card.favouriteCount || 0"
-                  size="sm"
-                />
+            <div class="mt-auto pt-3">
+              <span
+                v-if="conditionLabel(card)"
+                class="chip"
+                :class="conditionTone(card)"
+              >
+                {{ conditionLabel(card) }}
+              </span>
+              <div class="mt-2 flex items-end justify-between">
+                <div class="min-w-0">
+                  <span class="text-[10px] font-semibold uppercase tracking-wider text-ink-soft dark:text-zinc-500">
+                    RM
+                  </span>
+                  <p
+                    class="tabular-price font-extrabold text-[17px] leading-none text-ink dark:text-white"
+                  >
+                    {{ card.price.toFixed(2) }}
+                  </p>
+                </div>
+                <div class="flex items-center gap-1.5 shrink-0">
+                  <span
+                    v-if="card.interestedCount > 0"
+                    class="text-[10px] text-ink-soft dark:text-zinc-500"
+                  >
+                    🔥 {{ card.interestedCount }}
+                  </span>
+                  <FavouriteButton
+                    :item-id="card.id"
+                    item-type="card"
+                    :count="card.favouriteCount || 0"
+                    size="sm"
+                  />
+                </div>
               </div>
             </div>
           </div>
@@ -174,12 +170,12 @@ const conditionLabel = (card: Card): string => {
   return m ? m[1] : card.condition || "";
 };
 
-// Text tone for the bottom-of-image condition pill. The pill background
-// is solid white; we color the text per product type so graded slabs read
-// gold and sealed product reads red.
-const conditionPillTone = (card: Card): string => {
-  if (card.productType === "Graded") return "text-amber-700";
-  if (card.productType === "Sealed") return "text-pokemon-red";
-  return "text-ink";
+// Tone modifier for the condition chip above the price — uses the
+// chip-gold / chip-accent utility classes for graded / sealed and the
+// default chip styling for ungraded.
+const conditionTone = (card: Card): string => {
+  if (card.productType === "Graded") return "chip-gold";
+  if (card.productType === "Sealed") return "chip-accent";
+  return "";
 };
 </script>

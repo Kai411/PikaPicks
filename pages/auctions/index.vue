@@ -65,32 +65,19 @@
                 {{ formatTimeLeft(auction.endsAt) }}
               </span>
 
-              <!-- Bottom-left pills: seller name + condition. flex-nowrap +
-                   min-w-0 keeps them on a single row; the condition shrinks
-                   with truncation so the height is always one line. -->
+              <!-- Full-width seller band at the bottom of the image -->
               <div
-                class="absolute left-1.5 right-1.5 bottom-1.5 flex items-end gap-1 flex-nowrap pointer-events-none"
+                v-if="auction.seller"
+                class="absolute bottom-0 left-0 right-0 bg-pokemon-red text-white text-xs font-semibold px-3 py-1.5 truncate text-center"
               >
-                <span
-                  v-if="auction.seller"
-                  class="inline-flex items-center min-w-0 max-w-[60%] truncate px-1.5 py-0.5 rounded-md text-[10px] font-semibold tracking-wide whitespace-nowrap bg-white/95 text-ink shadow-sm"
-                >
-                  {{ auction.seller }}
-                </span>
-                <span
-                  v-if="conditionLabel(auction)"
-                  class="inline-flex items-center min-w-0 truncate px-1.5 py-0.5 rounded-md text-[10px] font-semibold tracking-wide uppercase whitespace-nowrap bg-white/95 shadow-sm"
-                  :class="conditionPillTone(auction)"
-                >
-                  {{ conditionLabel(auction) }}
-                </span>
+                {{ auction.seller }}
               </div>
             </div>
           </div>
 
           <!-- Body: flex-1 so it fills the rest of the tile, mt-auto on the
-               price row keeps prices aligned across tiles regardless of how
-               many subtitle lines each card has. -->
+               price block keeps prices aligned across tiles. Condition chip
+               sits directly above the price. -->
           <div class="px-3.5 sm:px-4 pt-2 pb-3.5 sm:pb-4 flex-1 flex flex-col">
             <h3
               class="font-semibold text-[15px] leading-tight text-ink dark:text-white truncate"
@@ -104,28 +91,37 @@
               {{ auction.cardSet }}
             </p>
 
-            <div class="mt-auto pt-3 flex items-end justify-between">
-              <div class="min-w-0">
-                <span
-                  class="text-[10px] font-semibold uppercase tracking-wider text-ink-soft dark:text-zinc-500"
-                >
-                  RM
-                </span>
-                <p
-                  class="tabular-price font-extrabold text-[17px] leading-none text-ink dark:text-white"
-                >
-                  {{ auction.currentPrice.toFixed(2) }}
-                </p>
-              </div>
-              <div class="flex items-center gap-1.5 shrink-0">
-                <span class="text-[10px] text-ink-soft dark:text-zinc-500">
-                  {{ bidCount(auction) }} bid{{ bidCount(auction) === 1 ? "" : "s" }}
-                </span>
-                <FavouriteButton
-                  :item-id="auction.id"
-                  item-type="auction"
-                  size="sm"
-                />
+            <div class="mt-auto pt-3">
+              <span
+                v-if="conditionLabel(auction)"
+                class="chip"
+                :class="conditionTone(auction)"
+              >
+                {{ conditionLabel(auction) }}
+              </span>
+              <div class="mt-2 flex items-end justify-between">
+                <div class="min-w-0">
+                  <span
+                    class="text-[10px] font-semibold uppercase tracking-wider text-ink-soft dark:text-zinc-500"
+                  >
+                    RM
+                  </span>
+                  <p
+                    class="tabular-price font-extrabold text-[17px] leading-none text-ink dark:text-white"
+                  >
+                    {{ auction.currentPrice.toFixed(2) }}
+                  </p>
+                </div>
+                <div class="flex items-center gap-1.5 shrink-0">
+                  <span class="text-[10px] text-ink-soft dark:text-zinc-500">
+                    {{ bidCount(auction) }} bid{{ bidCount(auction) === 1 ? "" : "s" }}
+                  </span>
+                  <FavouriteButton
+                    :item-id="auction.id"
+                    item-type="auction"
+                    size="sm"
+                  />
+                </div>
               </div>
             </div>
           </div>
@@ -192,9 +188,9 @@ const conditionLabel = (auction: Auction): string => {
   return m ? m[1] : auction.condition || "";
 };
 
-const conditionPillTone = (auction: Auction): string => {
-  if (auction.productType === "Graded") return "text-amber-700";
-  if (auction.productType === "Sealed") return "text-pokemon-red";
-  return "text-ink";
+const conditionTone = (auction: Auction): string => {
+  if (auction.productType === "Graded") return "chip-gold";
+  if (auction.productType === "Sealed") return "chip-accent";
+  return "";
 };
 </script>
