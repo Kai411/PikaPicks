@@ -76,7 +76,7 @@
           >
             <div class="flex flex-col sm:flex-row gap-3">
               <img
-                :src="item.imageUrl"
+                :src="item.scannedImageUrl || item.imageUrl"
                 :alt="item.cardName"
                 class="w-20 h-28 sm:w-24 sm:h-32 object-cover rounded shrink-0"
               />

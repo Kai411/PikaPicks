@@ -271,7 +271,7 @@
             class="mt-5 inline-flex items-center gap-3 bg-gray-50 rounded-xl border border-gray-200 px-3 py-2 text-left"
           >
             <img
-              :src="lastAdded.imageUrl"
+              :src="lastAdded.scannedImageUrl || lastAdded.imageUrl"
               class="w-10 h-14 object-cover rounded"
             />
             <div class="text-xs">
