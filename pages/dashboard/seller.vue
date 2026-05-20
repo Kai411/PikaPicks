@@ -47,7 +47,7 @@
               >
                 <img
                   v-if="card.imageUrls?.length || card.imageUrl"
-                  :src="card.imageUrls?.[0] || card.imageUrl"
+                  :src="cdnUrl(card.imageUrls?.[0] || card.imageUrl, 200)"
                   :alt="card.cardName"
                   class="w-full h-full object-cover"
                 />
@@ -90,7 +90,7 @@
               >
                 <img
                   v-if="card.imageUrls?.length || card.imageUrl"
-                  :src="card.imageUrls?.[0] || card.imageUrl"
+                  :src="cdnUrl(card.imageUrls?.[0] || card.imageUrl, 200)"
                   :alt="card.cardName"
                   class="w-full h-full object-cover"
                 />
@@ -142,7 +142,7 @@
               >
                 <img
                   v-if="auction.imageUrls?.length || auction.imageUrl"
-                  :src="auction.imageUrls?.[0] || auction.imageUrl"
+                  :src="cdnUrl(auction.imageUrls?.[0] || auction.imageUrl, 200)"
                   :alt="auction.cardName"
                   class="w-full h-full object-cover"
                 />
@@ -203,7 +203,7 @@
                   >
                     <img
                       v-if="auction.imageUrls?.length || auction.imageUrl"
-                      :src="auction.imageUrls?.[0] || auction.imageUrl"
+                      :src="cdnUrl(auction.imageUrls?.[0] || auction.imageUrl, 200)"
                       :alt="auction.cardName"
                       class="w-full h-full object-cover"
                     />

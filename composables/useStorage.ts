@@ -76,6 +76,18 @@ const compressImage = (file: File): Promise<File> => {
   });
 };
 
+// Insert a Cloudinary transformation into an /image/upload/ URL. Lets us
+// request a small thumbnail variant for grid tiles instead of always
+// downloading the full 1600px upload. Pass-through for non-Cloudinary URLs.
+export const cdnUrl = (url: string | undefined, width: number): string => {
+  if (!url) return "";
+  if (!url.includes("/image/upload/")) return url;
+  return url.replace(
+    "/image/upload/",
+    `/image/upload/w_${width},c_limit,q_auto,f_auto/`,
+  );
+};
+
 export const useStorage = () => {
   const config = useRuntimeConfig();
 

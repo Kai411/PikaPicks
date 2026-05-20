@@ -8,7 +8,7 @@
       >
         <img
           v-if="image"
-          :src="image"
+          :src="cdnUrl(image, 400)"
           :alt="title"
           loading="lazy"
           class="w-full h-full object-cover group-hover:scale-[1.04] transition-transform duration-500 ease-premium"

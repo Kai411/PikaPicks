@@ -79,8 +79,9 @@
           class="bg-white border border-gray-200 rounded-lg overflow-hidden group relative"
         >
           <img
-            :src="card.imageUrl"
+            :src="cdnUrl(card.imageUrl, 400)"
             :alt="card.cardName"
+            loading="lazy"
             class="w-full aspect-[2.5/3.5] object-cover"
           />
           <div class="p-2">

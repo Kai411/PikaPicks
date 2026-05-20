@@ -48,7 +48,7 @@
               >
                 <img
                   v-if="item.auction.imageUrls?.length || item.auction.imageUrl"
-                  :src="item.auction.imageUrls?.[0] || item.auction.imageUrl"
+                  :src="cdnUrl(item.auction.imageUrls?.[0] || item.auction.imageUrl, 200)"
                   :alt="item.auction.cardName"
                   class="w-full h-full object-cover"
                 />
@@ -104,7 +104,7 @@
               >
                 <img
                   v-if="item.auction.imageUrls?.length || item.auction.imageUrl"
-                  :src="item.auction.imageUrls?.[0] || item.auction.imageUrl"
+                  :src="cdnUrl(item.auction.imageUrls?.[0] || item.auction.imageUrl, 200)"
                   :alt="item.auction.cardName"
                   class="w-full h-full object-cover"
                 />

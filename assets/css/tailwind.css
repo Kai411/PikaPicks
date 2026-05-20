@@ -37,13 +37,15 @@
 }
 
 @layer components {
-  /* Glassy elevated surface — used for navbar, dropdowns, hero cards.
-     Lighter blur (md vs xl) keeps scroll cheap on mobile. */
+  /* Elevated nav surface. backdrop-blur was nuking scroll perf on mid-range
+     hardware — every scroll frame recomputed a GPU blur over the entire
+     navbar area. Swapped to slightly translucent solid bg; visually almost
+     identical at scroll speed, GPU cost ~zero. */
   .glass {
-    @apply bg-white/85 backdrop-blur-md border-b border-black/[0.06];
+    @apply bg-white/95 border-b border-black/[0.06];
   }
   .dark .glass {
-    @apply bg-[#111114]/85 border-white/[0.06];
+    @apply bg-[#111114]/95 border-white/[0.06];
   }
 
   /* Plain raised surface — used for cards, panels */

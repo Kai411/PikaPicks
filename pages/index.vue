@@ -112,7 +112,7 @@
           >
             <img
               v-if="card.imageUrls?.length || card.imageUrl"
-              :src="card.imageUrls?.[0] || card.imageUrl"
+              :src="cdnUrl(card.imageUrls?.[0] || card.imageUrl, 400)"
               :alt="card.cardName"
               loading="lazy"
               class="w-full h-full object-cover group-hover:scale-[1.02] transition-transform duration-300 ease-premium"

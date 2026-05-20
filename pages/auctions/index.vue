@@ -37,7 +37,7 @@
         >
           <img
             v-if="auction.imageUrls?.length || auction.imageUrl"
-            :src="auction.imageUrls?.[0] || auction.imageUrl"
+            :src="cdnUrl(auction.imageUrls?.[0] || auction.imageUrl, 400)"
             :alt="auction.cardName"
             class="w-full h-full object-cover group-hover:scale-105 transition-transform"
           />

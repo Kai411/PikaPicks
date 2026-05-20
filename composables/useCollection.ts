@@ -8,7 +8,7 @@ import {
   where,
   type Unsubscribe,
 } from "firebase/firestore";
-import { ref, onUnmounted, watch } from "vue";
+import { effectScope, ref, watch } from "vue";
 
 export interface CollectionCard {
   id: string;
@@ -23,58 +23,60 @@ export interface CollectionCard {
   createdAt: number;
 }
 
+// Module-level singleton for the current user's personal collection.
+const cards = ref<CollectionCard[]>([]);
+const loading = ref(true);
+let initialized = false;
+let unsubscribe: Unsubscribe | null = null;
+let currentUserId: string | null = null;
+
 export const useCollection = () => {
   const { firestore } = useFirebase();
   const { user } = useAuth();
-
-  const cards = ref<CollectionCard[]>([]);
-  const loading = ref(true);
   const collectionRef = collection(firestore!, "userCollection");
 
-  let unsubscribe: Unsubscribe | null = null;
-
-  const subscribe = (uid: string) => {
-    if (unsubscribe) unsubscribe();
-    // Single-field where() with no orderBy avoids needing a composite
-    // index in Firestore. Sorting happens client-side below.
-    const q = query(collectionRef, where("ownerUid", "==", uid));
-    unsubscribe = onSnapshot(
-      q,
-      (snapshot) => {
-        cards.value = snapshot.docs
-          .map((d) => ({
-            ...(d.data() as Omit<CollectionCard, "id">),
-            id: d.id,
-          }))
-          .sort((a, b) => b.createdAt - a.createdAt);
-        loading.value = false;
+  if (!initialized) {
+    initialized = true;
+    // Detached effect scope keeps the watch alive across navigations.
+    effectScope(true).run(() => {
+    watch(
+      user,
+      (u) => {
+        if ((u?.uid || null) === currentUserId) return;
+        currentUserId = u?.uid || null;
+        unsubscribe?.();
+        unsubscribe = null;
+        if (u) {
+          // Single-field where() with no orderBy avoids needing a composite
+          // index in Firestore. Sorting happens client-side below.
+          const q = query(collectionRef, where("ownerUid", "==", u.uid));
+          unsubscribe = onSnapshot(
+            q,
+            (snapshot) => {
+              cards.value = snapshot.docs
+                .map((d) => ({
+                  ...(d.data() as Omit<CollectionCard, "id">),
+                  id: d.id,
+                }))
+                .sort((a, b) => b.createdAt - a.createdAt);
+              loading.value = false;
+            },
+            (error) => {
+              // Most likely cause: Firestore security rules blocking reads
+              // on userCollection for this user.
+              console.error("[useCollection] snapshot error:", error);
+              loading.value = false;
+            },
+          );
+        } else {
+          cards.value = [];
+          loading.value = false;
+        }
       },
-      (error) => {
-        // If this still fires, it's almost certainly Firestore security
-        // rules blocking reads on userCollection for this user.
-        console.error("[useCollection] snapshot error:", error);
-        loading.value = false;
-      },
+      { immediate: true },
     );
-  };
-
-  watch(
-    user,
-    (u) => {
-      if (u) {
-        subscribe(u.uid);
-      } else {
-        cards.value = [];
-        loading.value = false;
-        if (unsubscribe) unsubscribe();
-      }
-    },
-    { immediate: true },
-  );
-
-  onUnmounted(() => {
-    if (unsubscribe) unsubscribe();
-  });
+    });
+  }
 
   const addCard = async (
     card: Omit<CollectionCard, "id" | "ownerUid" | "createdAt">,

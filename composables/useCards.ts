@@ -9,7 +9,7 @@ import {
   increment,
   type Unsubscribe,
 } from "firebase/firestore";
-import { ref, onUnmounted } from "vue";
+import { ref } from "vue";
 
 export interface Card {
   id: string;
@@ -35,25 +35,41 @@ export interface Card {
   favouriteCount: number;
 }
 
-export const useCards = () => {
-  const { firestore } = useFirebase();
-  const cards = ref<Card[]>([]);
-  const loading = ref(true);
+// Module-level singleton. Previously each call opened a new Firestore
+// listener — five pages called useCards(), so five identical subscriptions
+// were active any time the user navigated through the app.
+const cards = ref<Card[]>([]);
+const loading = ref(true);
+let initialized = false;
+let unsubscribe: Unsubscribe | null = null;
 
+const initialize = () => {
+  if (initialized) return;
+  initialized = true;
+  const { firestore } = useFirebase();
   const cardsCollection = collection(firestore!, "cards");
   const q = query(cardsCollection, orderBy("createdAt", "desc"));
+  unsubscribe = onSnapshot(
+    q,
+    (snapshot) => {
+      cards.value = snapshot.docs.map((d) => ({
+        ...(d.data() as Omit<Card, "id">),
+        id: d.id,
+      }));
+      loading.value = false;
+    },
+    (error) => {
+      console.error("[useCards] listener error:", error);
+      loading.value = false;
+    },
+  );
+};
 
-  const unsubscribe: Unsubscribe = onSnapshot(q, (snapshot) => {
-    cards.value = snapshot.docs.map((doc) => ({
-      ...(doc.data() as Omit<Card, "id">),
-      id: doc.id,
-    }));
-    loading.value = false;
-  });
+export const useCards = () => {
+  const { firestore } = useFirebase();
+  initialize();
 
-  onUnmounted(() => {
-    unsubscribe();
-  });
+  const cardsCollection = collection(firestore!, "cards");
 
   const createCard = async (
     card: Omit<
