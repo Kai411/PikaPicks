@@ -175,6 +175,10 @@ const formatTimeLeft = (endsAt: number) => {
 const bidCount = (auction: Auction) =>
   auction.bids ? Object.keys(auction.bids).length : 0;
 
+// Short pill label that always fits on a tile. Ungraded labels in the
+// constants list are written as "Near Mint (NM)", "Moderately Played (MP)",
+// etc. — strip down to just the abbreviation in the parens. Graded labels
+// like "PSA 10" are already short. Sealed becomes "SEALED".
 const conditionLabel = (auction: Auction): string => {
   if (auction.productType === "Graded") {
     const provider =
@@ -183,8 +187,9 @@ const conditionLabel = (auction: Auction): string => {
         : auction.gradingProvider;
     return `${provider || ""} ${auction.grade || ""}`.trim();
   }
-  if (auction.productType === "Sealed") return "Sealed";
-  return auction.condition || "";
+  if (auction.productType === "Sealed") return "SEALED";
+  const m = (auction.condition || "").match(/\(([^)]+)\)/);
+  return m ? m[1] : auction.condition || "";
 };
 
 const conditionPillTone = (auction: Auction): string => {

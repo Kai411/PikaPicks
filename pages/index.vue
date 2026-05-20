@@ -157,6 +157,10 @@ const availableCards = computed(() =>
     .sort((a: Card, b: Card) => b.createdAt - a.createdAt),
 );
 
+// Short pill label that always fits on a tile. Ungraded labels in the
+// constants list are written as "Near Mint (NM)", "Moderately Played (MP)",
+// etc. — strip down to just the abbreviation in the parens. Graded labels
+// like "PSA 10" are already short. Sealed becomes "SEALED".
 const conditionLabel = (card: Card): string => {
   if (card.productType === "Graded") {
     const provider =
@@ -165,8 +169,9 @@ const conditionLabel = (card: Card): string => {
         : card.gradingProvider;
     return `${provider || ""} ${card.grade || ""}`.trim();
   }
-  if (card.productType === "Sealed") return "Sealed";
-  return card.condition || "";
+  if (card.productType === "Sealed") return "SEALED";
+  const m = (card.condition || "").match(/\(([^)]+)\)/);
+  return m ? m[1] : card.condition || "";
 };
 
 // Text tone for the bottom-of-image condition pill. The pill background
