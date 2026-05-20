@@ -6,10 +6,11 @@
     <div
       class="sticky top-0 w-full py-1 text-center bg-pokemon-yellow text-[12px] font-bold"
     >
-      You are currently on Beta Access of TCGo
+      TCGo is currently under closed Beta Testing
     </div>
     <main class="container mx-auto px-4 py-8 pb-28 lg:pb-12">
       <slot />
     </main>
+    <BetaGate />
   </div>
 </template>

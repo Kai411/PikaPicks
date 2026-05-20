@@ -4,7 +4,7 @@
     <div
       class="sticky top-0 w-full py-1 text-center bg-pokemon-yellow text-[12px] font-bold"
     >
-      You are currently on Beta Access of TCGo
+      TCGo is currently under closed Beta Testing
     </div>
     <slot />
   </div>

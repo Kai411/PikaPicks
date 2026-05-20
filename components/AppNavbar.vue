@@ -67,11 +67,7 @@
           </svg>
         </button>
 
-        <div
-          v-if="user"
-          class="lg:hidden relative"
-          @click.stop
-        >
+        <div v-if="user" class="lg:hidden relative" @click.stop>
           <button
             @click="sellMenuOpen = !sellMenuOpen"
             class="inline-flex items-center gap-1 px-3.5 py-2 rounded-full text-sm font-semibold bg-pokemon-red text-white shadow-glow"
@@ -161,8 +157,7 @@
   <!-- Mobile bottom tab bar (3 tabs: Shop / Auctions / Profile).
        Sell + Search both moved to the top bar. -->
   <nav
-    class="lg:hidden fixed bottom-0 inset-x-0 z-40 glass border-t border-black/[0.06] dark:border-white/[0.08]"
-    style="padding-bottom: env(safe-area-inset-bottom)"
+    class="lg:hidden fixed bottom-0 inset-x-0 z-40 glass border-t border-black/[0.06] dark:border-white/[0.08] pb-[16px]"
   >
     <div
       class="grid h-16 px-1"

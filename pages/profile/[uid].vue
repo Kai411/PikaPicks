@@ -8,10 +8,7 @@
     </div>
 
     <!-- Not found -->
-    <div
-      v-else-if="!profile"
-      class="surface rounded-2xl py-20 text-center"
-    >
+    <div v-else-if="!profile" class="surface rounded-2xl py-20 text-center">
       <p class="text-lg font-semibold text-ink dark:text-white">
         User not found
       </p>
@@ -57,12 +54,9 @@
                       clip-rule="evenodd"
                     />
                   </svg>
-                  Verified
+                  Beta Verified
                 </span>
-                <span
-                  v-else-if="profile.whatsappNumber"
-                  class="chip"
-                >
+                <span v-else-if="profile.whatsappNumber" class="chip">
                   Contact added
                 </span>
                 <span
@@ -143,7 +137,10 @@
             :class="trustScoreColor(profile.trustScore ?? 100)"
           >
             {{ profile.trustScore ?? 100 }}
-            <span class="text-base text-ink-soft dark:text-zinc-500 font-semibold">/ 100</span>
+            <span
+              class="text-base text-ink-soft dark:text-zinc-500 font-semibold"
+              >/ 100</span
+            >
           </p>
         </button>
       </section>
@@ -335,19 +332,27 @@
               <ul class="space-y-2">
                 <li class="flex items-center justify-between">
                   <span>Scam (buyer or seller)</span>
-                  <span class="tabular-price text-pokemon-red font-bold">−25</span>
+                  <span class="tabular-price text-pokemon-red font-bold"
+                    >−25</span
+                  >
                 </li>
                 <li class="flex items-center justify-between">
                   <span>Auction bail</span>
-                  <span class="tabular-price text-orange-500 font-bold">−10</span>
+                  <span class="tabular-price text-orange-500 font-bold"
+                    >−10</span
+                  >
                 </li>
                 <li class="flex items-center justify-between">
                   <span>Ghosted deal</span>
-                  <span class="tabular-price text-yellow-500 font-bold">−5</span>
+                  <span class="tabular-price text-yellow-500 font-bold"
+                    >−5</span
+                  >
                 </li>
                 <li class="flex items-center justify-between">
                   <span>Disruptive behaviour</span>
-                  <span class="tabular-price text-yellow-500 font-bold">−5</span>
+                  <span class="tabular-price text-yellow-500 font-bold"
+                    >−5</span
+                  >
                 </li>
               </ul>
             </div>
@@ -364,19 +369,27 @@
               <span class="eyebrow mb-2 block">Restrictions</span>
               <ul class="space-y-1.5 text-xs">
                 <li class="flex justify-between">
-                  <span class="text-ink-muted dark:text-zinc-400">Below 80</span>
+                  <span class="text-ink-muted dark:text-zinc-400"
+                    >Below 80</span
+                  >
                   <span>Warning badge shown</span>
                 </li>
                 <li class="flex justify-between">
-                  <span class="text-ink-muted dark:text-zinc-400">Below 60</span>
+                  <span class="text-ink-muted dark:text-zinc-400"
+                    >Below 60</span
+                  >
                   <span>Cannot bid on auctions</span>
                 </li>
                 <li class="flex justify-between">
-                  <span class="text-ink-muted dark:text-zinc-400">Below 40</span>
+                  <span class="text-ink-muted dark:text-zinc-400"
+                    >Below 40</span
+                  >
                   <span>Cannot list items</span>
                 </li>
                 <li class="flex justify-between">
-                  <span class="text-ink-muted dark:text-zinc-400">Below 20</span>
+                  <span class="text-ink-muted dark:text-zinc-400"
+                    >Below 20</span
+                  >
                   <span>Account suspended</span>
                 </li>
               </ul>
@@ -497,9 +510,11 @@ const trustScoreColor = (score: number) => {
 };
 
 const badgeChipVariant = (score: number) => {
-  if (score >= 80) return "bg-emerald-500/10 text-emerald-700 dark:text-emerald-300";
+  if (score >= 80)
+    return "bg-emerald-500/10 text-emerald-700 dark:text-emerald-300";
   if (score >= 60) return "bg-amber-500/10 text-amber-700 dark:text-amber-300";
-  if (score >= 40) return "bg-orange-500/10 text-orange-700 dark:text-orange-300";
+  if (score >= 40)
+    return "bg-orange-500/10 text-orange-700 dark:text-orange-300";
   return "bg-pokemon-red/10 text-pokemon-red";
 };
 
