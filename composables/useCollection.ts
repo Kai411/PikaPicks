@@ -5,7 +5,6 @@ import {
   doc,
   onSnapshot,
   query,
-  orderBy,
   where,
   type Unsubscribe,
 } from "firebase/firestore";
@@ -36,18 +35,27 @@ export const useCollection = () => {
 
   const subscribe = (uid: string) => {
     if (unsubscribe) unsubscribe();
-    const q = query(
-      collectionRef,
-      where("ownerUid", "==", uid),
-      orderBy("createdAt", "desc"),
+    // Single-field where() with no orderBy avoids needing a composite
+    // index in Firestore. Sorting happens client-side below.
+    const q = query(collectionRef, where("ownerUid", "==", uid));
+    unsubscribe = onSnapshot(
+      q,
+      (snapshot) => {
+        cards.value = snapshot.docs
+          .map((d) => ({
+            ...(d.data() as Omit<CollectionCard, "id">),
+            id: d.id,
+          }))
+          .sort((a, b) => b.createdAt - a.createdAt);
+        loading.value = false;
+      },
+      (error) => {
+        // If this still fires, it's almost certainly Firestore security
+        // rules blocking reads on userCollection for this user.
+        console.error("[useCollection] snapshot error:", error);
+        loading.value = false;
+      },
     );
-    unsubscribe = onSnapshot(q, (snapshot) => {
-      cards.value = snapshot.docs.map((d) => ({
-        ...(d.data() as Omit<CollectionCard, "id">),
-        id: d.id,
-      }));
-      loading.value = false;
-    });
   };
 
   watch(
@@ -72,12 +80,18 @@ export const useCollection = () => {
     card: Omit<CollectionCard, "id" | "ownerUid" | "createdAt">,
   ) => {
     if (!user.value) throw new Error("Must be signed in");
-    const docRef = await addDoc(collectionRef, {
-      ...card,
-      ownerUid: user.value.uid,
-      createdAt: Date.now(),
-    });
-    return docRef.id;
+    try {
+      const docRef = await addDoc(collectionRef, {
+        ...card,
+        ownerUid: user.value.uid,
+        createdAt: Date.now(),
+      });
+      console.log("[useCollection] added card:", docRef.id);
+      return docRef.id;
+    } catch (error) {
+      console.error("[useCollection] addCard failed:", error);
+      throw error;
+    }
   };
 
   const removeCard = async (cardId: string) => {
