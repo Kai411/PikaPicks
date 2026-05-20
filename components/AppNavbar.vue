@@ -46,15 +46,100 @@
           </NuxtLink>
         </div>
 
-        <!-- Auth -->
+        <!-- Mobile: Search button (replaces the avatar) + Sell/Auction
+             chooser. The avatar lives at the bottom nav's Profile tab. -->
+        <button
+          @click="searchOpen = true"
+          aria-label="Search cards"
+          class="lg:hidden inline-flex items-center justify-center w-10 h-10 rounded-full hover:bg-black/[0.04] dark:hover:bg-white/[0.06] text-ink dark:text-white transition-colors"
+        >
+          <svg
+            class="w-5 h-5"
+            viewBox="0 0 24 24"
+            fill="none"
+            stroke="currentColor"
+            stroke-width="2"
+            stroke-linecap="round"
+            stroke-linejoin="round"
+          >
+            <circle cx="11" cy="11" r="7" />
+            <path d="m21 21-4.3-4.3" />
+          </svg>
+        </button>
+
+        <div
+          v-if="user"
+          class="lg:hidden relative"
+          @click.stop
+        >
+          <button
+            @click="sellMenuOpen = !sellMenuOpen"
+            class="inline-flex items-center gap-1 px-3.5 py-2 rounded-full text-sm font-semibold bg-pokemon-red text-white shadow-glow"
+            aria-haspopup="true"
+            :aria-expanded="sellMenuOpen"
+          >
+            <svg
+              class="w-4 h-4"
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              stroke-width="2.5"
+              stroke-linecap="round"
+            >
+              <path d="M12 5v14M5 12h14" />
+            </svg>
+            List
+            <svg
+              class="w-3 h-3 -mr-0.5"
+              :class="sellMenuOpen ? 'rotate-180' : ''"
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              stroke-width="2.5"
+              stroke-linecap="round"
+              stroke-linejoin="round"
+            >
+              <path d="m6 9 6 6 6-6" />
+            </svg>
+          </button>
+          <Transition
+            enter-active-class="transition duration-150"
+            enter-from-class="opacity-0 -translate-y-1"
+            leave-active-class="transition duration-100"
+            leave-to-class="opacity-0 -translate-y-1"
+          >
+            <div
+              v-if="sellMenuOpen"
+              class="absolute right-0 top-full mt-2 w-48 surface rounded-xl overflow-hidden py-1.5 z-50"
+            >
+              <NuxtLink
+                to="/cards/create"
+                @click="sellMenuOpen = false"
+                class="block px-4 py-2.5 text-sm font-medium text-ink dark:text-white hover:bg-black/[0.04] dark:hover:bg-white/[0.06]"
+              >
+                Sell a card
+              </NuxtLink>
+              <NuxtLink
+                to="/auctions/create"
+                @click="sellMenuOpen = false"
+                class="block px-4 py-2.5 text-sm font-medium text-ink dark:text-white hover:bg-black/[0.04] dark:hover:bg-white/[0.06]"
+              >
+                Start an auction
+              </NuxtLink>
+            </div>
+          </Transition>
+        </div>
+
+        <!-- Auth: avatar/sign-in shown on desktop only; mobile gets it via
+             the bottom-nav Profile tab. -->
         <div
           v-if="authLoading"
-          class="w-9 h-9 rounded-full bg-black/5 dark:bg-white/10 animate-pulse"
+          class="hidden lg:block w-9 h-9 rounded-full bg-black/5 dark:bg-white/10 animate-pulse"
         />
         <NuxtLink
           v-else-if="user"
           :to="`/profile/${user.uid}`"
-          class="ml-1 flex items-center hover:opacity-80 transition-opacity"
+          class="hidden lg:flex ml-1 items-center hover:opacity-80 transition-opacity"
         >
           <img
             :src="profile?.photoURL || user.photoURL || ''"
@@ -65,7 +150,7 @@
         <button
           v-else
           @click="signInWithGoogle"
-          class="px-4 py-2 rounded-full text-sm font-semibold bg-ink text-white dark:bg-white dark:text-ink hover:opacity-90 transition-opacity"
+          class="hidden lg:inline-flex px-4 py-2 rounded-full text-sm font-semibold bg-ink text-white dark:bg-white dark:text-ink hover:opacity-90 transition-opacity"
         >
           Sign In
         </button>
@@ -73,7 +158,8 @@
     </div>
   </nav>
 
-  <!-- Mobile bottom tab bar -->
+  <!-- Mobile bottom tab bar (3 tabs: Shop / Auctions / Profile).
+       Sell + Search both moved to the top bar. -->
   <nav
     class="lg:hidden fixed bottom-0 inset-x-0 z-40 glass border-t border-black/[0.06] dark:border-white/[0.08]"
     style="padding-bottom: env(safe-area-inset-bottom)"
@@ -89,34 +175,127 @@
         :key="tab.to"
         :to="tab.to"
         class="relative flex flex-col items-center justify-center gap-0.5 text-[10px] font-semibold tracking-wide text-ink-soft dark:text-zinc-500 transition-colors duration-200 ease-premium"
-        :active-class="
-          tab.accent
-            ? ''
-            : '!text-pokemon-red [&_.tab-dot]:!opacity-100'
-        "
+        active-class="!text-pokemon-red [&_.tab-dot]:!opacity-100"
       >
-        <!-- Sell: floating action button, sits above the bar line, no
-             label — the + glyph + red is self-evident. -->
-        <template v-if="tab.accent">
-          <span
-            class="absolute -top-5 w-14 h-14 rounded-full bg-pokemon-red text-white flex items-center justify-center shadow-[0_8px_20px_rgba(227,53,13,0.45),0_0_0_4px_rgba(255,255,255,0.95)] dark:shadow-[0_8px_20px_rgba(227,53,13,0.55),0_0_0_4px_rgba(17,17,20,1)]"
-          >
-            <component :is="tab.icon" class="w-6 h-6" />
-          </span>
-          <span class="mt-7 text-pokemon-red">{{ tab.label }}</span>
-        </template>
-
-        <!-- Regular tab: icon + label + tiny dot indicator below for active -->
-        <template v-else>
-          <component :is="tab.icon" class="w-6 h-6" />
-          <span>{{ tab.label }}</span>
-          <span
-            class="tab-dot absolute -bottom-0.5 w-1 h-1 rounded-full bg-pokemon-red opacity-0 transition-opacity duration-200 ease-premium"
-          />
-        </template>
+        <component :is="tab.icon" class="w-6 h-6" />
+        <span>{{ tab.label }}</span>
+        <span
+          class="tab-dot absolute -bottom-0.5 w-1 h-1 rounded-full bg-pokemon-red opacity-0 transition-opacity duration-200 ease-premium"
+        />
       </NuxtLink>
     </div>
   </nav>
+
+  <!-- Mobile search modal: filters the shop's card collection by name -->
+  <Teleport to="body">
+    <Transition
+      enter-active-class="transition duration-200"
+      enter-from-class="opacity-0"
+      leave-active-class="transition duration-200"
+      leave-to-class="opacity-0"
+    >
+      <div
+        v-if="searchOpen"
+        class="lg:hidden fixed inset-0 z-50 bg-canvas dark:bg-canvas-inverse flex flex-col"
+      >
+        <div
+          class="flex items-center gap-3 px-4 h-16 border-b border-black/[0.06] dark:border-white/[0.08]"
+        >
+          <button
+            @click="searchOpen = false"
+            class="w-9 h-9 rounded-full flex items-center justify-center hover:bg-black/[0.04] dark:hover:bg-white/[0.06] text-ink dark:text-white"
+            aria-label="Close search"
+          >
+            <svg
+              class="w-5 h-5"
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              stroke-width="2"
+              stroke-linecap="round"
+              stroke-linejoin="round"
+            >
+              <path d="m15 18-6-6 6-6" />
+            </svg>
+          </button>
+          <div
+            class="flex-1 flex items-center gap-2 px-3 h-10 rounded-full bg-black/[0.04] dark:bg-white/[0.06]"
+          >
+            <svg
+              class="w-4 h-4 text-ink-muted shrink-0"
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              stroke-width="2"
+              stroke-linecap="round"
+              stroke-linejoin="round"
+            >
+              <circle cx="11" cy="11" r="7" />
+              <path d="m21 21-4.3-4.3" />
+            </svg>
+            <input
+              ref="searchInput"
+              v-model="searchQuery"
+              type="search"
+              placeholder="Search cards by name or seller…"
+              class="flex-1 bg-transparent outline-none text-sm text-ink dark:text-white placeholder-ink-soft"
+            />
+          </div>
+        </div>
+
+        <div class="flex-1 overflow-y-auto p-4">
+          <div
+            v-if="searchQuery.trim().length === 0"
+            class="text-center text-sm text-ink-muted dark:text-zinc-400 py-12"
+          >
+            Type to search the shop.
+          </div>
+          <div
+            v-else-if="searchResults.length === 0"
+            class="text-center text-sm text-ink-muted dark:text-zinc-400 py-12"
+          >
+            No cards match "{{ searchQuery }}".
+          </div>
+          <div v-else class="grid grid-cols-2 gap-3">
+            <NuxtLink
+              v-for="card in searchResults"
+              :key="card.id"
+              :to="`/cards/${card.id}`"
+              @click="searchOpen = false"
+              class="surface rounded-xl overflow-hidden hover:shadow-card-hover transition-shadow"
+            >
+              <div class="p-1.5 bg-white dark:bg-white/[0.04]">
+                <img
+                  :src="cdnUrl(card.imageUrls?.[0] || card.imageUrl, 300)"
+                  :alt="card.cardName"
+                  loading="lazy"
+                  class="w-full aspect-[3/4] object-cover rounded"
+                />
+              </div>
+              <div class="px-3 py-2">
+                <p
+                  class="text-sm font-semibold text-ink dark:text-white truncate"
+                >
+                  {{ card.cardName }}
+                </p>
+                <p
+                  v-if="card.cardSet"
+                  class="text-xs text-ink-muted dark:text-zinc-400 truncate"
+                >
+                  {{ card.cardSet }}
+                </p>
+                <p
+                  class="mt-1 tabular-price text-sm font-bold text-ink dark:text-white"
+                >
+                  RM {{ card.price.toFixed(2) }}
+                </p>
+              </div>
+            </NuxtLink>
+          </div>
+        </div>
+      </div>
+    </Transition>
+  </Teleport>
 </template>
 
 <script setup lang="ts">
@@ -178,32 +357,71 @@ const mobileTabs = computed(() => {
     to: string;
     label: string;
     icon: any;
-    accent?: boolean;
   }[] = [
     { to: "/", label: "Shop", icon: IconShop },
     { to: "/auctions", label: "Auctions", icon: IconGavel },
   ];
   if (user.value) {
     tabs.push({
-      to: "/cards/create",
-      label: "Sell",
-      icon: IconPlus,
-      accent: true,
-    });
-    tabs.push({
       to: `/profile/${user.value.uid}`,
       label: "Profile",
       icon: IconUser,
     });
   } else {
-    tabs.push({
-      to: "/cards/create",
-      label: "Sell",
-      icon: IconPlus,
-      accent: true,
-    });
     tabs.push({ to: "/profile", label: "Sign in", icon: IconUser });
   }
   return tabs;
 });
+
+const sellMenuOpen = ref(false);
+const searchOpen = ref(false);
+const searchQuery = ref("");
+const searchInput = ref<HTMLInputElement | null>(null);
+
+// Cards subscription is a singleton so this is cheap — same data already
+// loaded by the Shop page.
+const { cards } = useCards();
+
+const searchResults = computed(() => {
+  const term = searchQuery.value.trim().toLowerCase();
+  if (!term) return [];
+  return cards.value
+    .filter((c: any) => !c.sold)
+    .filter((c: any) => {
+      const hay = `${c.cardName} ${c.cardSet} ${c.seller}`.toLowerCase();
+      return hay.includes(term);
+    })
+    .slice(0, 30);
+});
+
+// Close the menus when user clicks anywhere else, and focus the search
+// input when the modal opens.
+const handleDocClick = () => {
+  sellMenuOpen.value = false;
+};
+onMounted(() => {
+  document.addEventListener("click", handleDocClick);
+});
+onBeforeUnmount(() => {
+  document.removeEventListener("click", handleDocClick);
+});
+
+watch(searchOpen, async (open) => {
+  if (open) {
+    await nextTick();
+    searchInput.value?.focus();
+  } else {
+    searchQuery.value = "";
+  }
+});
+
+// Close transient menus on route change.
+const route = useRoute();
+watch(
+  () => route.fullPath,
+  () => {
+    sellMenuOpen.value = false;
+    searchOpen.value = false;
+  },
+);
 </script>
