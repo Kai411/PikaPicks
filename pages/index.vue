@@ -39,7 +39,7 @@
         class="group block"
       >
         <article
-          class="surface rounded-2xl overflow-hidden hover:shadow-card-hover transition-shadow duration-300 ease-premium"
+          class="surface rounded-2xl overflow-hidden hover:shadow-card-hover transition-shadow duration-300 ease-premium h-full flex flex-col"
         >
           <!-- White-framed image well: padding around the image so the card
                art doesn't crash into the surrounding tile edge. -->
@@ -61,19 +61,21 @@
                 No image
               </div>
 
-              <!-- Bottom-left pills: seller name + condition -->
+              <!-- Bottom-left pills: seller name + condition. flex-nowrap +
+                   truncation keeps them on a single row so the image area
+                   is always the same height. -->
               <div
-                class="absolute left-1.5 right-1.5 bottom-1.5 flex items-end gap-1 flex-wrap pointer-events-none"
+                class="absolute left-1.5 right-1.5 bottom-1.5 flex items-end gap-1 flex-nowrap pointer-events-none"
               >
                 <span
                   v-if="card.seller"
-                  class="inline-flex items-center max-w-[60%] truncate px-1.5 py-0.5 rounded-md text-[10px] font-semibold tracking-wide bg-white/95 text-ink shadow-sm"
+                  class="inline-flex items-center min-w-0 max-w-[60%] truncate px-1.5 py-0.5 rounded-md text-[10px] font-semibold tracking-wide whitespace-nowrap bg-white/95 text-ink shadow-sm"
                 >
                   {{ card.seller }}
                 </span>
                 <span
                   v-if="conditionLabel(card)"
-                  class="inline-flex items-center px-1.5 py-0.5 rounded-md text-[10px] font-semibold tracking-wide uppercase bg-white/95 shadow-sm"
+                  class="inline-flex items-center min-w-0 truncate px-1.5 py-0.5 rounded-md text-[10px] font-semibold tracking-wide uppercase whitespace-nowrap bg-white/95 shadow-sm"
                   :class="conditionPillTone(card)"
                 >
                   {{ conditionLabel(card) }}
@@ -82,7 +84,10 @@
             </div>
           </div>
 
-          <div class="px-3.5 sm:px-4 pt-2 pb-3.5 sm:pb-4">
+          <!-- Body: flex-1 fills the rest of the cell, mt-auto on the price
+               row keeps prices aligned across tiles even when the subtitle
+               line is missing. -->
+          <div class="px-3.5 sm:px-4 pt-2 pb-3.5 sm:pb-4 flex-1 flex flex-col">
             <h3
               class="font-semibold text-[15px] leading-tight text-ink dark:text-white truncate"
             >
@@ -95,7 +100,7 @@
               {{ card.cardSet }}
             </p>
 
-            <div class="mt-3 flex items-end justify-between">
+            <div class="mt-auto pt-3 flex items-end justify-between">
               <div class="min-w-0">
                 <span class="text-[10px] font-semibold uppercase tracking-wider text-ink-soft dark:text-zinc-500">
                   RM
