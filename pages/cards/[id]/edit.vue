@@ -31,7 +31,9 @@
           <div
             class="bg-white dark:bg-white/[0.04] rounded-xl border border-gray-200 dark:border-white/[0.08] p-5 space-y-3 lg:col-span-2"
           >
-            <h3 class="text-sm font-semibold text-gray-900 dark:text-zinc-100">Photos</h3>
+            <h3 class="text-sm font-semibold text-gray-900 dark:text-zinc-100">
+              Photos
+            </h3>
 
             <!-- Existing images -->
             <div
@@ -70,7 +72,9 @@
                 class="hidden"
                 @change="handleFileSelect"
               />
-              <p class="text-sm text-gray-400 dark:text-zinc-500">Add more photos</p>
+              <p class="text-sm text-gray-400 dark:text-zinc-500">
+                Add more photos
+              </p>
             </div>
 
             <div v-if="newFiles.length > 0" class="grid grid-cols-4 gap-2">
@@ -95,8 +99,12 @@
           </div>
 
           <!-- Price -->
-          <div class="bg-white dark:bg-white/[0.04] rounded-xl border border-gray-200 dark:border-white/[0.08] p-5">
-            <label class="block text-sm font-semibold text-gray-900 dark:text-zinc-100 mb-2">
+          <div
+            class="bg-white dark:bg-white/[0.04] rounded-xl border border-gray-200 dark:border-white/[0.08] p-5"
+          >
+            <label
+              class="block text-sm font-semibold text-gray-900 dark:text-zinc-100 mb-2"
+            >
               Price (RM) <span class="text-pokemon-red">*</span>
             </label>
             <input
@@ -111,11 +119,16 @@
           </div>
 
           <!-- Shipping -->
-          <div class="bg-white dark:bg-white/[0.04] rounded-xl border border-gray-200 dark:border-white/[0.08] p-5 space-y-3">
-            <h3 class="text-sm font-semibold text-gray-900 dark:text-zinc-100">Shipping</h3>
+          <div
+            class="bg-white dark:bg-white/[0.04] rounded-xl border border-gray-200 dark:border-white/[0.08] p-5 space-y-3"
+          >
+            <h3 class="text-sm font-semibold text-gray-900 dark:text-zinc-100">
+              Shipping
+            </h3>
             <div class="grid grid-cols-2 gap-3">
               <div>
-                <label class="block text-xs text-gray-600 dark:text-zinc-300 mb-1"
+                <label
+                  class="block text-xs text-gray-600 dark:text-zinc-300 mb-1"
                   >West Malaysia (RM)</label
                 >
                 <input
@@ -127,7 +140,8 @@
                 />
               </div>
               <div>
-                <label class="block text-xs text-gray-600 dark:text-zinc-300 mb-1"
+                <label
+                  class="block text-xs text-gray-600 dark:text-zinc-300 mb-1"
                   >East Malaysia (RM)</label
                 >
                 <input
@@ -164,6 +178,15 @@
             {{ submitting ? "Saving..." : "Save Changes" }}
           </button>
         </div>
+
+        <button
+          type="button"
+          @click="handleDelete"
+          :disabled="deleting"
+          class="w-full py-3 rounded-lg border border-red-300 dark:border-red-500/30 text-pokemon-red font-medium hover:bg-red-50 dark:hover:bg-red-500/10 transition-colors disabled:opacity-50"
+        >
+          {{ deleting ? "Deleting..." : "Delete Listing" }}
+        </button>
       </form>
     </template>
   </div>
@@ -178,7 +201,7 @@ const route = useRoute();
 const router = useRouter();
 const cardId = route.params.id as string;
 
-const { cards, loading } = useCards();
+const { cards, loading, deleteCard } = useCards();
 const { firestore } = useFirebase();
 const { user } = useAuth();
 const { uploadAuctionImages } = useStorage();
@@ -340,6 +363,26 @@ const handleSubmit = async () => {
     error.value = e.message || "Failed to save changes";
   } finally {
     submitting.value = false;
+  }
+};
+
+const deleting = ref(false);
+
+const handleDelete = async () => {
+  if (
+    !window.confirm(
+      "Are you sure you want to delete this listing? This cannot be undone.",
+    )
+  )
+    return;
+  deleting.value = true;
+  try {
+    await deleteCard(cardId);
+    await router.push("/");
+  } catch (e: any) {
+    error.value = e.message || "Failed to delete listing";
+  } finally {
+    deleting.value = false;
   }
 };
 </script>

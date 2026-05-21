@@ -2,6 +2,7 @@ import {
   collection,
   addDoc,
   updateDoc,
+  deleteDoc,
   doc,
   onSnapshot,
   query,
@@ -42,25 +43,31 @@ export interface Card {
 
   // ── Product metadata (auto-filled by scanner where possible) ─────────
   rarity?: string;
-  variant?: string;       // Normal / Holo / Reverse Holo / Full Art / ...
-  edition?: string;       // Unlimited / 1st Edition / Shadowless / Promo
-  era?: string;           // WOTC / EX / Modern / SwSh / SV / ...
-  artist?: string;        // illustrator credit from the card face
+  variant?: string; // Normal / Holo / Reverse Holo / Full Art / ...
+  edition?: string; // Unlimited / 1st Edition / Shadowless / Promo
+  era?: string; // WOTC / EX / Modern / SwSh / SV / ...
+  artist?: string; // illustrator credit from the card face
 
   // ── Authenticity / cert ──────────────────────────────────────────────
-  certNumber?: string;    // PSA/CGC cert # for graded slabs
+  certNumber?: string; // PSA/CGC cert # for graded slabs
 
   // ── Search / discovery ──────────────────────────────────────────────
-  tags?: string[];        // seller-defined free-form tags
-  defects?: string[];     // called-out flaws ("edge wear", "soft corners")
+  tags?: string[]; // seller-defined free-form tags
+  defects?: string[]; // called-out flaws ("edge wear", "soft corners")
 
   // ── Commerce flags ──────────────────────────────────────────────────
   negotiable?: boolean;
   pickupAvailable?: boolean;
-  quantity?: number;      // default 1
+  quantity?: number; // default 1
 
   // ── Lifecycle (replaces the `sold` boolean over time) ───────────────
-  status?: "active" | "reserved" | "pending_payment" | "sold" | "cancelled" | "expired";
+  status?:
+    | "active"
+    | "reserved"
+    | "pending_payment"
+    | "sold"
+    | "cancelled"
+    | "expired";
 
   // ── Engagement (computed, written by app) ───────────────────────────
   viewCount?: number;
@@ -129,5 +136,10 @@ export const useCards = () => {
     await updateDoc(cardDoc, { interestedCount: increment(1) });
   };
 
-  return { cards, loading, createCard, markAsSold, markInterested };
+  const deleteCard = async (cardId: string) => {
+    const cardDoc = doc(firestore!, "cards", cardId);
+    await deleteDoc(cardDoc);
+  };
+
+  return { cards, loading, createCard, markAsSold, markInterested, deleteCard };
 };
