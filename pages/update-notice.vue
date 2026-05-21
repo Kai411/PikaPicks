@@ -4,7 +4,7 @@ definePageMeta({
 });
 
 useHead({
-  title: "TCGo Marketplace - Buy, Sell & Auction Pokemon Cards in Malaysia",
+  title: "Updates · TCGo",
 });
 </script>
 
