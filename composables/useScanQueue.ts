@@ -1,6 +1,25 @@
 import { ref } from "vue";
 import type { TcgCard } from "./usePokemonTcg";
 
+// Normalize the pokemontcg.io rarity values into our 7-bucket picker.
+// API values are fine-grained ("Rare Holo VMAX", "Rare Ultra", "Rare
+// Rainbow", "Amazing Rare", ...) — we collapse them into Common /
+// Uncommon / Rare / Rare Holo / Ultra Rare / Secret Rare / Promo.
+const normalizeApiRarity = (raw: string | null | undefined): string => {
+  if (!raw) return "";
+  const r = raw.toLowerCase();
+  if (r === "common") return "Common";
+  if (r === "uncommon") return "Uncommon";
+  if (r.includes("promo")) return "Promo";
+  if (r.includes("rainbow") || r.includes("secret") || r.includes("shiny") || r.includes("hyper") || r.includes("gold"))
+    return "Secret Rare";
+  if (r.includes("ultra") || r.includes("vmax") || r.includes("vstar") || r.includes("ex") || r.includes("gx") || r.includes("amazing") || r.includes("radiant"))
+    return "Ultra Rare";
+  if (r.includes("holo")) return "Rare Holo";
+  if (r.includes("rare")) return "Rare";
+  return "";
+};
+
 // One scanned card waiting to be turned into a listing or auction. The
 // queue is shared across the scanner modal and the create page so the
 // user can scan-scan-scan and then fill in per-card details all at once.
@@ -26,6 +45,12 @@ export interface ScanQueueItem {
   detectedNumber?: string;
   // Detected card language ("EN", "JP", "KR", ...). Defaults to "EN".
   language?: string;
+  // Visual metadata extracted from the card face — these flow into the
+  // listing on publish so users don't have to re-enter them.
+  rarity?: string;
+  variant?: string;
+  edition?: string;
+  artist?: string;
 
   // Populated once status === "ready" (and on the picked candidate of
   // "needs-pick" after the user chooses).
@@ -79,13 +104,19 @@ export const useScanQueue = () => {
       ? `${match.number}/${printedTotal}`
       : match.number;
 
+    // TCG-API rarity is authoritative for English cards; fall back to
+    // whatever Gemini guessed if the API has no value for this print.
+    const current = queue.value.find((i) => i.id === id);
+    const apiRarity = normalizeApiRarity(match.rarity);
+    const rarity = apiRarity || current?.rarity || "";
+
     updateItem(id, {
       status: "ready",
       tcgApiId: match.id,
       cardName: match.name,
       cardSet: match.set.name,
       cardNumber,
-      rarity: match.rarity || "",
+      rarity,
       imageUrl: match.images.large || match.images.small,
       matches: undefined,
     });

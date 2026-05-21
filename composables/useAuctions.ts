@@ -36,6 +36,36 @@ export interface Auction {
   bids: Record<string, Bid>;
   autoBids: Record<string, AutoBid>;
   language?: string;
+  tcgType?: string;
+
+  // ── Product metadata (auto-filled by scanner where possible) ─────────
+  rarity?: string;
+  variant?: string;
+  edition?: string;
+  era?: string;
+  artist?: string;
+
+  // ── Authenticity / cert ──────────────────────────────────────────────
+  certNumber?: string;
+
+  // ── Search / discovery ──────────────────────────────────────────────
+  tags?: string[];
+  defects?: string[];
+
+  // ── Commerce flags ──────────────────────────────────────────────────
+  negotiable?: boolean;
+  pickupAvailable?: boolean;
+  quantity?: number;
+
+  // ── Lifecycle ────────────────────────────────────────────────────────
+  status?: "active" | "reserved" | "pending_payment" | "sold" | "cancelled" | "expired";
+
+  // ── Engagement ──────────────────────────────────────────────────────
+  viewCount?: number;
+
+  // Populated on the listing payload (where bids are stripped for perf)
+  // so tiles can show a bid count without holding the full bid map.
+  bidCount?: number;
 }
 
 export interface Bid {
@@ -78,8 +108,9 @@ const initializeAuctions = () => {
       // separately via useAuctionDetail.
       auctions.value = Object.entries(data).map(([id, raw]) => {
         const auction = raw as any;
-        const { bids: _b, autoBids: _ab, ...rest } = auction;
-        return { ...(rest as Omit<Auction, "id">), id } as Auction;
+        const { bids, autoBids: _ab, ...rest } = auction;
+        const bidCount = bids ? Object.keys(bids).length : 0;
+        return { ...(rest as Omit<Auction, "id">), id, bidCount } as Auction;
       });
     } else {
       auctions.value = [];

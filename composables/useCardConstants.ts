@@ -13,6 +13,54 @@ export const CARD_LANGUAGES = [
   { code: "PT", label: "Portuguese" },
 ] as const;
 
+// Trading-card game / franchise. Listings default to "Pokemon" for
+// back-compat with the original Pokemon-only catalog. Scanner only
+// supports Pokemon today; non-Pokemon listings have to be entered
+// manually.
+export const TCG_TYPES = [
+  "Pokemon",
+  "One Piece",
+  "Digimon",
+  "Magic: The Gathering",
+  "Yu-Gi-Oh!",
+  "Dragon Ball Super",
+  "Lorcana",
+  "Other",
+] as const;
+export type TcgType = (typeof TCG_TYPES)[number];
+
+// Rarities — Pokemon-focused since the scanner is Pokemon-only, but the
+// hierarchy maps well to other TCGs (Common → Uncommon → Rare → higher).
+// Free-form string in the schema so sellers of other games can pick
+// whatever fits.
+export const RARITIES = [
+  "Common",
+  "Uncommon",
+  "Rare",
+  "Rare Holo",
+  "Ultra Rare",
+  "Secret Rare",
+  "Promo",
+] as const;
+
+// Visual variant — distinct from rarity (a card can be both "Rare" and
+// "Reverse Holo"). Pokemon-driven but generic enough for other TCGs.
+export const VARIANTS = [
+  "Normal",
+  "Holo",
+  "Reverse Holo",
+  "Full Art",
+  "Alt Art",
+  "Rainbow Rare",
+  "Gold",
+  "Stamped",
+  "Promo",
+] as const;
+
+// Edition / print run. "Unlimited" is the default print and the assumed
+// value when nothing is selected.
+export const EDITIONS = ["Unlimited", "1st Edition", "Shadowless", "Promo"] as const;
+
 export const UNGRADED_CONDITIONS = [
   "Mint (M)",
   "Near Mint (NM)",

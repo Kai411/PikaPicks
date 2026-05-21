@@ -174,10 +174,9 @@ const formatTimeLeft = (endsAt: number) => {
   return `${hours}h ${minutes}m`;
 };
 
-// bids gets stripped from the listing payload by useAuctions, so it can be
-// undefined here — fall back to 0 in that case.
-const bidCount = (auction: Auction) =>
-  auction.bids ? Object.keys(auction.bids).length : 0;
+// useAuctions strips the full bid map from the listing payload and
+// computes the count instead — saves a lot of memory on long pages.
+const bidCount = (auction: Auction) => auction.bidCount ?? 0;
 
 // Short pill label that always fits on a tile. Ungraded labels in the
 // constants list are written as "Near Mint (NM)", "Moderately Played (MP)",

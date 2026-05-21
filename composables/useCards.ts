@@ -36,6 +36,34 @@ export interface Card {
   // 2-letter ISO of the card's printed language. Defaults to "EN" for
   // existing listings that pre-date this field.
   language?: string;
+  // Trading-card game / franchise. Defaults to "Pokemon" for back-compat
+  // with the original Pokemon-only catalog.
+  tcgType?: string;
+
+  // ── Product metadata (auto-filled by scanner where possible) ─────────
+  rarity?: string;
+  variant?: string;       // Normal / Holo / Reverse Holo / Full Art / ...
+  edition?: string;       // Unlimited / 1st Edition / Shadowless / Promo
+  era?: string;           // WOTC / EX / Modern / SwSh / SV / ...
+  artist?: string;        // illustrator credit from the card face
+
+  // ── Authenticity / cert ──────────────────────────────────────────────
+  certNumber?: string;    // PSA/CGC cert # for graded slabs
+
+  // ── Search / discovery ──────────────────────────────────────────────
+  tags?: string[];        // seller-defined free-form tags
+  defects?: string[];     // called-out flaws ("edge wear", "soft corners")
+
+  // ── Commerce flags ──────────────────────────────────────────────────
+  negotiable?: boolean;
+  pickupAvailable?: boolean;
+  quantity?: number;      // default 1
+
+  // ── Lifecycle (replaces the `sold` boolean over time) ───────────────
+  status?: "active" | "reserved" | "pending_payment" | "sold" | "cancelled" | "expired";
+
+  // ── Engagement (computed, written by app) ───────────────────────────
+  viewCount?: number;
 }
 
 // Module-level singleton. Previously each call opened a new Firestore

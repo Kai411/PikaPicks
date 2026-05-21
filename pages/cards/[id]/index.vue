@@ -40,7 +40,7 @@
           <!-- Images -->
           <div class="bg-gray-100 dark:bg-white/[0.02] p-4">
             <div
-              class="aspect-square rounded-lg overflow-hidden bg-white dark:bg-white/[0.04] flex items-center justify-center"
+              class="relative aspect-square rounded-lg overflow-hidden bg-white dark:bg-white/[0.04] flex items-center justify-center"
             >
               <img
                 v-if="activeImage"
@@ -49,6 +49,12 @@
                 class="w-full h-full object-contain"
               />
               <span v-else class="text-gray-400 dark:text-zinc-500">No Image</span>
+              <span
+                v-if="allImages.length > 1"
+                class="absolute bottom-2 right-2 bg-black/70 text-white text-xs font-semibold tabular-nums px-2 py-0.5 rounded-full"
+              >
+                {{ activeImageIndex + 1 }}/{{ allImages.length }}
+              </span>
             </div>
             <div v-if="allImages.length > 1" class="flex gap-2 mt-3">
               <button
@@ -119,20 +125,65 @@
                   {{ card.language }}
                 </span>
                 <span
-                  v-if="card.productType"
+                  v-if="card.productType === 'Graded' && card.grade"
+                  class="inline-flex items-center gap-1 text-xs font-bold px-2 py-0.5 rounded-full bg-amber-500/15 text-amber-700 dark:text-amber-300"
+                >
+                  <span class="uppercase tracking-wide">{{
+                    card.gradingProvider === "Others"
+                      ? card.customGradingProvider || "Graded"
+                      : card.gradingProvider
+                  }}</span>
+                  <span>{{ card.grade }}</span>
+                </span>
+                <span
+                  v-else-if="card.productType"
                   class="text-xs font-medium px-2 py-0.5 rounded-full"
                   :class="{
                     'bg-blue-100 text-blue-700':
                       card.productType === 'Ungraded',
-                    'bg-purple-100 text-purple-700':
-                      card.productType === 'Graded',
                     'bg-amber-100 text-amber-700':
                       card.productType === 'Sealed',
                   }"
                 >
                   {{ card.productType }}
                 </span>
+                <span
+                  v-if="card.rarity"
+                  class="bg-gray-100 dark:bg-white/[0.04] text-gray-700 dark:text-zinc-200 text-xs font-medium px-2 py-0.5 rounded-full"
+                >
+                  {{ card.rarity }}
+                </span>
+                <span
+                  v-if="card.variant && card.variant !== 'Normal'"
+                  class="bg-indigo-100 text-indigo-700 dark:bg-indigo-500/15 dark:text-indigo-300 text-xs font-medium px-2 py-0.5 rounded-full"
+                >
+                  {{ card.variant }}
+                </span>
+                <span
+                  v-if="card.edition && card.edition !== 'Unlimited'"
+                  class="bg-rose-100 text-rose-700 dark:bg-rose-500/15 dark:text-rose-300 text-xs font-medium px-2 py-0.5 rounded-full"
+                >
+                  {{ card.edition }}
+                </span>
+                <span
+                  v-if="card.pickupAvailable"
+                  class="bg-emerald-100 text-emerald-700 dark:bg-emerald-500/15 dark:text-emerald-300 text-xs font-medium px-2 py-0.5 rounded-full"
+                >
+                  Pickup OK
+                </span>
+                <span
+                  v-if="card.negotiable"
+                  class="bg-emerald-100 text-emerald-700 dark:bg-emerald-500/15 dark:text-emerald-300 text-xs font-medium px-2 py-0.5 rounded-full"
+                >
+                  Negotiable
+                </span>
               </div>
+              <p
+                v-if="card.artist"
+                class="text-xs text-gray-500 dark:text-zinc-400 mt-2"
+              >
+                Illus. {{ card.artist }}
+              </p>
 
               <p class="text-pokemon-red text-2xl font-bold mt-4">
                 RM {{ card.price.toFixed(2) }}

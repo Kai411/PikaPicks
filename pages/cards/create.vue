@@ -314,6 +314,48 @@
                     class="w-full border border-gray-300 dark:border-white/[0.10] rounded px-2 py-1.5 text-xs resize-none"
                   />
 
+                  <!-- Auto-detected metadata — edit if the scanner got it
+                       wrong. Writes back to the queue item directly so
+                       publish picks up the corrected value. -->
+                  <div class="grid grid-cols-3 gap-2">
+                    <select
+                      :value="item.rarity || ''"
+                      @change="
+                        updateQueueItem(item.id, {
+                          rarity: ($event.target as HTMLSelectElement).value,
+                        })
+                      "
+                      class="border border-gray-300 dark:border-white/[0.10] rounded px-2 py-1.5 text-xs"
+                    >
+                      <option value="">Rarity…</option>
+                      <option v-for="r in RARITIES" :key="r" :value="r">{{ r }}</option>
+                    </select>
+                    <select
+                      :value="item.variant || ''"
+                      @change="
+                        updateQueueItem(item.id, {
+                          variant: ($event.target as HTMLSelectElement).value,
+                        })
+                      "
+                      class="border border-gray-300 dark:border-white/[0.10] rounded px-2 py-1.5 text-xs"
+                    >
+                      <option value="">Variant…</option>
+                      <option v-for="v in VARIANTS" :key="v" :value="v">{{ v }}</option>
+                    </select>
+                    <select
+                      :value="item.edition || ''"
+                      @change="
+                        updateQueueItem(item.id, {
+                          edition: ($event.target as HTMLSelectElement).value,
+                        })
+                      "
+                      class="border border-gray-300 dark:border-white/[0.10] rounded px-2 py-1.5 text-xs"
+                    >
+                      <option value="">Edition…</option>
+                      <option v-for="e in EDITIONS" :key="e" :value="e">{{ e }}</option>
+                    </select>
+                  </div>
+
                   <!-- Extra photos -->
                   <div>
                     <p class="text-[11px] font-medium text-gray-600 dark:text-zinc-300 mb-1.5">
@@ -555,6 +597,9 @@ import type { CardFormData } from "~/components/CardFormFields.vue";
 import {
   UNGRADED_CONDITIONS,
   GRADING_PROVIDERS,
+  RARITIES,
+  VARIANTS,
+  EDITIONS,
   getGradesForProvider,
 } from "~/composables/useCardConstants";
 
@@ -780,6 +825,13 @@ const publishDrafts = async () => {
         seller: sellerName,
         sellerUid,
         language: item.language || "EN",
+        tcgType: "Pokemon",
+        rarity: item.rarity || "",
+        variant: item.variant || "",
+        edition: item.edition || "",
+        artist: item.artist || "",
+        quantity: 1,
+        status: "active",
       });
       // Remove the published item from the queue so unresolved ones remain
       // for the user to handle separately.
@@ -861,6 +913,15 @@ const cardForm = ref<CardFormData>({
   shippingWM: 8,
   shippingEM: 12,
   language: "EN",
+  tcgType: "Pokemon",
+  rarity: "",
+  variant: "",
+  edition: "",
+  artist: "",
+  certNumber: "",
+  quantity: 1,
+  negotiable: false,
+  pickupAvailable: false,
 });
 
 const price = ref<number | null>(null);
@@ -977,6 +1038,16 @@ const handleSubmit = async () => {
         profile.value?.customName || user.value!.displayName || "Anonymous",
       sellerUid: user.value!.uid,
       language: cardForm.value.language || "EN",
+      tcgType: cardForm.value.tcgType || "Pokemon",
+      rarity: cardForm.value.rarity || "",
+      variant: cardForm.value.variant || "",
+      edition: cardForm.value.edition || "",
+      artist: cardForm.value.artist || "",
+      certNumber: cardForm.value.certNumber || "",
+      quantity: cardForm.value.quantity || 1,
+      negotiable: cardForm.value.negotiable === true,
+      pickupAvailable: cardForm.value.pickupAvailable === true,
+      status: "active",
     });
 
     selectedFiles.value.forEach((f: any) => URL.revokeObjectURL(f.preview));

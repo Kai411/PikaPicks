@@ -1,5 +1,29 @@
 <template>
   <div>
+    <!-- TCG filter pills. Hidden while loading so we don't flash an empty
+         filter row above the spinner. -->
+    <div
+      v-if="!loading && tcgCounts.length > 1"
+      class="-mx-4 px-4 mb-4 sm:mb-6 overflow-x-auto"
+    >
+      <div class="flex items-center gap-2 whitespace-nowrap">
+        <button
+          v-for="{ type, count } in tcgCounts"
+          :key="type"
+          @click="activeTcg = type"
+          class="px-3.5 py-1.5 rounded-full text-sm font-semibold transition-colors ease-premium shrink-0"
+          :class="
+            activeTcg === type
+              ? 'bg-ink text-white dark:bg-white dark:text-ink'
+              : 'bg-black/[0.04] text-ink-muted dark:bg-white/[0.06] dark:text-zinc-400 hover:text-ink dark:hover:text-white'
+          "
+        >
+          {{ type }}
+          <span class="ml-1 text-xs opacity-70 tabular-nums">{{ count }}</span>
+        </button>
+      </div>
+    </div>
+
     <!-- Loading -->
     <div v-if="loading" class="flex justify-center py-24">
       <div
@@ -155,9 +179,32 @@ useHead({
 const { user } = useAuth();
 const { cards, loading } = useCards();
 
+// TCG filter — defaults to "All". Cards pre-dating the tcgType field
+// are bucketed as "Pokemon" so the legacy catalog stays visible.
+const activeTcg = ref<string>("All");
+const tcgOf = (c: Card) => c.tcgType || "Pokemon";
+
+const tcgCounts = computed(() => {
+  const live = cards.value.filter((c: Card) => !c.sold);
+  const counts = new Map<string, number>();
+  counts.set("All", live.length);
+  for (const c of live) {
+    const t = tcgOf(c);
+    counts.set(t, (counts.get(t) ?? 0) + 1);
+  }
+  // Order: All first, then by count desc.
+  const rest = [...counts.entries()]
+    .filter(([type]) => type !== "All")
+    .sort((a, b) => b[1] - a[1]);
+  return [["All", counts.get("All") ?? 0] as [string, number], ...rest].map(
+    ([type, count]) => ({ type, count }),
+  );
+});
+
 const availableCards = computed(() =>
   cards.value
     .filter((c: Card) => !c.sold)
+    .filter((c: Card) => activeTcg.value === "All" || tcgOf(c) === activeTcg.value)
     .sort((a: Card, b: Card) => b.createdAt - a.createdAt),
 );
 

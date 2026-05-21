@@ -15,12 +15,15 @@ The card may be from any region: English, Japanese, Korean, Chinese, German, Fre
 
 The card may be rotated, tilted, partially obscured by a hand or sleeve, or have holo/glare reflections. Mentally rotate the image as needed and look past glare to read the printed text.
 
-Return ONLY a JSON object with three fields:
+Return ONLY a JSON object with these fields. If you genuinely cannot read a field, use null for that field. Do not guess.
+
 - "name": the card's English Pokemon name (e.g. "Charizard ex", "Tyranitar", "Chansey", "Pikachu VMAX"). Even if the printed text is in another language, return the English name. Use the main name only — no HP, attack text, or trainer card descriptors.
 - "number": the set number printed near the bottom corner, formatted exactly as "N/Total" (e.g. "20/189", "187/167", "222/193"). Japanese cards use the same format (often "001/100"). Strip any leading zeros from N — write "20" not "020".
-- "language": the language of the printed text on the card as a 2-letter ISO code. One of: "EN" (English), "JP" (Japanese), "KR" (Korean), "CN" (Chinese, simplified or traditional), "DE" (German), "FR" (French), "IT" (Italian), "ES" (Spanish), "PT" (Portuguese). Default to "EN" if uncertain.
-
-If you genuinely cannot read a field, use null for that field. Do not guess.`;
+- "language": the language of the printed text on the card as a 2-letter ISO code. One of: "EN", "JP", "KR", "CN", "DE", "FR", "IT", "ES", "PT". Default to "EN" if uncertain.
+- "rarity": one of "Common", "Uncommon", "Rare", "Rare Holo", "Ultra Rare", "Secret Rare", "Promo". Use the rarity symbol next to the card number (● = Common, ◆ = Uncommon, ★ = Rare, double-star or ☆☆ = Ultra/Secret Rare, white star = Promo) plus visual cues (full-art / rainbow / gold borders → Secret Rare).
+- "variant": one of "Normal", "Holo", "Reverse Holo", "Full Art", "Alt Art", "Rainbow Rare", "Gold", "Stamped", "Promo". Look at the artwork frame and texture — only the artwork is shiny → Holo; the whole card background is shiny → Reverse Holo; artwork covers the full card → Full Art; alternate illustration / stylized art → Alt Art; rainbow/iridescent → Rainbow Rare; gold-metallic body → Gold. Default to "Normal" if it looks like a standard non-holo print.
+- "edition": one of "Unlimited", "1st Edition", "Shadowless", "Promo". Look for a "1st Edition" stamp/badge to the left of the artwork (mostly vintage WOTC era); no drop-shadow behind the artwork box on early base-set prints → "Shadowless"; visible "PROMO"/black-star stamp → "Promo"; otherwise "Unlimited".
+- "artist": the illustrator name printed in small text at the bottom of the artwork ("Illus. <name>" or "イラスト <name>"). Return just the name, no "Illus." prefix.`;
 
 interface RequestBody {
   imageBase64?: string;
@@ -63,6 +66,10 @@ export default defineEventHandler(async (event) => {
           name: { type: "string", nullable: true },
           number: { type: "string", nullable: true },
           language: { type: "string", nullable: true },
+          rarity: { type: "string", nullable: true },
+          variant: { type: "string", nullable: true },
+          edition: { type: "string", nullable: true },
+          artist: { type: "string", nullable: true },
         },
         required: ["name", "number", "language"],
       },
@@ -94,6 +101,10 @@ export default defineEventHandler(async (event) => {
     name?: string | null;
     number?: string | null;
     language?: string | null;
+    rarity?: string | null;
+    variant?: string | null;
+    edition?: string | null;
+    artist?: string | null;
   } = {};
   try {
     parsed = JSON.parse(text);
@@ -107,13 +118,29 @@ export default defineEventHandler(async (event) => {
   if (m) number = `${m[1].replace(/^0+/, "") || "0"}/${m[2]}`;
 
   // Normalize language: uppercase, fall back to EN if missing or unknown.
-  const ALLOWED = ["EN", "JP", "KR", "CN", "DE", "FR", "IT", "ES", "PT"];
+  const ALLOWED_LANGS = ["EN", "JP", "KR", "CN", "DE", "FR", "IT", "ES", "PT"];
   const lang = (parsed.language || "").toUpperCase().trim();
-  const language = ALLOWED.includes(lang) ? lang : "EN";
+  const language = ALLOWED_LANGS.includes(lang) ? lang : "EN";
+
+  // Normalize free-form-ish enums by snapping to the closest allowed
+  // value when the model returns a near-miss ("Holo Rare" vs "Rare Holo").
+  const normalize = (raw: string | null | undefined, allowed: readonly string[]) => {
+    if (!raw) return "";
+    const v = raw.trim();
+    const exact = allowed.find((a) => a.toLowerCase() === v.toLowerCase());
+    return exact || "";
+  };
+  const RARITIES = ["Common", "Uncommon", "Rare", "Rare Holo", "Ultra Rare", "Secret Rare", "Promo"];
+  const VARIANTS = ["Normal", "Holo", "Reverse Holo", "Full Art", "Alt Art", "Rainbow Rare", "Gold", "Stamped", "Promo"];
+  const EDITIONS = ["Unlimited", "1st Edition", "Shadowless", "Promo"];
 
   return {
     name: (parsed.name || "").trim(),
     number,
     language,
+    rarity: normalize(parsed.rarity, RARITIES),
+    variant: normalize(parsed.variant, VARIANTS),
+    edition: normalize(parsed.edition, EDITIONS),
+    artist: (parsed.artist || "").trim(),
   };
 });

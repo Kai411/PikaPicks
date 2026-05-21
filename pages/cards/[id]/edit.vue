@@ -203,6 +203,15 @@ const cardForm = ref<CardFormData>({
   shippingWM: 8,
   shippingEM: 12,
   language: "EN",
+  tcgType: "Pokemon",
+  rarity: "",
+  variant: "",
+  edition: "",
+  artist: "",
+  certNumber: "",
+  quantity: 1,
+  negotiable: false,
+  pickupAvailable: false,
 });
 
 const price = ref<number | null>(null);
@@ -231,6 +240,15 @@ watch(
         shippingWM: c.shippingWM ?? 8,
         shippingEM: c.shippingEM ?? 12,
         language: c.language || "EN",
+        tcgType: c.tcgType || "Pokemon",
+        rarity: c.rarity || "",
+        variant: c.variant || "",
+        edition: c.edition || "",
+        artist: c.artist || "",
+        certNumber: c.certNumber || "",
+        quantity: c.quantity ?? 1,
+        negotiable: c.negotiable === true,
+        pickupAvailable: c.pickupAvailable === true,
       };
       price.value = c.price;
       existingImages.value = [
@@ -305,6 +323,15 @@ const handleSubmit = async () => {
       imageUrl: allImages[0] || "",
       imageUrls: allImages,
       language: cardForm.value.language || "EN",
+      tcgType: cardForm.value.tcgType || "Pokemon",
+      rarity: cardForm.value.rarity || "",
+      variant: cardForm.value.variant || "",
+      edition: cardForm.value.edition || "",
+      artist: cardForm.value.artist || "",
+      certNumber: cardForm.value.certNumber || "",
+      quantity: cardForm.value.quantity || 1,
+      negotiable: cardForm.value.negotiable === true,
+      pickupAvailable: cardForm.value.pickupAvailable === true,
     });
 
     newFiles.value.forEach((f) => URL.revokeObjectURL(f.preview));

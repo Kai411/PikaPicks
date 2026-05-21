@@ -59,6 +59,19 @@
 
     <div>
       <label class="block text-sm font-medium text-gray-700 dark:text-zinc-200 mb-1">
+        TCG / Franchise
+      </label>
+      <select
+        :value="modelValue.tcgType || 'Pokemon'"
+        @change="onInput('tcgType', $event)"
+        class="w-full bg-white border border-gray-300 dark:border-white/[0.10] rounded-lg px-4 py-2.5 text-gray-900 dark:text-zinc-100 focus:border-pokemon-red focus:outline-none focus:ring-1 focus:ring-pokemon-red"
+      >
+        <option v-for="t in TCG_TYPES" :key="t" :value="t">{{ t }}</option>
+      </select>
+    </div>
+
+    <div>
+      <label class="block text-sm font-medium text-gray-700 dark:text-zinc-200 mb-1">
         Card Name <span class="text-pokemon-red">*</span>
       </label>
       <input
@@ -98,19 +111,112 @@
       </div>
     </div>
 
+    <div class="grid grid-cols-2 gap-3">
+      <div>
+        <label class="block text-sm font-medium text-gray-700 dark:text-zinc-200 mb-1">
+          Language
+        </label>
+        <select
+          :value="modelValue.language || 'EN'"
+          @change="onInput('language', $event)"
+          class="w-full bg-white border border-gray-300 dark:border-white/[0.10] rounded-lg px-4 py-2.5 text-gray-900 dark:text-zinc-100 focus:border-pokemon-red focus:outline-none focus:ring-1 focus:ring-pokemon-red"
+        >
+          <option v-for="l in CARD_LANGUAGES" :key="l.code" :value="l.code">
+            {{ l.label }}{{ l.code !== "EN" ? ` (${l.code})` : "" }}
+          </option>
+        </select>
+      </div>
+      <div>
+        <label class="block text-sm font-medium text-gray-700 dark:text-zinc-200 mb-1">
+          Quantity
+        </label>
+        <input
+          :value="modelValue.quantity ?? 1"
+          @input="onNumberInput('quantity', $event)"
+          type="number"
+          min="1"
+          step="1"
+          class="w-full bg-white border border-gray-300 dark:border-white/[0.10] rounded-lg px-4 py-2.5 text-gray-900 dark:text-zinc-100 focus:border-pokemon-red focus:outline-none focus:ring-1 focus:ring-pokemon-red"
+        />
+      </div>
+    </div>
+
+    <!-- Rarity / Variant / Edition — auto-filled by scanner, editable. -->
+    <div class="grid grid-cols-1 sm:grid-cols-3 gap-3">
+      <div>
+        <label class="block text-sm font-medium text-gray-700 dark:text-zinc-200 mb-1">
+          Rarity
+        </label>
+        <select
+          :value="modelValue.rarity || ''"
+          @change="onInput('rarity', $event)"
+          class="w-full bg-white border border-gray-300 dark:border-white/[0.10] rounded-lg px-4 py-2.5 text-gray-900 dark:text-zinc-100 focus:border-pokemon-red focus:outline-none focus:ring-1 focus:ring-pokemon-red"
+        >
+          <option value="">—</option>
+          <option v-for="r in RARITIES" :key="r" :value="r">{{ r }}</option>
+        </select>
+      </div>
+      <div>
+        <label class="block text-sm font-medium text-gray-700 dark:text-zinc-200 mb-1">
+          Variant
+        </label>
+        <select
+          :value="modelValue.variant || ''"
+          @change="onInput('variant', $event)"
+          class="w-full bg-white border border-gray-300 dark:border-white/[0.10] rounded-lg px-4 py-2.5 text-gray-900 dark:text-zinc-100 focus:border-pokemon-red focus:outline-none focus:ring-1 focus:ring-pokemon-red"
+        >
+          <option value="">—</option>
+          <option v-for="v in VARIANTS" :key="v" :value="v">{{ v }}</option>
+        </select>
+      </div>
+      <div>
+        <label class="block text-sm font-medium text-gray-700 dark:text-zinc-200 mb-1">
+          Edition
+        </label>
+        <select
+          :value="modelValue.edition || ''"
+          @change="onInput('edition', $event)"
+          class="w-full bg-white border border-gray-300 dark:border-white/[0.10] rounded-lg px-4 py-2.5 text-gray-900 dark:text-zinc-100 focus:border-pokemon-red focus:outline-none focus:ring-1 focus:ring-pokemon-red"
+        >
+          <option value="">—</option>
+          <option v-for="e in EDITIONS" :key="e" :value="e">{{ e }}</option>
+        </select>
+      </div>
+    </div>
+
     <div>
       <label class="block text-sm font-medium text-gray-700 dark:text-zinc-200 mb-1">
-        Language
+        Artist
       </label>
-      <select
-        :value="modelValue.language || 'EN'"
-        @change="onInput('language', $event)"
-        class="w-full bg-white border border-gray-300 dark:border-white/[0.10] rounded-lg px-4 py-2.5 text-gray-900 dark:text-zinc-100 focus:border-pokemon-red focus:outline-none focus:ring-1 focus:ring-pokemon-red"
-      >
-        <option v-for="l in CARD_LANGUAGES" :key="l.code" :value="l.code">
-          {{ l.label }}{{ l.code !== "EN" ? ` (${l.code})` : "" }}
-        </option>
-      </select>
+      <input
+        :value="modelValue.artist || ''"
+        @input="onInput('artist', $event)"
+        type="text"
+        placeholder="e.g. Mitsuhiro Arita"
+        class="w-full bg-white border border-gray-300 dark:border-white/[0.10] rounded-lg px-4 py-2.5 text-gray-900 dark:text-zinc-100 placeholder-gray-400 focus:border-pokemon-red focus:outline-none focus:ring-1 focus:ring-pokemon-red"
+      />
+    </div>
+
+    <!-- Optional flags for buyers -->
+    <div class="flex flex-wrap gap-4 pt-1">
+      <label class="inline-flex items-center gap-2 cursor-pointer text-sm text-gray-700 dark:text-zinc-200">
+        <input
+          type="checkbox"
+          :checked="modelValue.negotiable === true"
+          @change="onCheckboxInput('negotiable', $event)"
+          class="w-4 h-4 rounded text-pokemon-red focus:ring-pokemon-red"
+        />
+        Negotiable
+      </label>
+      <label class="inline-flex items-center gap-2 cursor-pointer text-sm text-gray-700 dark:text-zinc-200">
+        <input
+          type="checkbox"
+          :checked="modelValue.pickupAvailable === true"
+          @change="onCheckboxInput('pickupAvailable', $event)"
+          class="w-4 h-4 rounded text-pokemon-red focus:ring-pokemon-red"
+        />
+        Pickup available
+      </label>
     </div>
   </div>
 
@@ -239,6 +345,10 @@ import {
   UNGRADED_CONDITIONS,
   GRADING_PROVIDERS,
   CARD_LANGUAGES,
+  TCG_TYPES,
+  RARITIES,
+  VARIANTS,
+  EDITIONS,
   getGradesForProvider,
 } from "~/composables/useCardConstants";
 
@@ -255,6 +365,18 @@ export interface CardFormData {
   shippingWM: number;
   shippingEM: number;
   language: string;
+  tcgType: string;
+  // Visual metadata — scanner auto-fills these; users can correct.
+  rarity: string;
+  variant: string;
+  edition: string;
+  artist: string;
+  // Authenticity / cert for graded cards
+  certNumber: string;
+  // Commerce flags
+  quantity: number;
+  negotiable: boolean;
+  pickupAvailable: boolean;
 }
 
 const props = defineProps<{
@@ -324,6 +446,11 @@ const onInput = (key: keyof CardFormData, event: Event) => {
 const onNumberInput = (key: keyof CardFormData, event: Event) => {
   const target = event.target as HTMLInputElement;
   updateField(key, parseFloat(target.value) || 0);
+};
+
+const onCheckboxInput = (key: keyof CardFormData, event: Event) => {
+  const target = event.target as HTMLInputElement;
+  updateField(key, target.checked);
 };
 
 const onProviderSelect = (provider: string) => {

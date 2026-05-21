@@ -237,42 +237,43 @@
           <p class="text-white text-lg font-semibold">Drop photo to scan</p>
         </div>
 
-        <p
-          class="absolute bottom-28 left-4 right-4 text-center text-white/80 text-xs"
-        >
-          Line up the card and tap capture, or drag a photo anywhere.
-        </p>
-
-        <!-- Bottom: capture + Done -->
+        <!-- Bottom: capture + Done. The hint text sits inside the gradient
+             so it gets a small breath of dark behind it instead of fighting
+             the live camera frame for contrast. -->
         <div
-          class="absolute bottom-0 left-0 right-0 flex items-center justify-center pb-8 pt-6 bg-gradient-to-t from-black/80 to-transparent"
+          class="absolute bottom-0 left-0 right-0 flex flex-col items-center pb-8 pt-8 bg-gradient-to-t from-black/80 to-transparent"
         >
-          <button
-            @click="capture"
-            :disabled="!streamReady"
-            class="w-16 h-16 rounded-full bg-white border-4 border-white/40 disabled:opacity-40 hover:scale-105 transition-transform"
-            aria-label="Capture"
-          ></button>
-          <button
-            v-if="queue.length > 0"
-            @click="finishScanning"
-            class="absolute right-6 bottom-10 inline-flex items-center gap-1.5 bg-emerald-500 text-white px-4 py-2.5 rounded-full text-sm font-semibold shadow-lg hover:bg-emerald-600 transition-colors"
-          >
-            Done · {{ queue.length }}
-            <svg
-              class="w-4 h-4"
-              fill="none"
-              stroke="currentColor"
-              stroke-width="2.5"
-              viewBox="0 0 24 24"
+          <p class="text-center text-white/80 text-xs px-4 mb-5">
+            Line up the card and tap capture, or drag a photo anywhere.
+          </p>
+          <div class="relative w-full flex items-center justify-center">
+            <button
+              @click="capture"
+              :disabled="!streamReady"
+              class="w-16 h-16 rounded-full bg-white border-4 border-white/40 disabled:opacity-40 hover:scale-105 transition-transform"
+              aria-label="Capture"
+            ></button>
+            <button
+              v-if="queue.length > 0"
+              @click="finishScanning"
+              class="absolute right-6 inline-flex items-center gap-1.5 bg-emerald-500 text-white px-4 py-2.5 rounded-full text-sm font-semibold shadow-lg hover:bg-emerald-600 transition-colors"
             >
-              <path
-                stroke-linecap="round"
-                stroke-linejoin="round"
-                d="M9 5l7 7-7 7"
-              />
-            </svg>
-          </button>
+              Done · {{ queue.length }}
+              <svg
+                class="w-4 h-4"
+                fill="none"
+                stroke="currentColor"
+                stroke-width="2.5"
+                viewBox="0 0 24 24"
+              >
+                <path
+                  stroke-linecap="round"
+                  stroke-linejoin="round"
+                  d="M9 5l7 7-7 7"
+                />
+              </svg>
+            </button>
+          </div>
         </div>
       </div>
     </div>
@@ -525,6 +526,10 @@ const processInBackground = async (
   let name = "";
   let number = "";
   let language = "EN";
+  let rarity = "";
+  let variant = "";
+  let edition = "";
+  let artist = "";
   try {
     const resized = await resizeBlob(blob);
     const imageBase64 = await blobToBase64(resized);
@@ -532,6 +537,10 @@ const processInBackground = async (
       name: string;
       number: string;
       language: string;
+      rarity?: string;
+      variant?: string;
+      edition?: string;
+      artist?: string;
     }>("/api/identify-card", {
       method: "POST",
       body: { imageBase64, mimeType: "image/jpeg" },
@@ -539,6 +548,10 @@ const processInBackground = async (
     name = res.name || "";
     number = res.number || "";
     language = res.language || "EN";
+    rarity = res.rarity || "";
+    variant = res.variant || "";
+    edition = res.edition || "";
+    artist = res.artist || "";
   } catch (e: any) {
     updateItem(id, {
       status: "failed",
@@ -546,20 +559,28 @@ const processInBackground = async (
     });
     return;
   }
-  updateItem(id, { detectedName: name, detectedNumber: number, language });
+  updateItem(id, {
+    detectedName: name,
+    detectedNumber: number,
+    language,
+    rarity,
+    variant,
+    edition,
+    artist,
+  });
 
   // 3. For non-English cards, skip the TCG API lookup — the API only indexes
   // English prints, so matching would overwrite the JP set number with an
   // unrelated English print's number and attach a wrong card image. Use the
   // user's scanned image + Gemini's English-translated name + the printed
-  // (e.g. JP) set number directly.
+  // (e.g. JP) set number directly. Rarity / variant / edition stay as
+  // whatever Gemini extracted from the JP face.
   if (language !== "EN") {
     updateItem(id, {
       status: "ready",
       cardName: name,
       cardSet: "",
       cardNumber: number,
-      rarity: "",
       imageUrl: undefined,
     });
     return;
