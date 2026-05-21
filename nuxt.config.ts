@@ -28,19 +28,19 @@ export default defineNuxtConfig({
       orientation: "portrait",
       icons: [
         {
-          src: "/tcgo.png",
+          src: "/tcgo_sprites.png",
           sizes: "192x192",
           type: "image/png",
           purpose: "any",
         },
         {
-          src: "/tcgo.png",
+          src: "/tcgo_sprites.png",
           sizes: "512x512",
           type: "image/png",
           purpose: "any",
         },
         {
-          src: "/tcgo.png",
+          src: "/tcgo_sprites.png",
           sizes: "512x512",
           type: "image/png",
           purpose: "maskable",
