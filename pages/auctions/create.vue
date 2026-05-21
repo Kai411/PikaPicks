@@ -148,10 +148,24 @@
                       }}
                     </p>
                     <p
-                      v-if="item.cardSet"
-                      class="text-xs text-gray-500 dark:text-zinc-400 truncate"
+                      v-if="item.cardSet || item.cardNumber"
+                      class="text-xs text-gray-500 dark:text-zinc-400 truncate flex items-center gap-1.5"
                     >
-                      {{ item.cardSet }} · {{ item.cardNumber }}
+                      <span
+                        v-if="item.language && item.language !== 'EN'"
+                        class="inline-block bg-black/85 text-white text-[10px] font-bold tracking-wide px-1.5 py-0.5 rounded"
+                      >
+                        {{ item.language }}
+                      </span>
+                      <span class="truncate">
+                        <template v-if="item.cardSet && item.cardNumber"
+                          >{{ item.cardSet }} · {{ item.cardNumber }}</template
+                        >
+                        <template v-else-if="item.cardNumber">{{
+                          item.cardNumber
+                        }}</template>
+                        <template v-else>{{ item.cardSet }}</template>
+                      </span>
                     </p>
                     <p
                       v-else-if="item.status === 'failed' && item.error"
