@@ -15,6 +15,51 @@ useHead({
     <div class="updates">
       <div class="header">
         <hr class="my-8" />
+        <h1>V 0.3.0</h1>
+        <p class="italic mt-2">Date: May 21, 2026</p>
+
+        <br />
+        <strong>Major changes:</strong>
+        <ul>
+          <li>
+            <strong>Beta verification gate</strong> — unverified users see a
+            full-screen overlay on marketplace pages with instructions to verify
+            their beta access.
+          </li>
+          <li>
+            <strong>Card tile redesign</strong> — grade/condition badge moved to
+            image overlay, seller moved to body text, image aspect ratio updated
+            to match real card proportions (3.55:5).
+          </li>
+          <li>
+            <strong>Auction tile redesign</strong> — merged status and countdown
+            into a single badge (LIVE 20h 43m / ENDED), removed side border
+            accent, color-coded urgency (green → amber → red pulse).
+          </li>
+          <li>
+            <strong>Price formatting</strong> — prices now display with comma
+            separators (e.g. 10,000.00). Price input shows "RM" prefix icon.
+          </li>
+          <li>
+            <strong>Scanner simplified</strong> — removed rarity, variant, and
+            edition auto-detection to avoid incorrect data. Scanner now only
+            fills name, number, language, and artist.
+          </li>
+          <li>
+            <strong>Image handling</strong> — scan-to-list no longer saves the
+            official pokemontcg.io image; only the user's own photo is used.
+            Fixed duplicate image bug.
+          </li>
+          <li>
+            <strong>Detail page cleanup</strong> — removed
+            rarity/variant/edition badges, kept set number and condition/grade
+            with consistent color coding.
+          </li>
+        </ul>
+      </div>
+
+      <div class="header">
+        <hr class="my-8" />
         <h1>V 0.2.0</h1>
         <p class="italic mt-2">Date: May 21, 2026</p>
 

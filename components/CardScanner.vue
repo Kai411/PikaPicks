@@ -81,12 +81,17 @@
           class="w-14 h-14 rounded-full bg-amber-500/20 text-amber-300 flex items-center justify-center mb-4"
         >
           <svg class="w-7 h-7" viewBox="0 0 24 24" fill="currentColor">
-            <path d="M12 2l2.4 7.4H22l-6.2 4.5 2.4 7.4L12 16.8 5.8 21.3l2.4-7.4L2 9.4h7.6z" />
+            <path
+              d="M12 2l2.4 7.4H22l-6.2 4.5 2.4 7.4L12 16.8 5.8 21.3l2.4-7.4L2 9.4h7.6z"
+            />
           </svg>
         </div>
-        <h3 class="text-lg font-semibold mb-1">You've used all {{ FREE_SCAN_LIMIT }} scans</h3>
+        <h3 class="text-lg font-semibold mb-1">
+          You've used all {{ FREE_SCAN_LIMIT }} scans
+        </h3>
         <p class="text-sm text-white/70 mb-2 max-w-xs">
-          Quota resets {{ resetDateLabel }}. Upgrade to Premium for unlimited scans.
+          Quota resets {{ resetDateLabel }}. Upgrade to Premium for unlimited
+          scans.
         </p>
         <a
           v-if="adminWhatsAppLink"
@@ -289,13 +294,8 @@ const emit = defineEmits<{
 
 const { uploadImage } = useStorage();
 const { searchByNameAndNumber, searchByName } = usePokemonTcg();
-const {
-  queue,
-  addProcessing,
-  updateItem,
-  pickMatch,
-  processingCount,
-} = useScanQueue();
+const { queue, addProcessing, updateItem, pickMatch, processingCount } =
+  useScanQueue();
 const { user, signInWithGoogle } = useAuth();
 const { isPremium, remaining, used, tryConsumeScan } = useScanQuota();
 const { profile } = useMyProfile();
@@ -527,9 +527,6 @@ const processInBackground = async (
   let name = "";
   let number = "";
   let language = "EN";
-  let rarity = "";
-  let variant = "";
-  let edition = "";
   let artist = "";
   try {
     const resized = await resizeBlob(blob);
@@ -538,9 +535,6 @@ const processInBackground = async (
       name: string;
       number: string;
       language: string;
-      rarity?: string;
-      variant?: string;
-      edition?: string;
       artist?: string;
     }>("/api/identify-card", {
       method: "POST",
@@ -549,9 +543,6 @@ const processInBackground = async (
     name = res.name || "";
     number = res.number || "";
     language = res.language || "EN";
-    rarity = res.rarity || "";
-    variant = res.variant || "";
-    edition = res.edition || "";
     artist = res.artist || "";
   } catch (e: any) {
     // User-facing message — never expose raw model/HTTP error strings.
@@ -571,9 +562,6 @@ const processInBackground = async (
     detectedName: name,
     detectedNumber: number,
     language,
-    rarity,
-    variant,
-    edition,
     artist,
   });
 

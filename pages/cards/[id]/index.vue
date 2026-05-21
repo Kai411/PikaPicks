@@ -35,7 +35,9 @@
         </NuxtLink>
       </div>
 
-      <div class="bg-white dark:bg-white/[0.04] rounded-xl border border-gray-200 dark:border-white/[0.08] overflow-hidden">
+      <div
+        class="bg-white dark:bg-white/[0.04] rounded-xl border border-gray-200 dark:border-white/[0.08] overflow-hidden"
+      >
         <div class="grid grid-cols-1 md:grid-cols-2 gap-0">
           <!-- Images -->
           <div class="bg-gray-100 dark:bg-white/[0.02] p-4">
@@ -48,7 +50,9 @@
                 :alt="card.cardName"
                 class="w-full h-full object-contain"
               />
-              <span v-else class="text-gray-400 dark:text-zinc-500">No Image</span>
+              <span v-else class="text-gray-400 dark:text-zinc-500"
+                >No Image</span
+              >
               <span
                 v-if="allImages.length > 1"
                 class="absolute bottom-2 right-2 bg-black/70 text-white text-xs font-semibold tabular-nums px-2 py-0.5 rounded-full"
@@ -126,7 +130,7 @@
                 </span>
                 <span
                   v-if="card.productType === 'Graded' && card.grade"
-                  class="inline-flex items-center gap-1 text-xs font-bold px-2 py-0.5 rounded-full bg-amber-500/15 text-amber-700 dark:text-amber-300"
+                  class="inline-flex items-center gap-1 text-xs font-bold px-2 py-0.5 rounded-full bg-amber-400 text-amber-950 border border-amber-600"
                 >
                   <span class="uppercase tracking-wide">{{
                     card.gradingProvider === "Others"
@@ -136,34 +140,16 @@
                   <span>{{ card.grade }}</span>
                 </span>
                 <span
-                  v-else-if="card.productType"
-                  class="text-xs font-medium px-2 py-0.5 rounded-full"
-                  :class="{
-                    'bg-blue-100 text-blue-700':
-                      card.productType === 'Ungraded',
-                    'bg-amber-100 text-amber-700':
-                      card.productType === 'Sealed',
-                  }"
+                  v-else-if="card.productType === 'Sealed'"
+                  class="text-xs font-bold px-2 py-0.5 rounded-full bg-blue-500 text-white border border-blue-700"
                 >
-                  {{ card.productType }}
+                  Sealed
                 </span>
                 <span
-                  v-if="card.rarity"
-                  class="bg-gray-100 dark:bg-white/[0.04] text-gray-700 dark:text-zinc-200 text-xs font-medium px-2 py-0.5 rounded-full"
+                  v-else-if="card.productType === 'Ungraded' && card.condition"
+                  class="text-xs font-bold px-2 py-0.5 rounded-full bg-white text-ink border border-gray-300 dark:bg-zinc-800 dark:text-zinc-200 dark:border-zinc-600"
                 >
-                  {{ card.rarity }}
-                </span>
-                <span
-                  v-if="card.variant && card.variant !== 'Normal'"
-                  class="bg-indigo-100 text-indigo-700 dark:bg-indigo-500/15 dark:text-indigo-300 text-xs font-medium px-2 py-0.5 rounded-full"
-                >
-                  {{ card.variant }}
-                </span>
-                <span
-                  v-if="card.edition && card.edition !== 'Unlimited'"
-                  class="bg-rose-100 text-rose-700 dark:bg-rose-500/15 dark:text-rose-300 text-xs font-medium px-2 py-0.5 rounded-full"
-                >
-                  {{ card.edition }}
+                  {{ conditionShort(card.condition) }}
                 </span>
                 <span
                   v-if="card.pickupAvailable"
@@ -197,13 +183,17 @@
               </p>
 
               <div v-if="card.description" class="mt-4">
-                <p class="text-sm text-gray-600 dark:text-zinc-300 whitespace-pre-line">
+                <p
+                  class="text-sm text-gray-600 dark:text-zinc-300 whitespace-pre-line"
+                >
                   {{ card.description }}
                 </p>
               </div>
 
               <!-- Seller Info -->
-              <div class="mt-6 pt-4 border-t border-gray-200 dark:border-white/[0.08]">
+              <div
+                class="mt-6 pt-4 border-t border-gray-200 dark:border-white/[0.08]"
+              >
                 <NuxtLink
                   :to="`/profile/${card.sellerUid}`"
                   class="flex items-center gap-3 hover:opacity-80 transition-opacity"
@@ -221,10 +211,14 @@
                     {{ card.seller.charAt(0).toUpperCase() }}
                   </div>
                   <div>
-                    <p class="text-sm font-medium text-gray-900 dark:text-zinc-100">
+                    <p
+                      class="text-sm font-medium text-gray-900 dark:text-zinc-100"
+                    >
                       {{ card.seller }}
                     </p>
-                    <p class="text-xs text-gray-400 dark:text-zinc-500">Seller</p>
+                    <p class="text-xs text-gray-400 dark:text-zinc-500">
+                      Seller
+                    </p>
                   </div>
                 </NuxtLink>
               </div>
@@ -292,6 +286,12 @@ const { user } = useAuth();
 const card = computed(
   () => cards.value.find((c: Card) => c.id === cardId) || null,
 );
+
+// Short condition label — extract abbreviation from "Near Mint (NM)" format
+const conditionShort = (condition: string): string => {
+  const m = condition.match(/\(([^)]+)\)/);
+  return m ? m[1] : condition;
+};
 
 const isOwnListing = computed(
   () => user.value && card.value && card.value.sellerUid === user.value.uid,

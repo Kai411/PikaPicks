@@ -56,7 +56,9 @@
         class="bg-white dark:bg-white/[0.04] rounded-xl border border-gray-200 dark:border-white/[0.08] p-5 mb-6 flex items-center justify-between gap-4 flex-wrap"
       >
         <div>
-          <p class="text-sm font-semibold text-gray-900 dark:text-zinc-100">Scan cards</p>
+          <p class="text-sm font-semibold text-gray-900 dark:text-zinc-100">
+            Scan cards
+          </p>
           <p class="text-xs text-gray-500 dark:text-zinc-400 mt-0.5">
             Use your camera (or upload photos). Each scan goes into a queue —
             fill the price + condition for each one and publish all at once.
@@ -74,7 +76,9 @@
             stroke-width="2"
             viewBox="0 0 24 24"
           >
-            <path d="M3 9a2 2 0 012-2h.93a2 2 0 001.664-.89l.812-1.22A2 2 0 0110.07 4h3.86a2 2 0 011.664.89l.812 1.22A2 2 0 0018.07 7H19a2 2 0 012 2v9a2 2 0 01-2 2H5a2 2 0 01-2-2V9z" />
+            <path
+              d="M3 9a2 2 0 012-2h.93a2 2 0 001.664-.89l.812-1.22A2 2 0 0110.07 4h3.86a2 2 0 011.664.89l.812 1.22A2 2 0 0018.07 7H19a2 2 0 012 2v9a2 2 0 01-2 2H5a2 2 0 01-2-2V9z"
+            />
             <path d="M15 13a3 3 0 11-6 0 3 3 0 016 0z" />
           </svg>
           Scan cards
@@ -89,7 +93,9 @@
         <div class="flex items-center justify-between mb-4">
           <h2 class="text-base font-semibold text-gray-900 dark:text-zinc-100">
             Scanned drafts
-            <span class="text-gray-400 dark:text-zinc-500 font-normal">({{ queue.length }})</span>
+            <span class="text-gray-400 dark:text-zinc-500 font-normal"
+              >({{ queue.length }})</span
+            >
           </h2>
           <button
             type="button"
@@ -139,7 +145,10 @@
                   <div class="min-w-0">
                     <p
                       class="font-semibold text-sm text-gray-900 dark:text-zinc-100 truncate"
-                      :class="!item.cardName && 'italic text-gray-400 dark:text-zinc-500'"
+                      :class="
+                        !item.cardName &&
+                        'italic text-gray-400 dark:text-zinc-500'
+                      "
                     >
                       {{
                         item.cardName ||
@@ -192,7 +201,9 @@
                   v-if="item.status === 'processing'"
                   class="flex items-center gap-3 py-2 text-xs text-gray-500 dark:text-zinc-400"
                 >
-                  <span class="inline-block w-3 h-3 rounded-full border-2 border-gray-300 dark:border-white/[0.15] border-t-pokemon-red animate-spin"></span>
+                  <span
+                    class="inline-block w-3 h-3 rounded-full border-2 border-gray-300 dark:border-white/[0.15] border-t-pokemon-red animate-spin"
+                  ></span>
                   <span>Reading the card and looking up matches…</span>
                 </div>
 
@@ -214,7 +225,9 @@
                       <p class="px-1 py-0.5 text-[10px] font-semibold truncate">
                         {{ m.name }}
                       </p>
-                      <p class="px-1 pb-1 text-[9px] text-gray-500 dark:text-zinc-400 truncate">
+                      <p
+                        class="px-1 pb-1 text-[9px] text-gray-500 dark:text-zinc-400 truncate"
+                      >
                         {{ m.set.name }} · {{ m.number }}
                       </p>
                     </button>
@@ -308,14 +321,21 @@
                       placeholder="Grade"
                       class="border border-gray-300 dark:border-white/[0.10] rounded px-2 py-1.5 text-xs"
                     />
-                    <input
-                      v-model.number="draftFields[item.id].price"
-                      type="number"
-                      step="0.01"
-                      min="0.01"
-                      placeholder="Price (RM)"
-                      class="border border-gray-300 dark:border-white/[0.10] rounded px-2 py-1.5 text-xs"
-                    />
+                    <!-- Price: full width on mobile, fits in 3rd col on desktop -->
+                    <div class="relative col-span-2 sm:col-span-1">
+                      <span
+                        class="absolute left-2 top-1/2 -translate-y-1/2 text-xs font-semibold text-gray-500 dark:text-zinc-400 pointer-events-none"
+                        >RM</span
+                      >
+                      <input
+                        v-model.number="draftFields[item.id].price"
+                        type="number"
+                        step="0.01"
+                        min="0.01"
+                        placeholder="0.00"
+                        class="w-full border border-gray-300 dark:border-white/[0.10] rounded px-2 py-1.5 pl-8 text-xs"
+                      />
+                    </div>
                   </div>
 
                   <!-- Description -->
@@ -326,51 +346,11 @@
                     class="w-full border border-gray-300 dark:border-white/[0.10] rounded px-2 py-1.5 text-xs resize-none"
                   />
 
-                  <!-- Auto-detected metadata — edit if the scanner got it
-                       wrong. Writes back to the queue item directly so
-                       publish picks up the corrected value. -->
-                  <div class="grid grid-cols-3 gap-2">
-                    <select
-                      :value="item.rarity || ''"
-                      @change="
-                        updateQueueItem(item.id, {
-                          rarity: ($event.target as HTMLSelectElement).value,
-                        })
-                      "
-                      class="border border-gray-300 dark:border-white/[0.10] rounded px-2 py-1.5 text-xs"
-                    >
-                      <option value="">Rarity…</option>
-                      <option v-for="r in RARITIES" :key="r" :value="r">{{ r }}</option>
-                    </select>
-                    <select
-                      :value="item.variant || ''"
-                      @change="
-                        updateQueueItem(item.id, {
-                          variant: ($event.target as HTMLSelectElement).value,
-                        })
-                      "
-                      class="border border-gray-300 dark:border-white/[0.10] rounded px-2 py-1.5 text-xs"
-                    >
-                      <option value="">Variant…</option>
-                      <option v-for="v in VARIANTS" :key="v" :value="v">{{ v }}</option>
-                    </select>
-                    <select
-                      :value="item.edition || ''"
-                      @change="
-                        updateQueueItem(item.id, {
-                          edition: ($event.target as HTMLSelectElement).value,
-                        })
-                      "
-                      class="border border-gray-300 dark:border-white/[0.10] rounded px-2 py-1.5 text-xs"
-                    >
-                      <option value="">Edition…</option>
-                      <option v-for="e in EDITIONS" :key="e" :value="e">{{ e }}</option>
-                    </select>
-                  </div>
-
                   <!-- Extra photos -->
                   <div>
-                    <p class="text-[11px] font-medium text-gray-600 dark:text-zinc-300 mb-1.5">
+                    <p
+                      class="text-[11px] font-medium text-gray-600 dark:text-zinc-300 mb-1.5"
+                    >
                       Extra photos (optional) — your scan is already attached
                     </p>
                     <div class="flex items-center gap-2 flex-wrap">
@@ -513,30 +493,49 @@
           </div>
 
           <!-- Card: Price -->
-          <div class="bg-white dark:bg-white/[0.04] rounded-xl border border-gray-200 dark:border-white/[0.08] p-5">
-            <label class="block text-sm font-semibold text-gray-900 dark:text-zinc-100 mb-2">
-              Price (RM) <span class="text-pokemon-red">*</span>
+          <div
+            class="bg-white dark:bg-white/[0.04] rounded-xl border border-gray-200 dark:border-white/[0.08] p-5"
+          >
+            <label
+              class="block text-sm font-semibold text-gray-900 dark:text-zinc-100 mb-2"
+            >
+              Price <span class="text-pokemon-red">*</span>
             </label>
-            <input
-              v-model.number="price"
-              type="number"
-              min="0.01"
-              step="0.01"
-              required
-              placeholder="10.00"
-              class="w-full border border-gray-300 dark:border-white/[0.10] rounded-lg px-4 py-2.5 text-gray-900 dark:text-zinc-100 placeholder-gray-400 focus:border-pokemon-blue focus:outline-none focus:ring-1 focus:ring-pokemon-blue"
-            />
+            <div class="relative">
+              <span
+                class="absolute left-4 top-1/2 -translate-y-1/2 text-sm font-semibold text-gray-500 dark:text-zinc-400 pointer-events-none"
+                >RM</span
+              >
+              <input
+                v-model.number="price"
+                type="number"
+                min="0.01"
+                step="0.01"
+                required
+                placeholder="0.00"
+                class="w-full border border-gray-300 dark:border-white/[0.10] rounded-lg pl-10 pr-4 py-2.5 text-gray-900 dark:text-zinc-100 placeholder-gray-400 focus:border-pokemon-blue focus:outline-none focus:ring-1 focus:ring-pokemon-blue"
+              />
+            </div>
           </div>
 
           <!-- Card: Shipping -->
-          <div class="bg-white dark:bg-white/[0.04] rounded-xl border border-gray-200 dark:border-white/[0.08] p-5 space-y-3">
+          <div
+            class="bg-white dark:bg-white/[0.04] rounded-xl border border-gray-200 dark:border-white/[0.08] p-5 space-y-3"
+          >
             <div class="flex items-center justify-between">
-              <h3 class="text-sm font-semibold text-gray-900 dark:text-zinc-100">Shipping</h3>
-              <span class="text-xs text-gray-400 dark:text-zinc-500">Profile defaults</span>
+              <h3
+                class="text-sm font-semibold text-gray-900 dark:text-zinc-100"
+              >
+                Shipping
+              </h3>
+              <span class="text-xs text-gray-400 dark:text-zinc-500"
+                >Profile defaults</span
+              >
             </div>
             <div class="grid grid-cols-2 gap-3">
               <div>
-                <label class="block text-xs text-gray-600 dark:text-zinc-300 mb-1"
+                <label
+                  class="block text-xs text-gray-600 dark:text-zinc-300 mb-1"
                   >West Malaysia (RM)</label
                 >
                 <input
@@ -548,7 +547,8 @@
                 />
               </div>
               <div>
-                <label class="block text-xs text-gray-600 dark:text-zinc-300 mb-1"
+                <label
+                  class="block text-xs text-gray-600 dark:text-zinc-300 mb-1"
                   >East Malaysia (RM)</label
                 >
                 <input
@@ -814,9 +814,8 @@ const publishDrafts = async () => {
         ? await uploadAuctionImages(f.extraFiles.map((x) => x.file))
         : [];
 
-      const baseUrls = item.scannedImageUrl
-        ? [item.scannedImageUrl, item.imageUrl || ""].filter(Boolean)
-        : [item.imageUrl || ""].filter(Boolean);
+      const baseUrls: string[] = [];
+      if (item.scannedImageUrl) baseUrls.push(item.scannedImageUrl);
       const imageUrls = [...baseUrls, ...extraUrls];
 
       await createCard({

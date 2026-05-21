@@ -34,10 +34,10 @@
         <article
           class="surface rounded-2xl overflow-hidden hover:shadow-card-hover transition-shadow duration-300 ease-premium h-full flex flex-col"
         >
-          <!-- White-framed image well -->
+          <!-- Image well -->
           <div class="p-2 sm:p-2.5 bg-white dark:bg-white/[0.04]">
             <div
-              class="relative aspect-[3/4] rounded-lg bg-canvas-sunken dark:bg-white/[0.02] overflow-hidden"
+              class="relative aspect-[3.55/5] rounded-lg overflow-hidden bg-canvas-sunken dark:bg-white/[0.02]"
             >
               <img
                 v-if="auction.imageUrls?.length || auction.imageUrl"
@@ -53,18 +53,27 @@
                 No image
               </div>
 
-              <!-- Top-left: language badge for non-English cards, then a
-                   photo-count badge directly below it when multi-photo. -->
+              <!-- Top-left: status + time badge -->
               <span
-                v-if="auction.language && auction.language !== 'EN'"
-                class="absolute left-1.5 top-1.5 bg-black/75 text-white text-[10px] font-bold tracking-wide px-1.5 py-0.5 rounded"
+                class="absolute left-1.5 top-1.5 inline-flex items-center gap-1 px-1.5 py-0.5 rounded text-[10px] font-bold tracking-wide shadow-sm"
+                :class="timerClasses(auction.endsAt)"
               >
-                {{ auction.language }}
+                {{ statusTimeLabel(auction.endsAt) }}
               </span>
+
+              <!-- Bottom-right: grade badge (overlay on image) -->
+              <span
+                v-if="conditionLabel(auction)"
+                class="absolute right-1.5 bottom-1.5 px-1.5 py-0.5 rounded text-[10px] font-bold shadow-sm"
+                :class="gradeBadgeClasses(auction)"
+              >
+                {{ conditionLabel(auction) }}
+              </span>
+
+              <!-- Bottom-left: photo count -->
               <span
                 v-if="(auction.imageUrls?.length || 0) > 1"
-                class="absolute left-1.5 inline-flex items-center gap-1 bg-black/75 text-white text-[10px] font-semibold px-1.5 py-0.5 rounded"
-                :class="auction.language && auction.language !== 'EN' ? 'top-8' : 'top-1.5'"
+                class="absolute left-1.5 bottom-1.5 inline-flex items-center gap-1 bg-black/75 text-white text-[10px] font-semibold px-1.5 py-0.5 rounded"
               >
                 <svg
                   class="w-2.5 h-2.5"
@@ -76,34 +85,12 @@
                   <rect x="3" y="6" width="18" height="14" rx="2" />
                   <circle cx="12" cy="13" r="3" />
                 </svg>
-                {{ auction.imageUrls!.length }}
+                {{ auction.imageUrls?.length }}
               </span>
-
-              <!-- Top-right: time-left pill -->
-              <span
-                class="absolute right-1.5 top-1.5 inline-flex items-center px-1.5 py-0.5 rounded-md text-[10px] font-semibold tracking-wide whitespace-nowrap shadow-sm"
-                :class="
-                  isEnding(auction.endsAt)
-                    ? 'bg-pokemon-red text-white'
-                    : 'bg-white/95 text-ink'
-                "
-              >
-                {{ formatTimeLeft(auction.endsAt) }}
-              </span>
-
-              <!-- Full-width seller band at the bottom of the image -->
-              <div
-                v-if="auction.seller"
-                class="absolute bottom-0 left-0 right-0 bg-pokemon-red text-white text-xs font-semibold px-3 py-1.5 truncate text-center"
-              >
-                {{ auction.seller }}
-              </div>
             </div>
           </div>
 
-          <!-- Body: flex-1 so it fills the rest of the tile, mt-auto on the
-               price block keeps prices aligned across tiles. Condition chip
-               sits directly above the price. -->
+          <!-- Body -->
           <div class="px-3.5 sm:px-4 pt-2 pb-3.5 sm:pb-4 flex-1 flex flex-col">
             <h3
               class="font-semibold text-[15px] leading-tight text-ink dark:text-white truncate"
@@ -112,42 +99,38 @@
             </h3>
             <p
               v-if="auction.cardSet"
-              class="mt-1 text-xs text-ink-muted dark:text-zinc-400 truncate"
+              class="mt-0.5 text-xs text-ink-muted dark:text-zinc-400 truncate"
             >
               {{ auction.cardSet }}
             </p>
 
             <div class="mt-auto pt-3">
-              <span
-                v-if="conditionLabel(auction)"
-                class="chip"
-                :class="conditionTone(auction)"
-              >
-                {{ conditionLabel(auction) }}
-              </span>
-              <div class="mt-2 flex items-end justify-between">
+              <div class="flex items-end justify-between">
                 <div class="min-w-0">
                   <span
                     class="text-[10px] font-semibold uppercase tracking-wider text-ink-soft dark:text-zinc-500"
                   >
-                    RM
+                    Current bid
                   </span>
                   <p
                     class="tabular-price font-extrabold text-[17px] leading-none text-ink dark:text-white"
                   >
-                    {{ auction.currentPrice.toFixed(2) }}
+                    RM {{ formatPrice(auction.currentPrice) }}
                   </p>
                 </div>
-                <div class="flex items-center gap-1.5 shrink-0">
-                  <span class="text-[10px] text-ink-soft dark:text-zinc-500">
-                    {{ bidCount(auction) }} bid{{ bidCount(auction) === 1 ? "" : "s" }}
-                  </span>
-                  <FavouriteButton
-                    :item-id="auction.id"
-                    item-type="auction"
-                    size="sm"
-                  />
-                </div>
+              </div>
+              <div class="mt-1.5 flex items-center justify-between">
+                <span class="text-[11px] text-ink-muted dark:text-zinc-400">
+                  {{ bidCount(auction) }} bid{{
+                    bidCount(auction) === 1 ? "" : "s"
+                  }}
+                </span>
+                <span
+                  v-if="auction.seller"
+                  class="text-[11px] text-ink-muted dark:text-zinc-400 truncate max-w-[50%]"
+                >
+                  @{{ auction.seller }}
+                </span>
               </div>
             </div>
           </div>
@@ -182,7 +165,7 @@ const isEnding = (endsAt: number) => endsAt - Date.now() < 3600000;
 
 const formatTimeLeft = (endsAt: number) => {
   const diff = endsAt - Date.now();
-  if (diff <= 0) return "Ended";
+  if (diff <= 0) return "";
   const hours = Math.floor(diff / 3600000);
   const minutes = Math.floor((diff % 3600000) / 60000);
   if (hours > 24) {
@@ -192,14 +175,38 @@ const formatTimeLeft = (endsAt: number) => {
   return `${hours}h ${minutes}m`;
 };
 
-// useAuctions strips the full bid map from the listing payload and
-// computes the count instead — saves a lot of memory on long pages.
+const statusTimeLabel = (endsAt: number) => {
+  const diff = endsAt - Date.now();
+  if (diff <= 0) return "ENDED";
+  return `LIVE ${formatTimeLeft(endsAt)}`;
+};
+
+const timerClasses = (endsAt: number) => {
+  const diff = endsAt - Date.now();
+  if (diff <= 0)
+    return "bg-zinc-200 text-zinc-600 dark:bg-zinc-700 dark:text-zinc-300";
+  if (diff < 300000) return "bg-pokemon-red text-white animate-pulse";
+  if (diff < 3600000) return "bg-amber-500 text-white";
+  return "bg-emerald-500/90 text-white";
+};
+
+const gradeBadgeClasses = (auction: Auction) => {
+  if (auction.productType === "Graded")
+    return "bg-amber-400 text-amber-950 border border-amber-600";
+  if (auction.productType === "Sealed")
+    return "bg-blue-500 text-white border border-blue-700";
+  return "bg-white text-ink border border-gray-300 dark:bg-zinc-800 dark:text-zinc-200 dark:border-zinc-600";
+};
+
 const bidCount = (auction: Auction) => auction.bidCount ?? 0;
 
-// Short pill label that always fits on a tile. Ungraded labels in the
-// constants list are written as "Near Mint (NM)", "Moderately Played (MP)",
-// etc. — strip down to just the abbreviation in the parens. Graded labels
-// like "PSA 10" are already short. Sealed becomes "SEALED".
+const formatPrice = (price: number): string => {
+  return price.toLocaleString("en-MY", {
+    minimumFractionDigits: 2,
+    maximumFractionDigits: 2,
+  });
+};
+
 const conditionLabel = (auction: Auction): string => {
   if (auction.productType === "Graded") {
     const provider =
@@ -211,11 +218,5 @@ const conditionLabel = (auction: Auction): string => {
   if (auction.productType === "Sealed") return "SEALED";
   const m = (auction.condition || "").match(/\(([^)]+)\)/);
   return m ? m[1] : auction.condition || "";
-};
-
-const conditionTone = (auction: Auction): string => {
-  if (auction.productType === "Graded") return "chip-gold";
-  if (auction.productType === "Sealed") return "chip-accent";
-  return "";
 };
 </script>

@@ -65,11 +65,10 @@
         <article
           class="surface rounded-2xl overflow-hidden hover:shadow-card-hover transition-shadow duration-300 ease-premium h-full flex flex-col"
         >
-          <!-- White-framed image well: padding around the image so the card
-               art doesn't crash into the surrounding tile edge. -->
+          <!-- Image well -->
           <div class="p-2 sm:p-2.5 bg-white dark:bg-white/[0.04]">
             <div
-              class="relative aspect-[3/4] rounded-lg bg-canvas-sunken dark:bg-white/[0.02] overflow-hidden"
+              class="relative aspect-[3.55/5] rounded-lg overflow-hidden bg-canvas-sunken dark:bg-white/[0.02]"
             >
               <img
                 v-if="card.imageUrls?.length || card.imageUrl"
@@ -85,15 +84,7 @@
                 No image
               </div>
 
-              <!-- Language badge (top-right) — only for non-English cards -->
-              <span
-                v-if="card.language && card.language !== 'EN'"
-                class="absolute top-1.5 right-1.5 bg-black/75 text-white text-[10px] font-bold tracking-wide px-1.5 py-0.5 rounded"
-              >
-                {{ card.language }}
-              </span>
-
-              <!-- Photo count badge (top-left) — only when multi-photo -->
+              <!-- Top-left: photo count -->
               <span
                 v-if="(card.imageUrls?.length || 0) > 1"
                 class="absolute top-1.5 left-1.5 inline-flex items-center gap-1 bg-black/75 text-white text-[10px] font-semibold px-1.5 py-0.5 rounded"
@@ -108,22 +99,29 @@
                   <rect x="3" y="6" width="18" height="14" rx="2" />
                   <circle cx="12" cy="13" r="3" />
                 </svg>
-                {{ card.imageUrls!.length }}
+                {{ card.imageUrls?.length }}
               </span>
 
-              <!-- Full-width seller band at the bottom of the image -->
-              <div
-                v-if="card.seller"
-                class="absolute bottom-0 left-0 right-0 bg-pokemon-red text-white text-xs font-semibold px-3 py-1.5 truncate text-center"
+              <!-- Top-right: grade/condition badge on image -->
+              <span
+                v-if="conditionLabel(card)"
+                class="absolute top-1.5 right-1.5 px-1.5 py-0.5 rounded text-[10px] font-bold shadow-sm"
+                :class="gradeBadgeClasses(card)"
               >
-                {{ card.seller }}
-              </div>
+                {{ conditionLabel(card) }}
+              </span>
+
+              <!-- Bottom-left: language badge -->
+              <span
+                v-if="card.language && card.language !== 'EN'"
+                class="absolute left-1.5 bottom-1.5 bg-black/75 text-white text-[10px] font-bold tracking-wide px-1.5 py-0.5 rounded"
+              >
+                {{ card.language }}
+              </span>
             </div>
           </div>
 
-          <!-- Body: flex-1 fills the rest of the cell, mt-auto on the price
-               block keeps prices aligned across tiles. Condition chip sits
-               directly above the price. -->
+          <!-- Body -->
           <div class="px-3.5 sm:px-4 pt-2 pb-3.5 sm:pb-4 flex-1 flex flex-col">
             <h3
               class="font-semibold text-[15px] leading-tight text-ink dark:text-white truncate"
@@ -132,28 +130,23 @@
             </h3>
             <p
               v-if="card.cardSet"
-              class="mt-1 text-xs text-ink-muted dark:text-zinc-400 truncate"
+              class="mt-0.5 text-xs text-ink-muted dark:text-zinc-400 truncate"
             >
               {{ card.cardSet }}
             </p>
 
             <div class="mt-auto pt-3">
-              <span
-                v-if="conditionLabel(card)"
-                class="chip"
-                :class="conditionTone(card)"
-              >
-                {{ conditionLabel(card) }}
-              </span>
-              <div class="mt-2 flex items-end justify-between">
+              <div class="flex items-end justify-between">
                 <div class="min-w-0">
-                  <span class="text-[10px] font-semibold uppercase tracking-wider text-ink-soft dark:text-zinc-500">
+                  <span
+                    class="text-[10px] font-semibold uppercase tracking-wider text-ink-soft dark:text-zinc-500"
+                  >
                     RM
                   </span>
                   <p
                     class="tabular-price font-extrabold text-[17px] leading-none text-ink dark:text-white"
                   >
-                    {{ card.price.toFixed(2) }}
+                    {{ formatPrice(card.price) }}
                   </p>
                 </div>
                 <div class="flex items-center gap-1.5 shrink-0">
@@ -170,6 +163,14 @@
                     size="sm"
                   />
                 </div>
+              </div>
+              <div class="mt-1.5">
+                <span
+                  v-if="card.seller"
+                  class="text-[11px] text-ink-muted dark:text-zinc-400 truncate"
+                >
+                  @{{ card.seller }}
+                </span>
               </div>
             </div>
           </div>
@@ -222,7 +223,9 @@ const tcgCounts = computed(() => {
 const availableCards = computed(() =>
   cards.value
     .filter((c: Card) => !c.sold)
-    .filter((c: Card) => activeTcg.value === "All" || tcgOf(c) === activeTcg.value)
+    .filter(
+      (c: Card) => activeTcg.value === "All" || tcgOf(c) === activeTcg.value,
+    )
     .sort((a: Card, b: Card) => b.createdAt - a.createdAt),
 );
 
@@ -243,12 +246,18 @@ const conditionLabel = (card: Card): string => {
   return m ? m[1] : card.condition || "";
 };
 
-// Tone modifier for the condition chip above the price — uses the
-// chip-gold / chip-accent utility classes for graded / sealed and the
-// default chip styling for ungraded.
-const conditionTone = (card: Card): string => {
-  if (card.productType === "Graded") return "chip-gold";
-  if (card.productType === "Sealed") return "chip-accent";
-  return "";
+const gradeBadgeClasses = (card: Card): string => {
+  if (card.productType === "Graded")
+    return "bg-amber-400 text-amber-950 border border-amber-600";
+  if (card.productType === "Sealed")
+    return "bg-blue-500 text-white border border-blue-700";
+  return "bg-white text-ink border border-gray-300 dark:bg-zinc-800 dark:text-zinc-200 dark:border-zinc-600";
+};
+
+const formatPrice = (price: number): string => {
+  return price.toLocaleString("en-MY", {
+    minimumFractionDigits: 2,
+    maximumFractionDigits: 2,
+  });
 };
 </script>
