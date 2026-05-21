@@ -146,3 +146,118 @@ These exist on `Card` + `Auction` interfaces but don't have user-facing surfaces
 - TCG type filter on `/auctions` page (mirror of shop filter)
 - Auction page filter pills for rarity / variant
 - Admin tool to flip user tier (free ↔ premium) without Firebase Console
+
+---
+
+## Membership + Stripe — full build plan
+
+> Branch: `feature/membership-stripe`. Not started yet — this is the spec.
+
+### Decisions locked in
+- **Price**: RM **5.99 / month**. Monthly only for v1 (yearly comes later if conversion works).
+- **Trial**: Card-free preview — first time a free user taps "Upgrade", grant **+5 bonus scans** (one-time, lifetime). Consumed before the monthly 20.
+- **Payment methods**: **Cards only** for the subscription. Stripe's recurring billing in MY supports cards (Visa / Mastercard / Amex). FPX / GrabPay / DuitNow are single-charge methods — they can't auto-renew. For non-card recurring you'd need DuitNow Direct Debit (PADM), which is a custom bank integration outside Stripe — out of scope for v1.
+- **Cancel**: Keep Premium until current period ends, then auto-flip to Free. Stripe handles natively (`cancel_at_period_end: true`).
+
+### User flow
+
+```
+Free user (in scanner, hit quota OR clicked Upgrade)
+   │
+   ├── First time: "Try Premium — +5 bonus scans" → claim → back to scanner
+   │
+   └── After trial used / direct upgrade
+         │
+         ▼
+   POST /api/stripe/checkout
+         │ creates Stripe Checkout Session
+         ▼
+   Stripe Hosted Checkout (card form)
+         │
+         ├── success → /membership/success → settings shows Premium
+         └── cancel  → /membership/cancel  → back to /pricing
+
+(Async)
+Stripe ──webhook──► /api/stripe/webhook
+                      writes Premium + Stripe IDs + period dates to Firestore
+```
+
+### Pages to build
+
+| Path | Purpose |
+|------|---------|
+| `/pricing` *(new)* | Public. Free vs Premium comparison + Upgrade CTA. |
+| `/membership/success` *(new, small)* | "You're Premium!" → auto-redirect to /profile. |
+| `/membership/cancel` *(new, small)* | Back-to-/pricing landing for abandoned checkouts. |
+| `/profile` Membership tile | Extend: if premium, show **Manage subscription** button → Stripe Customer Portal. |
+
+### Server endpoints
+
+| Path | Method | Purpose |
+|------|--------|---------|
+| `/api/stripe/checkout` | POST | Authed. Creates a Checkout Session for the signed-in user; returns the hosted URL. |
+| `/api/stripe/portal` | POST | Authed. Creates a Customer Portal Session for the signed-in user; returns the URL. |
+| `/api/stripe/webhook` | POST | Stripe → us. Verifies signature, updates Firestore on subscription events. |
+
+**Webhook listens for:**
+- `checkout.session.completed` → save `stripeCustomerId`, `stripeSubscriptionId`, set `tier: "premium"`, `subscriptionStatus: "active"`, `currentPeriodEnd`.
+- `customer.subscription.updated` → sync status + `currentPeriodEnd` + `cancelAtPeriodEnd`.
+- `customer.subscription.deleted` → set `tier: "free"`, clear subscription fields.
+- `invoice.payment_failed` → set `subscriptionStatus: "past_due"`. Stay premium for a grace period; Stripe will retry. If retries exhaust, the `deleted` event will fire.
+
+### Schema additions on `UserProfile`
+
+```ts
+// Subscription state — only the webhook writes these.
+stripeCustomerId?: string;
+stripeSubscriptionId?: string;
+subscriptionStatus?: "active" | "past_due" | "canceled" | "trialing" | "incomplete";
+currentPeriodEnd?: number;        // epoch ms — used by client to show "renews on …"
+cancelAtPeriodEnd?: boolean;      // true if user cancelled but still active till the date
+
+// Card-free preview — set when user claims the +5 bonus.
+bonusScansRemaining?: number;
+bonusScansClaimedAt?: number;     // prevents re-claiming
+```
+
+`tier` ("free" | "premium") stays. We **derive** it server-side from `subscriptionStatus` so it's never out of sync. Client just reads `tier`.
+
+### Quota check order
+
+In `useScanQuota.tryConsumeScan`:
+1. Premium → allow, no decrement.
+2. Else `bonusScansRemaining > 0` → decrement bonus, allow.
+3. Else `scansUsed < FREE_SCAN_LIMIT` → increment used, allow.
+4. Else → block, show upgrade CTA.
+
+### Env vars (Netlify)
+
+```
+STRIPE_SECRET_KEY                  = sk_test_… (then sk_live_…)
+STRIPE_WEBHOOK_SECRET              = whsec_…
+STRIPE_PRICE_ID_PREMIUM_MONTHLY    = price_…
+NUXT_PUBLIC_STRIPE_PUBLISHABLE_KEY = pk_test_… (then pk_live_…)
+NUXT_PUBLIC_SITE_URL               = https://tcgo-staging.netlify.app
+```
+
+### Stripe dashboard setup (one-off, manual)
+
+1. Confirm Stripe account region is **Malaysia** (so MYR is the native currency and card processing works locally).
+2. Create Product: **TCGo Premium** with recurring price **RM 5.99 / month**.
+3. Enable **Customer Portal** under Settings → Billing. Allow: cancel, change card. Disable: switching plans (since there's only one).
+4. Add webhook endpoint → `https://<your-domain>/api/stripe/webhook` listening for the 4 events above. Copy the signing secret.
+5. Develop in **Test mode** keys; flip to **Live** after first successful end-to-end test.
+
+### Implementation order (5 commits)
+
+1. **Bonus scans** — schema field + quota-check change + "Try Premium" button claims +5. No Stripe yet. Lets you test the trial flow standalone.
+2. **Stripe SDK + checkout endpoint** — `stripe` npm package, `/api/stripe/checkout.post.ts`. Test in Stripe test mode by hand-curl.
+3. **Webhook endpoint** — signature verify, Firestore writes. Test via Stripe CLI (`stripe listen --forward-to localhost:3000/api/stripe/webhook`).
+4. **`/pricing` page + Upgrade button** — wires #2 into a real page.
+5. **Settings tile: Manage subscription** — `/api/stripe/portal.post.ts` + "Manage" button on the Membership tile for premium users.
+
+### Open / future
+- Yearly plan (toggle on /pricing) — add when monthly is converting.
+- Lifetime / one-time tier — separate price, different webhook flow.
+- DuitNow Direct Debit for non-card recurring — custom bank integration, only if the addressable market warrants it.
+- Annual revenue tracking + sub-status dashboard for admin.
