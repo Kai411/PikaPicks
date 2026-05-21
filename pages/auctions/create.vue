@@ -106,9 +106,11 @@
             :key="item.id"
             class="p-3 border border-gray-200 dark:border-white/[0.08] rounded-lg"
           >
-            <div class="flex flex-col sm:flex-row gap-3">
-              <!-- Thumbnail with status overlay -->
-              <div class="relative shrink-0">
+            <div class="flex flex-col sm:flex-row gap-3 items-start">
+              <!-- Thumbnail with status overlay. w-fit pins the container
+                   to the image's natural width so the absolute overlay
+                   can never paint past it. -->
+              <div class="relative shrink-0 w-fit">
                 <img
                   :src="item.scannedImageUrl"
                   :alt="item.cardName || 'Scanned card'"
@@ -834,10 +836,10 @@ const retryManualSearch = async (id: string) => {
         error: undefined,
       });
     }
-  } catch (e: any) {
+  } catch {
     updateQueueItem(id, {
       status: "failed",
-      error: e?.message || "Search failed",
+      error: "Search couldn't reach the card database. Try again in a moment.",
     });
   } finally {
     manualSearching.value[id] = false;

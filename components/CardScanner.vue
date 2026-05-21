@@ -554,10 +554,17 @@ const processInBackground = async (
     edition = res.edition || "";
     artist = res.artist || "";
   } catch (e: any) {
-    updateItem(id, {
-      status: "failed",
-      error: e?.data?.message || e?.message || "Identification failed",
-    });
+    // User-facing message — never expose raw model/HTTP error strings.
+    // 503 means the model is overloaded (transient, worth a retry); other
+    // codes get a generic "couldn't read this card" with a search hint.
+    const status = e?.response?.status || e?.statusCode;
+    const friendly =
+      status === 503
+        ? "The card recognizer is busy — try again in a moment."
+        : status === 429
+          ? "Too many scans at once — please slow down."
+          : "Couldn't read this card. Try a clearer photo or search by name below.";
+    updateItem(id, { status: "failed", error: friendly });
     return;
   }
   updateItem(id, {
@@ -597,10 +604,10 @@ const processInBackground = async (
     if (results.length === 0 && name) {
       results = await searchByName(name);
     }
-  } catch (e: any) {
+  } catch {
     updateItem(id, {
       status: "failed",
-      error: e?.data?.message || e?.message || "Card lookup failed",
+      error: "Couldn't reach the card database. Try again or search by name.",
     });
     return;
   }
