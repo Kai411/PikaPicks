@@ -765,6 +765,7 @@ const publishDrafts = async () => {
         imageUrls,
         seller: sellerName,
         sellerUid,
+        language: item.language || "EN",
       });
       // Remove the published item from the queue so unresolved ones remain
       // for the user to handle separately.
@@ -845,6 +846,7 @@ const cardForm = ref<CardFormData>({
   description: "",
   shippingWM: 8,
   shippingEM: 12,
+  language: "EN",
 });
 
 const price = ref<number | null>(null);
@@ -960,6 +962,7 @@ const handleSubmit = async () => {
       seller:
         profile.value?.customName || user.value!.displayName || "Anonymous",
       sellerUid: user.value!.uid,
+      language: cardForm.value.language || "EN",
     });
 
     selectedFiles.value.forEach((f: any) => URL.revokeObjectURL(f.preview));

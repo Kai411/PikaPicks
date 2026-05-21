@@ -202,6 +202,7 @@ const cardForm = ref<CardFormData>({
   description: "",
   shippingWM: 8,
   shippingEM: 12,
+  language: "EN",
 });
 
 const price = ref<number | null>(null);
@@ -229,6 +230,7 @@ watch(
         description: c.description || "",
         shippingWM: c.shippingWM ?? 8,
         shippingEM: c.shippingEM ?? 12,
+        language: c.language || "EN",
       };
       price.value = c.price;
       existingImages.value = [
@@ -302,6 +304,7 @@ const handleSubmit = async () => {
       shippingEM: cardForm.value.shippingEM,
       imageUrl: allImages[0] || "",
       imageUrls: allImages,
+      language: cardForm.value.language || "EN",
     });
 
     newFiles.value.forEach((f) => URL.revokeObjectURL(f.preview));

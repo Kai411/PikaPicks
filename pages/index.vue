@@ -61,6 +61,14 @@
                 No image
               </div>
 
+              <!-- Language badge (top-right) — only for non-English cards -->
+              <span
+                v-if="card.language && card.language !== 'EN'"
+                class="absolute top-1.5 right-1.5 bg-black/75 text-white text-[10px] font-bold tracking-wide px-1.5 py-0.5 rounded"
+              >
+                {{ card.language }}
+              </span>
+
               <!-- Full-width seller band at the bottom of the image -->
               <div
                 v-if="card.seller"

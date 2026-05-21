@@ -53,6 +53,14 @@
                 No image
               </div>
 
+              <!-- Top-left: language badge for non-English cards -->
+              <span
+                v-if="auction.language && auction.language !== 'EN'"
+                class="absolute left-1.5 top-1.5 bg-black/75 text-white text-[10px] font-bold tracking-wide px-1.5 py-0.5 rounded"
+              >
+                {{ auction.language }}
+              </span>
+
               <!-- Top-right: time-left pill -->
               <span
                 class="absolute right-1.5 top-1.5 inline-flex items-center px-1.5 py-0.5 rounded-md text-[10px] font-semibold tracking-wide whitespace-nowrap shadow-sm"

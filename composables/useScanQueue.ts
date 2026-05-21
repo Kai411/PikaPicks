@@ -24,6 +24,8 @@ export interface ScanQueueItem {
   // What the AI read off the card (debug/UX info).
   detectedName?: string;
   detectedNumber?: string;
+  // Detected card language ("EN", "JP", "KR", ...). Defaults to "EN".
+  language?: string;
 
   // Populated once status === "ready" (and on the picked candidate of
   // "needs-pick" after the user chooses).

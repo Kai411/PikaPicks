@@ -33,6 +33,9 @@ export interface Card {
   sold: boolean;
   interestedCount: number;
   favouriteCount: number;
+  // 2-letter ISO of the card's printed language. Defaults to "EN" for
+  // existing listings that pre-date this field.
+  language?: string;
 }
 
 // Module-level singleton. Previously each call opened a new Firestore

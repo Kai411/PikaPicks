@@ -871,6 +871,7 @@ const publishDrafts = async () => {
         sellerUid,
         endsAt: now + f.duration,
         isPrivate: f.isPrivate,
+        language: item.language || "EN",
       });
       removeFromQueue(item.id);
       publishProgress.value++;
@@ -947,6 +948,7 @@ const cardForm = ref<CardFormData>({
   description: "",
   shippingWM: 8,
   shippingEM: 12,
+  language: "EN",
 });
 
 const startingPrice = ref<number | null>(null);
@@ -1080,6 +1082,7 @@ const handleSubmit = async () => {
       sellerUid: user.value!.uid,
       endsAt: Date.now() + duration.value,
       isPrivate: isPrivate.value,
+      language: cardForm.value.language || "EN",
     });
 
     selectedFiles.value.forEach((f: any) => URL.revokeObjectURL(f.preview));

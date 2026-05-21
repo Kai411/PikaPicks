@@ -97,6 +97,21 @@
         />
       </div>
     </div>
+
+    <div>
+      <label class="block text-sm font-medium text-gray-700 dark:text-zinc-200 mb-1">
+        Language
+      </label>
+      <select
+        :value="modelValue.language || 'EN'"
+        @change="onInput('language', $event)"
+        class="w-full bg-white border border-gray-300 dark:border-white/[0.10] rounded-lg px-4 py-2.5 text-gray-900 dark:text-zinc-100 focus:border-pokemon-red focus:outline-none focus:ring-1 focus:ring-pokemon-red"
+      >
+        <option v-for="l in CARD_LANGUAGES" :key="l.code" :value="l.code">
+          {{ l.label }}{{ l.code !== "EN" ? ` (${l.code})` : "" }}
+        </option>
+      </select>
+    </div>
   </div>
 
   <!-- Card: Description -->
@@ -238,7 +253,20 @@ export interface CardFormData {
   description: string;
   shippingWM: number;
   shippingEM: number;
+  language: string;
 }
+
+export const CARD_LANGUAGES = [
+  { code: "EN", label: "English" },
+  { code: "JP", label: "Japanese" },
+  { code: "KR", label: "Korean" },
+  { code: "CN", label: "Chinese" },
+  { code: "DE", label: "German" },
+  { code: "FR", label: "French" },
+  { code: "IT", label: "Italian" },
+  { code: "ES", label: "Spanish" },
+  { code: "PT", label: "Portuguese" },
+] as const;
 
 const props = defineProps<{
   modelValue: CardFormData;

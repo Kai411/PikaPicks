@@ -102,6 +102,11 @@
                 >{{ auction.cardSet }}</span
               >
               <span
+                v-if="auction.language && auction.language !== 'EN'"
+                class="bg-black/85 text-white px-2.5 py-0.5 rounded-full text-xs font-bold tracking-wide"
+                >{{ auction.language }}</span
+              >
+              <span
                 class="bg-gray-100 dark:bg-white/[0.04] text-gray-700 dark:text-zinc-200 px-2.5 py-0.5 rounded-full text-xs"
                 >{{ auction.condition }}</span
               >

@@ -524,18 +524,21 @@ const processInBackground = async (
   // 2. Identify the card via Gemini.
   let name = "";
   let number = "";
+  let language = "EN";
   try {
     const resized = await resizeBlob(blob);
     const imageBase64 = await blobToBase64(resized);
-    const res = await $fetch<{ name: string; number: string }>(
-      "/api/identify-card",
-      {
-        method: "POST",
-        body: { imageBase64, mimeType: "image/jpeg" },
-      },
-    );
+    const res = await $fetch<{
+      name: string;
+      number: string;
+      language: string;
+    }>("/api/identify-card", {
+      method: "POST",
+      body: { imageBase64, mimeType: "image/jpeg" },
+    });
     name = res.name || "";
     number = res.number || "";
+    language = res.language || "EN";
   } catch (e: any) {
     updateItem(id, {
       status: "failed",
@@ -543,9 +546,26 @@ const processInBackground = async (
     });
     return;
   }
-  updateItem(id, { detectedName: name, detectedNumber: number });
+  updateItem(id, { detectedName: name, detectedNumber: number, language });
 
-  // 3. Look up matches in the TCG API.
+  // 3. For non-English cards, skip the TCG API lookup — the API only indexes
+  // English prints, so matching would overwrite the JP set number with an
+  // unrelated English print's number and attach a wrong card image. Use the
+  // user's scanned image + Gemini's English-translated name + the printed
+  // (e.g. JP) set number directly.
+  if (language !== "EN") {
+    updateItem(id, {
+      status: "ready",
+      cardName: name,
+      cardSet: "",
+      cardNumber: number,
+      rarity: "",
+      imageUrl: undefined,
+    });
+    return;
+  }
+
+  // 4. Look up matches in the TCG API (English cards only).
   let results: any[] = [];
   try {
     const cardNumber = number.includes("/") ? number.split("/")[0] : number;
@@ -571,7 +591,7 @@ const processInBackground = async (
     return;
   }
 
-  // 4. Single match → auto-pick. Multiple matches → flag for user.
+  // 5. Single match → auto-pick. Multiple matches → flag for user.
   if (results.length === 1) {
     pickMatch(id, results[0]);
   } else {

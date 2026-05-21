@@ -35,6 +35,7 @@ export interface Auction {
   isPrivate: boolean;
   bids: Record<string, Bid>;
   autoBids: Record<string, AutoBid>;
+  language?: string;
 }
 
 export interface Bid {

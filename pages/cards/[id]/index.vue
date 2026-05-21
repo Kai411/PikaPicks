@@ -113,6 +113,12 @@
                   {{ card.cardNumber }}
                 </span>
                 <span
+                  v-if="card.language && card.language !== 'EN'"
+                  class="bg-black/85 text-white text-xs font-bold tracking-wide px-2 py-0.5 rounded-full"
+                >
+                  {{ card.language }}
+                </span>
+                <span
                   v-if="card.productType"
                   class="text-xs font-medium px-2 py-0.5 rounded-full"
                   :class="{

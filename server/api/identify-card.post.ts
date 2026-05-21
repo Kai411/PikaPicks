@@ -6,7 +6,7 @@
 // English). The actual card lookup happens client-side against
 // api.pokemontcg.io using those two fields.
 
-const MODEL = "gemini-2.5-flash";
+const MODEL = "gemini-3.1-flash-lite";
 const ENDPOINT = `https://generativelanguage.googleapis.com/v1beta/models/${MODEL}:generateContent`;
 
 const PROMPT = `You are reading a single Pokemon TCG card from the image.
@@ -15,9 +15,10 @@ The card may be from any region: English, Japanese, Korean, Chinese, German, Fre
 
 The card may be rotated, tilted, partially obscured by a hand or sleeve, or have holo/glare reflections. Mentally rotate the image as needed and look past glare to read the printed text.
 
-Return ONLY a JSON object with two fields:
+Return ONLY a JSON object with three fields:
 - "name": the card's English Pokemon name (e.g. "Charizard ex", "Tyranitar", "Chansey", "Pikachu VMAX"). Even if the printed text is in another language, return the English name. Use the main name only — no HP, attack text, or trainer card descriptors.
 - "number": the set number printed near the bottom corner, formatted exactly as "N/Total" (e.g. "20/189", "187/167", "222/193"). Japanese cards use the same format (often "001/100"). Strip any leading zeros from N — write "20" not "020".
+- "language": the language of the printed text on the card as a 2-letter ISO code. One of: "EN" (English), "JP" (Japanese), "KR" (Korean), "CN" (Chinese, simplified or traditional), "DE" (German), "FR" (French), "IT" (Italian), "ES" (Spanish), "PT" (Portuguese). Default to "EN" if uncertain.
 
 If you genuinely cannot read a field, use null for that field. Do not guess.`;
 
@@ -61,8 +62,9 @@ export default defineEventHandler(async (event) => {
         properties: {
           name: { type: "string", nullable: true },
           number: { type: "string", nullable: true },
+          language: { type: "string", nullable: true },
         },
-        required: ["name", "number"],
+        required: ["name", "number", "language"],
       },
       temperature: 0,
     },
@@ -88,7 +90,11 @@ export default defineEventHandler(async (event) => {
     json?.candidates?.[0]?.content?.parts?.[0]?.text || "{}";
   console.log("[identify-card] raw response:", text);
 
-  let parsed: { name?: string | null; number?: string | null } = {};
+  let parsed: {
+    name?: string | null;
+    number?: string | null;
+    language?: string | null;
+  } = {};
   try {
     parsed = JSON.parse(text);
   } catch {
@@ -100,8 +106,14 @@ export default defineEventHandler(async (event) => {
   const m = number.match(/^(\d+)\s*\/\s*(\d+)$/);
   if (m) number = `${m[1].replace(/^0+/, "") || "0"}/${m[2]}`;
 
+  // Normalize language: uppercase, fall back to EN if missing or unknown.
+  const ALLOWED = ["EN", "JP", "KR", "CN", "DE", "FR", "IT", "ES", "PT"];
+  const lang = (parsed.language || "").toUpperCase().trim();
+  const language = ALLOWED.includes(lang) ? lang : "EN";
+
   return {
     name: (parsed.name || "").trim(),
     number,
+    language,
   };
 });

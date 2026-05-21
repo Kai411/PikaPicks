@@ -9,7 +9,12 @@
         <img
           src="~/assets/images/tcgo_sprites.png"
           alt="TCGo"
-          class="h-full w-[110px] object-cover dark:[filter:drop-shadow(0_0_8px_rgba(255,255,255,0.7))]"
+          class="h-full w-[110px] object-cover block dark:hidden"
+        />
+        <img
+          src="/tcgo_sprites_white.png"
+          alt="TCGo"
+          class="h-full w-[110px] object-cover hidden dark:block"
         />
       </NuxtLink>
 
