@@ -51,12 +51,12 @@
           </NuxtLink>
         </div>
 
-        <!-- Mobile: Search button (replaces the avatar) + Sell/Auction
-             chooser. The avatar lives at the bottom nav's Profile tab. -->
+        <!-- Search button — visible on both mobile and desktop. Opens the
+             full-screen search modal. -->
         <button
           @click="searchOpen = true"
-          aria-label="Search cards"
-          class="lg:hidden inline-flex items-center justify-center w-10 h-10 rounded-full hover:bg-black/[0.04] dark:hover:bg-white/[0.06] text-ink dark:text-white transition-colors"
+          aria-label="Search"
+          class="inline-flex items-center justify-center w-10 h-10 rounded-full hover:bg-black/[0.04] dark:hover:bg-white/[0.06] text-ink dark:text-white transition-colors"
         >
           <svg
             class="w-5 h-5"
@@ -186,116 +186,7 @@
     </div>
   </nav>
 
-  <!-- Mobile search modal: filters the shop's card collection by name -->
-  <Teleport to="body">
-    <Transition
-      enter-active-class="transition duration-200"
-      enter-from-class="opacity-0"
-      leave-active-class="transition duration-200"
-      leave-to-class="opacity-0"
-    >
-      <div
-        v-if="searchOpen"
-        class="lg:hidden fixed inset-0 z-50 bg-canvas dark:bg-canvas-inverse flex flex-col"
-      >
-        <div
-          class="flex items-center gap-3 px-4 h-16 border-b border-black/[0.06] dark:border-white/[0.08]"
-        >
-          <button
-            @click="searchOpen = false"
-            class="w-9 h-9 rounded-full flex items-center justify-center hover:bg-black/[0.04] dark:hover:bg-white/[0.06] text-ink dark:text-white"
-            aria-label="Close search"
-          >
-            <svg
-              class="w-5 h-5"
-              viewBox="0 0 24 24"
-              fill="none"
-              stroke="currentColor"
-              stroke-width="2"
-              stroke-linecap="round"
-              stroke-linejoin="round"
-            >
-              <path d="m15 18-6-6 6-6" />
-            </svg>
-          </button>
-          <div
-            class="flex-1 flex items-center gap-2 px-3 h-10 rounded-full bg-black/[0.04] dark:bg-white/[0.06]"
-          >
-            <svg
-              class="w-4 h-4 text-ink-muted shrink-0"
-              viewBox="0 0 24 24"
-              fill="none"
-              stroke="currentColor"
-              stroke-width="2"
-              stroke-linecap="round"
-              stroke-linejoin="round"
-            >
-              <circle cx="11" cy="11" r="7" />
-              <path d="m21 21-4.3-4.3" />
-            </svg>
-            <input
-              ref="searchInput"
-              v-model="searchQuery"
-              type="search"
-              placeholder="Search cards by name or seller…"
-              class="flex-1 bg-transparent outline-none text-sm text-ink dark:text-white placeholder-ink-soft"
-            />
-          </div>
-        </div>
-
-        <div class="flex-1 overflow-y-auto p-4">
-          <div
-            v-if="searchQuery.trim().length === 0"
-            class="text-center text-sm text-ink-muted dark:text-zinc-400 py-12"
-          >
-            Type to search the shop.
-          </div>
-          <div
-            v-else-if="searchResults.length === 0"
-            class="text-center text-sm text-ink-muted dark:text-zinc-400 py-12"
-          >
-            No cards match "{{ searchQuery }}".
-          </div>
-          <div v-else class="grid grid-cols-2 gap-3">
-            <NuxtLink
-              v-for="card in searchResults"
-              :key="card.id"
-              :to="`/cards/${card.id}`"
-              @click="searchOpen = false"
-              class="surface rounded-xl overflow-hidden hover:shadow-card-hover transition-shadow"
-            >
-              <div class="p-1.5 bg-white dark:bg-white/[0.04]">
-                <img
-                  :src="cdnUrl(card.imageUrls?.[0] || card.imageUrl, 300)"
-                  :alt="card.cardName"
-                  loading="lazy"
-                  class="w-full aspect-[3/4] object-cover rounded"
-                />
-              </div>
-              <div class="px-3 py-2">
-                <p
-                  class="text-sm font-semibold text-ink dark:text-white truncate"
-                >
-                  {{ card.cardName }}
-                </p>
-                <p
-                  v-if="card.cardSet"
-                  class="text-xs text-ink-muted dark:text-zinc-400 truncate"
-                >
-                  {{ card.cardSet }}
-                </p>
-                <p
-                  class="mt-1 tabular-price text-sm font-bold text-ink dark:text-white"
-                >
-                  RM {{ card.price.toFixed(2) }}
-                </p>
-              </div>
-            </NuxtLink>
-          </div>
-        </div>
-      </div>
-    </Transition>
-  </Teleport>
+  <SearchModal v-model="searchOpen" />
 </template>
 
 <script setup lang="ts">
@@ -379,27 +270,8 @@ const mobileTabs = computed(() => {
 
 const sellMenuOpen = ref(false);
 const searchOpen = ref(false);
-const searchQuery = ref("");
-const searchInput = ref<HTMLInputElement | null>(null);
 
-// Cards subscription is a singleton so this is cheap — same data already
-// loaded by the Shop page.
-const { cards } = useCards();
-
-const searchResults = computed(() => {
-  const term = searchQuery.value.trim().toLowerCase();
-  if (!term) return [];
-  return cards.value
-    .filter((c: any) => !c.sold)
-    .filter((c: any) => {
-      const hay = `${c.cardName} ${c.cardSet} ${c.seller}`.toLowerCase();
-      return hay.includes(term);
-    })
-    .slice(0, 30);
-});
-
-// Close the menus when user clicks anywhere else, and focus the search
-// input when the modal opens.
+// Close the sell menu when user clicks anywhere else.
 const handleDocClick = () => {
   sellMenuOpen.value = false;
 };
@@ -408,15 +280,6 @@ onMounted(() => {
 });
 onBeforeUnmount(() => {
   document.removeEventListener("click", handleDocClick);
-});
-
-watch(searchOpen, async (open) => {
-  if (open) {
-    await nextTick();
-    searchInput.value?.focus();
-  } else {
-    searchQuery.value = "";
-  }
 });
 
 // Close transient menus on route change.
