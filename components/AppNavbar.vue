@@ -314,10 +314,7 @@ const desktopLinks = computed(() => {
     { to: "/auctions", label: "Auctions" },
   ];
   if (user.value) {
-    links.push(
-      { to: "/dashboard/seller", label: "Listings" },
-      { to: "/dashboard/buyer", label: "Bids" },
-    );
+    links.push({ to: "/activity", label: "Activity" });
   }
   if (isAdmin.value) links.push({ to: "/admin/reports", label: "Admin" });
   return links;
@@ -367,7 +364,7 @@ const mobileTabs = computed(() => {
   ];
   if (user.value) {
     tabs.push(
-      { to: "/dashboard/buyer", label: "Activity", icon: IconActivity },
+      { to: "/activity", label: "Activity", icon: IconActivity },
       {
         to: `/profile/${user.value.uid}`,
         label: "Profile",
