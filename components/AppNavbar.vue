@@ -4,8 +4,10 @@
     <div
       class="container mx-auto px-4 h-16 flex items-center justify-between gap-4"
     >
-      <!-- Logo (matches LandingNavbar: square sprite cropped to wordmark slice) -->
-      <NuxtLink to="/" class="flex items-center h-full shrink-0">
+      <!-- Logo (matches LandingNavbar: square sprite cropped to wordmark slice).
+           Links to /landing (marketing) — user prefers this over the shop
+           home since the marketing surface is where new visitors land. -->
+      <NuxtLink to="/landing" class="flex items-center h-full shrink-0">
         <img
           src="~/assets/images/tcgo_sprites.png"
           alt="TCGo"
