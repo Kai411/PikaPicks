@@ -258,7 +258,7 @@
                   <input
                     v-model="manualSearch[item.id]"
                     placeholder="Search card name…"
-                    class="flex-1 border border-gray-300 dark:border-white/[0.10] rounded px-2 py-1.5 text-xs"
+                    class="flex-1 border border-gray-300 dark:border-white/[0.10] rounded-lg px-2.5 py-2 text-sm"
                     @keydown.enter.prevent="retryManualSearch(item.id)"
                   />
                   <button
@@ -277,7 +277,7 @@
                   <div class="grid grid-cols-2 sm:grid-cols-3 gap-2">
                     <select
                       v-model="draftFields[item.id].productType"
-                      class="border border-gray-300 dark:border-white/[0.10] rounded px-2 py-1.5 text-xs"
+                      class="border border-gray-300 dark:border-white/[0.10] rounded-lg px-2.5 py-2 text-sm"
                     >
                       <option value="Ungraded">Ungraded</option>
                       <option value="Graded">Graded</option>
@@ -286,7 +286,7 @@
                     <select
                       v-if="draftFields[item.id].productType === 'Ungraded'"
                       v-model="draftFields[item.id].condition"
-                      class="border border-gray-300 dark:border-white/[0.10] rounded px-2 py-1.5 text-xs"
+                      class="border border-gray-300 dark:border-white/[0.10] rounded-lg px-2.5 py-2 text-sm"
                     >
                       <option value="">Condition…</option>
                       <option
@@ -300,7 +300,7 @@
                     <select
                       v-if="draftFields[item.id].productType === 'Graded'"
                       v-model="draftFields[item.id].gradingProvider"
-                      class="border border-gray-300 dark:border-white/[0.10] rounded px-2 py-1.5 text-xs"
+                      class="border border-gray-300 dark:border-white/[0.10] rounded-lg px-2.5 py-2 text-sm"
                     >
                       <option value="">Provider…</option>
                       <option
@@ -318,7 +318,7 @@
                         draftFields[item.id].gradingProvider !== 'Others'
                       "
                       v-model="draftFields[item.id].grade"
-                      class="border border-gray-300 dark:border-white/[0.10] rounded px-2 py-1.5 text-xs"
+                      class="border border-gray-300 dark:border-white/[0.10] rounded-lg px-2.5 py-2 text-sm"
                     >
                       <option value="">Grade…</option>
                       <option
@@ -338,12 +338,12 @@
                       "
                       v-model="draftFields[item.id].grade"
                       placeholder="Grade"
-                      class="border border-gray-300 dark:border-white/[0.10] rounded px-2 py-1.5 text-xs"
+                      class="border border-gray-300 dark:border-white/[0.10] rounded-lg px-2.5 py-2 text-sm"
                     />
                     <!-- Price: full width on mobile, fits in 3rd col on desktop -->
                     <div class="relative col-span-2 sm:col-span-1">
                       <span
-                        class="absolute left-2 top-1/2 -translate-y-1/2 text-xs font-semibold text-gray-500 dark:text-zinc-400 pointer-events-none"
+                        class="absolute left-2.5 top-1/2 -translate-y-1/2 text-sm font-semibold text-gray-500 dark:text-zinc-400 pointer-events-none"
                         >RM</span
                       >
                       <input
@@ -356,7 +356,7 @@
                             ? `~${item.marketPrice.low}–${item.marketPrice.high}`
                             : '0.00'
                         "
-                        class="w-full border border-gray-300 dark:border-white/[0.10] rounded px-2 py-1.5 pl-8 text-xs"
+                        class="w-full border border-gray-300 dark:border-white/[0.10] rounded-lg px-2.5 py-2 pl-9 text-sm"
                       />
                     </div>
                   </div>
@@ -366,7 +366,7 @@
                     v-model="draftFields[item.id].description"
                     rows="2"
                     placeholder="Notes about the card (optional)…"
-                    class="w-full border border-gray-300 dark:border-white/[0.10] rounded px-2 py-1.5 text-xs resize-none"
+                    class="w-full border border-gray-300 dark:border-white/[0.10] rounded-lg px-2.5 py-2 text-sm resize-none"
                   />
 
                   <!-- Extra photos -->

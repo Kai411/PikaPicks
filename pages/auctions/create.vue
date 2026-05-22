@@ -225,7 +225,7 @@
                   <input
                     v-model="manualSearch[item.id]"
                     placeholder="Search card name…"
-                    class="flex-1 border border-gray-300 dark:border-white/[0.10] rounded px-2 py-1.5 text-xs"
+                    class="flex-1 border border-gray-300 dark:border-white/[0.10] rounded-lg px-2.5 py-2 text-sm"
                     @keydown.enter.prevent="retryManualSearch(item.id)"
                   />
                   <button
@@ -244,7 +244,7 @@
                 <div class="grid grid-cols-2 sm:grid-cols-3 gap-2">
                   <select
                     v-model="draftFields[item.id].productType"
-                    class="border border-gray-300 dark:border-white/[0.10] rounded px-2 py-1.5 text-xs"
+                    class="border border-gray-300 dark:border-white/[0.10] rounded-lg px-2.5 py-2 text-sm"
                   >
                     <option value="Ungraded">Ungraded</option>
                     <option value="Graded">Graded</option>
@@ -253,7 +253,7 @@
                   <select
                     v-if="draftFields[item.id].productType === 'Ungraded'"
                     v-model="draftFields[item.id].condition"
-                    class="border border-gray-300 dark:border-white/[0.10] rounded px-2 py-1.5 text-xs"
+                    class="border border-gray-300 dark:border-white/[0.10] rounded-lg px-2.5 py-2 text-sm"
                   >
                     <option value="">Condition…</option>
                     <option v-for="c in UNGRADED_CONDITIONS" :key="c" :value="c">
@@ -263,7 +263,7 @@
                   <select
                     v-if="draftFields[item.id].productType === 'Graded'"
                     v-model="draftFields[item.id].gradingProvider"
-                    class="border border-gray-300 dark:border-white/[0.10] rounded px-2 py-1.5 text-xs"
+                    class="border border-gray-300 dark:border-white/[0.10] rounded-lg px-2.5 py-2 text-sm"
                   >
                     <option value="">Provider…</option>
                     <option v-for="p in GRADING_PROVIDERS" :key="p" :value="p">
@@ -277,7 +277,7 @@
                       draftFields[item.id].gradingProvider !== 'Others'
                     "
                     v-model="draftFields[item.id].grade"
-                    class="border border-gray-300 dark:border-white/[0.10] rounded px-2 py-1.5 text-xs"
+                    class="border border-gray-300 dark:border-white/[0.10] rounded-lg px-2.5 py-2 text-sm"
                   >
                     <option value="">Grade…</option>
                     <option
@@ -297,7 +297,7 @@
                     "
                     v-model="draftFields[item.id].grade"
                     placeholder="Grade"
-                    class="border border-gray-300 dark:border-white/[0.10] rounded px-2 py-1.5 text-xs"
+                    class="border border-gray-300 dark:border-white/[0.10] rounded-lg px-2.5 py-2 text-sm"
                   />
                 </div>
 
@@ -309,7 +309,7 @@
                     step="0.01"
                     min="0.01"
                     placeholder="Start price (RM)"
-                    class="border border-gray-300 dark:border-white/[0.10] rounded px-2 py-1.5 text-xs"
+                    class="border border-gray-300 dark:border-white/[0.10] rounded-lg px-2.5 py-2 text-sm"
                   />
                   <input
                     v-model.number="draftFields[item.id].minIncrement"
@@ -317,11 +317,11 @@
                     step="0.01"
                     min="0.01"
                     placeholder="Min increment"
-                    class="border border-gray-300 dark:border-white/[0.10] rounded px-2 py-1.5 text-xs"
+                    class="border border-gray-300 dark:border-white/[0.10] rounded-lg px-2.5 py-2 text-sm"
                   />
                   <select
                     v-model.number="draftFields[item.id].duration"
-                    class="border border-gray-300 dark:border-white/[0.10] rounded px-2 py-1.5 text-xs"
+                    class="border border-gray-300 dark:border-white/[0.10] rounded-lg px-2.5 py-2 text-sm"
                   >
                     <option
                       v-for="d in durationOptions"
@@ -334,7 +334,7 @@
                 </div>
 
                 <!-- Private toggle -->
-                <label class="flex items-center gap-2 text-xs text-gray-700 dark:text-zinc-200 cursor-pointer">
+                <label class="flex items-center gap-2 text-sm text-gray-700 dark:text-zinc-200 cursor-pointer">
                   <input
                     type="checkbox"
                     v-model="draftFields[item.id].isPrivate"
@@ -348,7 +348,7 @@
                   v-model="draftFields[item.id].description"
                   rows="2"
                   placeholder="Notes about the card (optional)…"
-                  class="w-full border border-gray-300 dark:border-white/[0.10] rounded px-2 py-1.5 text-xs resize-none"
+                  class="w-full border border-gray-300 dark:border-white/[0.10] rounded-lg px-2.5 py-2 text-sm resize-none"
                 />
 
                 <!-- Auto-detected metadata — edit if scanner got it wrong. -->
@@ -360,7 +360,7 @@
                         rarity: ($event.target as HTMLSelectElement).value,
                       })
                     "
-                    class="border border-gray-300 dark:border-white/[0.10] rounded px-2 py-1.5 text-xs"
+                    class="border border-gray-300 dark:border-white/[0.10] rounded-lg px-2.5 py-2 text-sm"
                   >
                     <option value="">Rarity…</option>
                     <option v-for="r in RARITIES" :key="r" :value="r">{{ r }}</option>
@@ -372,7 +372,7 @@
                         variant: ($event.target as HTMLSelectElement).value,
                       })
                     "
-                    class="border border-gray-300 dark:border-white/[0.10] rounded px-2 py-1.5 text-xs"
+                    class="border border-gray-300 dark:border-white/[0.10] rounded-lg px-2.5 py-2 text-sm"
                   >
                     <option value="">Variant…</option>
                     <option v-for="v in VARIANTS" :key="v" :value="v">{{ v }}</option>
@@ -384,7 +384,7 @@
                         edition: ($event.target as HTMLSelectElement).value,
                       })
                     "
-                    class="border border-gray-300 dark:border-white/[0.10] rounded px-2 py-1.5 text-xs"
+                    class="border border-gray-300 dark:border-white/[0.10] rounded-lg px-2.5 py-2 text-sm"
                   >
                     <option value="">Edition…</option>
                     <option v-for="e in EDITIONS" :key="e" :value="e">{{ e }}</option>
