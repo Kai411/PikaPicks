@@ -5,7 +5,7 @@ Last updated: 2026-05-22. Living doc — tick items as they ship, move blocks be
 ## At a glance
 
 - **Released**: V 0.3.0 (May 21)
-- **In progress**: V 0.4.0 — bug fixes, filters, polish
+- **In progress**: V 0.4.0 — code complete; only `seed 100 listings` (content work) remains
 - **Next**: V 0.5.0 — Stripe payments + premium membership
 - **After**: V 0.6.0 — wishlist, collection tracker, market prices
 - **Future**: live breaks, in-app chat, trades, reviews
@@ -14,17 +14,17 @@ Last updated: 2026-05-22. Living doc — tick items as they ship, move blocks be
 
 ## V 0.4.0 — Bug fixes + polish + groundwork (current sprint)
 
-- [ ] **Fix PWA install popup** — install prompt isn't showing on supported browsers (likely caused by the precache-everything SW we just narrowed in `80067a4`; needs verification)
-- [ ] **iOS "Add to Home Screen" prompt** — Safari doesn't show one natively; need an in-app prompt with screenshots/instructions for iOS users
-- [ ] **Filters in shop index page** — rarity, variant, language, condition, price range, set name. Builds on existing TCG type pills.
-- [ ] **Filters in auction index page** — mirror shop filters + status (live / ended) + time-left buckets
-- [ ] **My Listings / My Activity page refactor** — current `/dashboard/buyer` + `/dashboard/seller` are minimal; unify under `/activity` with proper tabs, empty states, filters
-- [ ] **Profile page: cards / auctions / favourite toggle spacing** — tighten the three-tab switcher on `/profile/[uid]`
-- [ ] **Improve search** — global search across listings + auctions; refer to Hoopi / Collektr MY for UX (full-screen modal, recent searches, suggested sets/cards)
-- [ ] **Market price indicator in scan flow** — when scanner identifies a card, show estimated market value (RM range) before publish. Uses [TCGdex](https://tcgdex.dev/) for a first pass.
+- [x] **Fix PWA install popup** — `useInstallPrompt` listens for `beforeinstallprompt` and surfaces a bottom card with Install/Later; 14-day quiet period after dismiss.
+- [x] **iOS "Add to Home Screen" prompt** — same `<InstallPrompt>` component detects iOS Safari (where the API doesn't exist) and opens a sheet walking through Share → Add to Home Screen.
+- [x] **Filters in shop index page** — rarity, variant, language, product type, condition, set, price range. Sheet UI with removable inline chips, plus sort.
+- [x] **Filters in auction index page** — shop filters + status (live/ended) + time-left buckets + ending-soon / most-bids sort.
+- [x] **My Listings / My Activity page refactor** — `/activity` with Selling / Bidding / History tabs (query-param routing). Old `/dashboard/buyer` + `/dashboard/seller` URLs redirect.
+- [x] **Profile page: cards / auctions / favourite toggle spacing** — tightened text size, padding, and gap on the underline tab strip.
+- [x] **Improve search** — `<SearchModal>` full-screen overlay across cards + auctions, with recent searches (localStorage), popular sets, and active sellers derived from live listings.
+- [x] **Market price indicator in scan flow** — pokemontcg.io price block flows into the scan queue; "Market RM X–Y" badge under each draft and a pre-filled price placeholder.
 - [ ] **Seed shop with ~100 real listings** — content work, not code. Catalog of actual cards across TCGs to populate the index for launch credibility.
-- [ ] **AppNavbar logo → `/` instead of `/landing`** — currently the nav logo on the in-app shell goes to the marketing landing; should go to shop home.
-- [ ] **Landing page "TCGo marketplace →" link** — opens in new tab (`target="_blank" rel="noopener"`)
+- [x] **AppNavbar logo → `/` instead of `/landing`** — in-app nav now stays in-app.
+- [x] **Landing page "TCGo marketplace →" link** — both nav CTAs are now plain `<a target="_blank" rel="noopener">`.
 
 ---
 
@@ -79,6 +79,8 @@ Detail in **[Competitive features](#tier-1--competitive-differentiators)** below
 - [ ] Move `nuxt: "3.13.2"` pin → unblock 3.21+ once the vite-node IPC bug is fixed upstream
 - [ ] Replace `bidCount` per-tick recompute with a Firestore-side aggregate
 - [ ] Admin tool to flip user tier (free ↔ premium) without Firebase Console
+- [ ] Consider partial SSR via `routeRules` (`prerender`/`swr`) for `/`, `/cards/[id]`, `/auctions/[id]` so social link previews show per-listing data without going full SSR
+- [ ] Replace constant USD/EUR → MYR rates in `useMarketPrice` with a live FX feed once the static rate drifts >5%
 
 ### Schema fields shipped without UI (wire when feature lands)
 
