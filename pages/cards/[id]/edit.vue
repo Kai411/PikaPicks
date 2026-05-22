@@ -7,7 +7,7 @@
     </div>
 
     <div v-else-if="!card || !isOwner" class="text-center py-12">
-      <p class="text-gray-500 text-lg">
+      <p class="text-gray-500 dark:text-zinc-400 text-lg">
         Card not found or you don't have permission to edit.
       </p>
       <NuxtLink
@@ -29,9 +29,11 @@
 
           <!-- Card: Photos -->
           <div
-            class="bg-white rounded-xl border border-gray-200 p-5 space-y-3 lg:col-span-2"
+            class="bg-white dark:bg-white/[0.04] rounded-xl border border-gray-200 dark:border-white/[0.08] p-5 space-y-3 lg:col-span-2"
           >
-            <h3 class="text-sm font-semibold text-gray-900">Photos</h3>
+            <h3 class="text-sm font-semibold text-gray-900 dark:text-zinc-100">
+              Photos
+            </h3>
 
             <!-- Existing images -->
             <div
@@ -45,7 +47,7 @@
               >
                 <img
                   :src="url"
-                  class="w-full aspect-square object-cover rounded-lg border border-gray-200"
+                  class="w-full aspect-square object-cover rounded-lg border border-gray-200 dark:border-white/[0.08]"
                 />
                 <button
                   type="button"
@@ -59,7 +61,7 @@
 
             <!-- Upload new -->
             <div
-              class="border-2 border-dashed border-gray-300 rounded-lg p-4 text-center hover:border-pokemon-blue transition-colors cursor-pointer"
+              class="border-2 border-dashed border-gray-300 dark:border-white/[0.10] rounded-lg p-4 text-center hover:border-pokemon-blue transition-colors cursor-pointer"
               @click="triggerFileInput"
             >
               <input
@@ -70,7 +72,9 @@
                 class="hidden"
                 @change="handleFileSelect"
               />
-              <p class="text-sm text-gray-400">Add more photos</p>
+              <p class="text-sm text-gray-400 dark:text-zinc-500">
+                Add more photos
+              </p>
             </div>
 
             <div v-if="newFiles.length > 0" class="grid grid-cols-4 gap-2">
@@ -81,7 +85,7 @@
               >
                 <img
                   :src="file.preview"
-                  class="w-full aspect-square object-cover rounded-lg border border-gray-200"
+                  class="w-full aspect-square object-cover rounded-lg border border-gray-200 dark:border-white/[0.08]"
                 />
                 <button
                   type="button"
@@ -95,8 +99,12 @@
           </div>
 
           <!-- Price -->
-          <div class="bg-white rounded-xl border border-gray-200 p-5">
-            <label class="block text-sm font-semibold text-gray-900 mb-2">
+          <div
+            class="bg-white dark:bg-white/[0.04] rounded-xl border border-gray-200 dark:border-white/[0.08] p-5"
+          >
+            <label
+              class="block text-sm font-semibold text-gray-900 dark:text-zinc-100 mb-2"
+            >
               Price (RM) <span class="text-pokemon-red">*</span>
             </label>
             <input
@@ -106,16 +114,21 @@
               step="0.01"
               required
               placeholder="10.00"
-              class="w-full border border-gray-300 rounded-lg px-4 py-2.5 text-gray-900 placeholder-gray-400 focus:border-pokemon-blue focus:outline-none focus:ring-1 focus:ring-pokemon-blue"
+              class="w-full border border-gray-300 dark:border-white/[0.10] rounded-lg px-4 py-2.5 text-gray-900 dark:text-zinc-100 placeholder-gray-400 focus:border-pokemon-blue focus:outline-none focus:ring-1 focus:ring-pokemon-blue"
             />
           </div>
 
           <!-- Shipping -->
-          <div class="bg-white rounded-xl border border-gray-200 p-5 space-y-3">
-            <h3 class="text-sm font-semibold text-gray-900">Shipping</h3>
+          <div
+            class="bg-white dark:bg-white/[0.04] rounded-xl border border-gray-200 dark:border-white/[0.08] p-5 space-y-3"
+          >
+            <h3 class="text-sm font-semibold text-gray-900 dark:text-zinc-100">
+              Shipping
+            </h3>
             <div class="grid grid-cols-2 gap-3">
               <div>
-                <label class="block text-xs text-gray-600 mb-1"
+                <label
+                  class="block text-xs text-gray-600 dark:text-zinc-300 mb-1"
                   >West Malaysia (RM)</label
                 >
                 <input
@@ -123,11 +136,12 @@
                   type="number"
                   min="0"
                   step="0.01"
-                  class="w-full bg-white border border-gray-300 rounded-lg px-4 py-2.5 text-gray-900 focus:border-pokemon-red focus:outline-none focus:ring-1 focus:ring-pokemon-red"
+                  class="w-full bg-white border border-gray-300 dark:border-white/[0.10] rounded-lg px-4 py-2.5 text-gray-900 dark:text-zinc-100 focus:border-pokemon-red focus:outline-none focus:ring-1 focus:ring-pokemon-red"
                 />
               </div>
               <div>
-                <label class="block text-xs text-gray-600 mb-1"
+                <label
+                  class="block text-xs text-gray-600 dark:text-zinc-300 mb-1"
                   >East Malaysia (RM)</label
                 >
                 <input
@@ -135,7 +149,7 @@
                   type="number"
                   min="0"
                   step="0.01"
-                  class="w-full bg-white border border-gray-300 rounded-lg px-4 py-2.5 text-gray-900 focus:border-pokemon-red focus:outline-none focus:ring-1 focus:ring-pokemon-red"
+                  class="w-full bg-white border border-gray-300 dark:border-white/[0.10] rounded-lg px-4 py-2.5 text-gray-900 dark:text-zinc-100 focus:border-pokemon-red focus:outline-none focus:ring-1 focus:ring-pokemon-red"
                 />
               </div>
             </div>
@@ -152,7 +166,7 @@
         <div class="flex gap-3">
           <NuxtLink
             :to="`/cards/${cardId}`"
-            class="flex-1 text-center py-3 rounded-lg border border-gray-300 text-gray-600 font-medium hover:bg-gray-50 transition-colors"
+            class="flex-1 text-center py-3 rounded-lg border border-gray-300 dark:border-white/[0.10] text-gray-600 dark:text-zinc-300 font-medium hover:bg-gray-50 dark:hover:bg-white/[0.02] transition-colors"
           >
             Cancel
           </NuxtLink>
@@ -164,6 +178,15 @@
             {{ submitting ? "Saving..." : "Save Changes" }}
           </button>
         </div>
+
+        <button
+          type="button"
+          @click="handleDelete"
+          :disabled="deleting"
+          class="w-full py-3 rounded-lg border border-red-300 dark:border-red-500/30 text-pokemon-red font-medium hover:bg-red-50 dark:hover:bg-red-500/10 transition-colors disabled:opacity-50"
+        >
+          {{ deleting ? "Deleting..." : "Delete Listing" }}
+        </button>
       </form>
     </template>
   </div>
@@ -178,7 +201,7 @@ const route = useRoute();
 const router = useRouter();
 const cardId = route.params.id as string;
 
-const { cards, loading } = useCards();
+const { cards, loading, deleteCard } = useCards();
 const { firestore } = useFirebase();
 const { user } = useAuth();
 const { uploadAuctionImages } = useStorage();
@@ -202,6 +225,16 @@ const cardForm = ref<CardFormData>({
   description: "",
   shippingWM: 8,
   shippingEM: 12,
+  language: "EN",
+  tcgType: "Pokemon",
+  rarity: "",
+  variant: "",
+  edition: "",
+  artist: "",
+  certNumber: "",
+  quantity: 1,
+  negotiable: false,
+  pickupAvailable: false,
 });
 
 const price = ref<number | null>(null);
@@ -229,6 +262,16 @@ watch(
         description: c.description || "",
         shippingWM: c.shippingWM ?? 8,
         shippingEM: c.shippingEM ?? 12,
+        language: c.language || "EN",
+        tcgType: c.tcgType || "Pokemon",
+        rarity: c.rarity || "",
+        variant: c.variant || "",
+        edition: c.edition || "",
+        artist: c.artist || "",
+        certNumber: c.certNumber || "",
+        quantity: c.quantity ?? 1,
+        negotiable: c.negotiable === true,
+        pickupAvailable: c.pickupAvailable === true,
       };
       price.value = c.price;
       existingImages.value = [
@@ -302,6 +345,16 @@ const handleSubmit = async () => {
       shippingEM: cardForm.value.shippingEM,
       imageUrl: allImages[0] || "",
       imageUrls: allImages,
+      language: cardForm.value.language || "EN",
+      tcgType: cardForm.value.tcgType || "Pokemon",
+      rarity: cardForm.value.rarity || "",
+      variant: cardForm.value.variant || "",
+      edition: cardForm.value.edition || "",
+      artist: cardForm.value.artist || "",
+      certNumber: cardForm.value.certNumber || "",
+      quantity: cardForm.value.quantity || 1,
+      negotiable: cardForm.value.negotiable === true,
+      pickupAvailable: cardForm.value.pickupAvailable === true,
     });
 
     newFiles.value.forEach((f) => URL.revokeObjectURL(f.preview));
@@ -310,6 +363,26 @@ const handleSubmit = async () => {
     error.value = e.message || "Failed to save changes";
   } finally {
     submitting.value = false;
+  }
+};
+
+const deleting = ref(false);
+
+const handleDelete = async () => {
+  if (
+    !window.confirm(
+      "Are you sure you want to delete this listing? This cannot be undone.",
+    )
+  )
+    return;
+  deleting.value = true;
+  try {
+    await deleteCard(cardId);
+    await router.push("/");
+  } catch (e: any) {
+    error.value = e.message || "Failed to delete listing";
+  } finally {
+    deleting.value = false;
   }
 };
 </script>

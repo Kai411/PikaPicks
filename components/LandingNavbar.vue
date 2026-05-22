@@ -13,6 +13,20 @@
         <!-- Desktop nav -->
         <div class="hidden lg:flex items-center gap-5">
           <NuxtLink
+            to="/beta"
+            class="text-gray-600 hover:text-gray-900 transition-colors text-sm font-medium"
+            active-class="!text-pokemon-red"
+          >
+            Beta Access
+          </NuxtLink>
+          <NuxtLink
+            to="/update-notice"
+            class="text-gray-600 hover:text-gray-900 transition-colors text-sm font-medium"
+            active-class="!text-pokemon-red"
+          >
+            Updates
+          </NuxtLink>
+          <NuxtLink
             to="/privacy-policy"
             class="text-gray-600 hover:text-gray-900 transition-colors text-sm font-medium"
             active-class="!text-pokemon-red"
@@ -28,7 +42,7 @@
           </NuxtLink> -->
           <NuxtLink
             to="/"
-            class="bg-pokemon-red text-white px-5 py-2 rounded-lg border-2 border-red-800 text-sm font-medium hover:bg-red-700 transition-colors"
+            class="inline-flex items-center gap-1 px-3.5 py-2 rounded-full text-sm font-semibold bg-pokemon-red text-white shadow-glow"
           >
             TCGo Marketplace →
           </NuxtLink>
@@ -108,6 +122,22 @@
           <!-- Nav links -->
           <div class="flex-1 flex flex-col px-6 py-6 gap-1">
             <NuxtLink
+              to="/beta"
+              class="text-lg font-medium text-gray-700 hover:text-pokemon-red py-3 border-b border-gray-100 transition-colors"
+              active-class="!text-pokemon-red"
+              @click="mobileMenuOpen = false"
+            >
+              Beta Access
+            </NuxtLink>
+            <NuxtLink
+              to="/update-notice"
+              class="text-lg font-medium text-gray-700 hover:text-pokemon-red py-3 border-b border-gray-100 transition-colors"
+              active-class="!text-pokemon-red"
+              @click="mobileMenuOpen = false"
+            >
+              Updates
+            </NuxtLink>
+            <NuxtLink
               to="/privacy-policy"
               class="text-lg font-medium text-gray-700 hover:text-pokemon-red py-3 border-b border-gray-100 transition-colors"
               active-class="!text-pokemon-red"
@@ -121,7 +151,7 @@
           <div class="flex px-6 py-6 border-t border-gray-200 w-full">
             <NuxtLink
               to="/"
-              class="bg-pokemon-red text-white text-center w-full px-5 py-2 rounded-lg text-xl font-medium hover:bg-red-700 transition-colors"
+              class="inline-flex w-full items-center justify-center gap-1 px-3.5 py-2 rounded-full text-xl font-semibold bg-pokemon-red text-white shadow-glow"
             >
               TCGo Marketplace →
             </NuxtLink>

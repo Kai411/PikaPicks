@@ -1,4 +1,11 @@
-import { ref as dbRef, push, onValue, update, get } from "firebase/database";
+import {
+  ref as dbRef,
+  push,
+  onValue,
+  update,
+  get,
+  type Unsubscribe,
+} from "firebase/database";
 import { doc, getDoc } from "firebase/firestore";
 import { ref, onUnmounted } from "vue";
 
@@ -28,6 +35,37 @@ export interface Auction {
   isPrivate: boolean;
   bids: Record<string, Bid>;
   autoBids: Record<string, AutoBid>;
+  language?: string;
+  tcgType?: string;
+
+  // ── Product metadata (auto-filled by scanner where possible) ─────────
+  rarity?: string;
+  variant?: string;
+  edition?: string;
+  era?: string;
+  artist?: string;
+
+  // ── Authenticity / cert ──────────────────────────────────────────────
+  certNumber?: string;
+
+  // ── Search / discovery ──────────────────────────────────────────────
+  tags?: string[];
+  defects?: string[];
+
+  // ── Commerce flags ──────────────────────────────────────────────────
+  negotiable?: boolean;
+  pickupAvailable?: boolean;
+  quantity?: number;
+
+  // ── Lifecycle ────────────────────────────────────────────────────────
+  status?: "active" | "reserved" | "pending_payment" | "sold" | "cancelled" | "expired";
+
+  // ── Engagement ──────────────────────────────────────────────────────
+  viewCount?: number;
+
+  // Populated on the listing payload (where bids are stripped for perf)
+  // so tiles can show a bid count without holding the full bid map.
+  bidCount?: number;
 }
 
 export interface Bid {
@@ -48,29 +86,43 @@ export interface AutoBid {
   createdAt: number;
 }
 
-export const useAuctions = () => {
+// Module-level singleton. Previously every page that touched auctions
+// opened its own RTDB listener on the entire auctions tree.
+const auctions = ref<Auction[]>([]);
+const loading = ref(true);
+let initialized = false;
+let unsubscribeAuctions: Unsubscribe | null = null;
+
+const initializeAuctions = () => {
+  if (initialized) return;
+  initialized = true;
   const { db } = useFirebase();
-  const auctions = ref<Auction[]>([]);
-  const loading = ref(true);
-
   const auctionsRef = dbRef(db!, "auctions");
-
-  const unsubscribe = onValue(auctionsRef, (snapshot) => {
+  unsubscribeAuctions = onValue(auctionsRef, (snapshot) => {
     const data = snapshot.val();
     if (data) {
-      auctions.value = Object.entries(data).map(([id, auction]) => ({
-        ...(auction as Omit<Auction, "id">),
-        id,
-      }));
+      // Strip nested bids/autoBids on receipt. RTDB has no field projection
+      // so we still pay bandwidth, but Vue's reactivity won't track the
+      // huge nested objects on the list view — a big memory + render win
+      // when many auctions accumulate bid history. Detail page subscribes
+      // separately via useAuctionDetail.
+      auctions.value = Object.entries(data).map(([id, raw]) => {
+        const auction = raw as any;
+        const { bids, autoBids: _ab, ...rest } = auction;
+        const bidCount = bids ? Object.keys(bids).length : 0;
+        return { ...(rest as Omit<Auction, "id">), id, bidCount } as Auction;
+      });
     } else {
       auctions.value = [];
     }
     loading.value = false;
   });
+};
 
-  onUnmounted(() => {
-    unsubscribe();
-  });
+export const useAuctions = () => {
+  const { db } = useFirebase();
+  initializeAuctions();
+  const auctionsRef = dbRef(db!, "auctions");
 
   const createAuction = async (
     auction: Omit<

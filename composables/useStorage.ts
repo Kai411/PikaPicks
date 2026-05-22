@@ -1,10 +1,11 @@
-const MAX_WIDTH = 1600;
-const MAX_HEIGHT = 1600;
-const QUALITY = 0.82;
+const MAX_WIDTH = 2400;
+const MAX_HEIGHT = 2400;
+const QUALITY = 0.88;
 
 /**
  * Compress and convert image to WebP using Canvas API.
- * Resizes to max 1600x1600 while preserving aspect ratio.
+ * Resizes to max 2400x2400 while preserving aspect ratio so card text and
+ * holo detail stay legible at 2x DPR displays.
  * Returns a compressed File ready for upload.
  */
 const compressImage = (file: File): Promise<File> => {
@@ -74,6 +75,18 @@ const compressImage = (file: File): Promise<File> => {
 
     img.src = url;
   });
+};
+
+// Insert a Cloudinary transformation into an /image/upload/ URL. Lets us
+// request a small thumbnail variant for grid tiles instead of always
+// downloading the full 1600px upload. Pass-through for non-Cloudinary URLs.
+export const cdnUrl = (url: string | undefined, width: number): string => {
+  if (!url) return "";
+  if (!url.includes("/image/upload/")) return url;
+  return url.replace(
+    "/image/upload/",
+    `/image/upload/w_${width},c_limit,q_auto,f_auto/`,
+  );
 };
 
 export const useStorage = () => {

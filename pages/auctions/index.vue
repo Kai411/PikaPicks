@@ -1,86 +1,149 @@
 <template>
   <div>
-    <div class="flex items-center justify-between mb-6">
-      <h1 class="text-2xl font-bold">Live Auctions</h1>
-      <NuxtLink
-        v-if="user"
-        to="/auctions/create"
-        class="bg-pokemon-red text-white px-4 py-2 rounded-lg text-sm font-medium hover:bg-red-700 transition-colors"
-      >
-        + List for Auction
-      </NuxtLink>
-    </div>
-
-    <div v-if="loading" class="flex justify-center py-12">
+    <!-- Loading -->
+    <div v-if="loading" class="flex justify-center py-24">
       <div
-        class="animate-spin rounded-full h-6 w-6 border-b-2 border-pokemon-red"
-      ></div>
+        class="animate-spin rounded-full h-8 w-8 border-2 border-ink/10 border-t-pokemon-red"
+      />
     </div>
 
-    <div v-else-if="publicAuctions.length === 0" class="text-center py-12">
-      <p class="text-gray-500 text-lg">No active auctions yet.</p>
-      <p class="text-gray-400 mt-1 text-sm">Be the first to list a card!</p>
+    <!-- Empty -->
+    <div
+      v-else-if="publicAuctions.length === 0"
+      class="surface rounded-2xl py-20 text-center"
+    >
+      <p class="text-lg font-semibold text-ink dark:text-white">
+        No live auctions yet
+      </p>
+      <p class="mt-1 text-sm text-ink-muted dark:text-zinc-400">
+        Be the first to list a card.
+      </p>
     </div>
 
+    <!-- Grid -->
     <div
       v-else
-      class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-4"
+      class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-3 sm:gap-5"
     >
       <NuxtLink
         v-for="auction in publicAuctions"
         :key="auction.id"
         :to="`/auctions/${auction.id}`"
-        class="bg-white rounded-xl overflow-hidden border border-gray-200 hover:border-pokemon-red hover:shadow-md transition-all group cursor-pointer block"
+        class="group block"
       >
-        <div
-          class="aspect-[3/4] bg-gray-100 flex items-center justify-center overflow-hidden"
+        <article
+          class="surface rounded-2xl overflow-hidden hover:shadow-card-hover transition-shadow duration-300 ease-premium h-full flex flex-col"
         >
-          <img
-            v-if="auction.imageUrls?.length || auction.imageUrl"
-            :src="auction.imageUrls?.[0] || auction.imageUrl"
-            :alt="auction.cardName"
-            class="w-full h-full object-cover group-hover:scale-105 transition-transform"
-          />
-          <span v-else class="text-gray-400 text-xs">No Image</span>
-        </div>
-        <div class="p-3">
-          <h3 class="font-semibold text-sm truncate">{{ auction.cardName }}</h3>
-          <p class="text-xs text-gray-500 truncate">
-            {{ auction.cardSet }} · {{ auction.condition }}
-          </p>
-          <p class="text-xs text-pokemon-blue truncate mt-0.5">
-            {{ auction.seller }}
-          </p>
-          <div class="flex items-center justify-between mt-2">
-            <p class="text-pokemon-red font-bold text-sm">
-              RM {{ auction.currentPrice.toFixed(2) }}
-            </p>
-            <div class="flex items-center gap-1">
-              <p
-                class="text-xs"
-                :class="
-                  isEnding(auction.endsAt) ? 'text-red-500' : 'text-gray-400'
-                "
-              >
-                {{ formatTimeLeft(auction.endsAt) }}
-              </p>
-              <FavouriteButton
-                :item-id="auction.id"
-                item-type="auction"
-                size="sm"
+          <!-- Image well -->
+          <div class="p-2 sm:p-2.5 bg-white dark:bg-white/[0.04]">
+            <div
+              class="relative aspect-[3.55/5] rounded-lg overflow-hidden bg-canvas-sunken dark:bg-white/[0.02]"
+            >
+              <img
+                v-if="auction.imageUrls?.length || auction.imageUrl"
+                :src="cdnUrl(auction.imageUrls?.[0] || auction.imageUrl, 400)"
+                :alt="auction.cardName"
+                loading="lazy"
+                class="w-full h-full object-cover group-hover:scale-[1.02] transition-transform duration-300 ease-premium"
               />
+              <div
+                v-else
+                class="absolute inset-0 flex items-center justify-center text-xs text-ink-soft dark:text-zinc-500"
+              >
+                No image
+              </div>
+
+              <!-- Top-left: status + time badge -->
+              <span
+                class="absolute left-1.5 top-1.5 inline-flex items-center gap-1 px-1.5 py-0.5 rounded text-[10px] font-bold tracking-wide shadow-sm"
+                :class="timerClasses(auction.endsAt)"
+              >
+                {{ statusTimeLabel(auction.endsAt) }}
+              </span>
+
+              <!-- Bottom-right: grade badge (overlay on image) -->
+              <span
+                v-if="conditionLabel(auction)"
+                class="absolute right-1.5 bottom-1.5 px-1.5 py-0.5 rounded text-[10px] font-bold shadow-sm"
+                :class="gradeBadgeClasses(auction)"
+              >
+                {{ conditionLabel(auction) }}
+              </span>
+
+              <!-- Bottom-left: photo count -->
+              <span
+                v-if="(auction.imageUrls?.length || 0) > 1"
+                class="absolute left-1.5 bottom-1.5 inline-flex items-center gap-1 bg-black/75 text-white text-[10px] font-semibold px-1.5 py-0.5 rounded"
+              >
+                <svg
+                  class="w-2.5 h-2.5"
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  stroke="currentColor"
+                  stroke-width="2.5"
+                >
+                  <rect x="3" y="6" width="18" height="14" rx="2" />
+                  <circle cx="12" cy="13" r="3" />
+                </svg>
+                {{ auction.imageUrls?.length }}
+              </span>
             </div>
           </div>
-          <p class="text-xs text-gray-400 mt-1">
-            {{ Object.keys(auction.bids || {}).length }} bid(s)
-          </p>
-        </div>
+
+          <!-- Body -->
+          <div class="px-3.5 sm:px-4 pt-2 pb-3.5 sm:pb-4 flex-1 flex flex-col">
+            <h3
+              class="font-semibold text-[15px] leading-tight text-ink dark:text-white truncate"
+            >
+              {{ auction.cardName }}
+            </h3>
+            <p
+              v-if="auction.cardSet"
+              class="mt-0.5 text-xs text-ink-muted dark:text-zinc-400 truncate"
+            >
+              {{ auction.cardSet }}
+            </p>
+
+            <div class="mt-auto pt-3">
+              <div class="flex items-end justify-between">
+                <div class="min-w-0">
+                  <span
+                    class="text-[10px] font-semibold uppercase tracking-wider text-ink-soft dark:text-zinc-500"
+                  >
+                    Current bid
+                  </span>
+                  <p
+                    class="tabular-price font-extrabold text-[17px] leading-none text-ink dark:text-white"
+                  >
+                    RM {{ formatPrice(auction.currentPrice) }}
+                  </p>
+                </div>
+              </div>
+              <div class="mt-1.5 flex items-center justify-between">
+                <span class="text-[11px] text-ink-muted dark:text-zinc-400">
+                  {{ bidCount(auction) }} bid{{
+                    bidCount(auction) === 1 ? "" : "s"
+                  }}
+                </span>
+                <span
+                  v-if="auction.seller"
+                  class="text-[11px] text-ink-muted dark:text-zinc-400 truncate max-w-[50%]"
+                >
+                  @{{ auction.seller }}
+                </span>
+              </div>
+            </div>
+          </div>
+        </article>
       </NuxtLink>
     </div>
   </div>
 </template>
 
 <script setup lang="ts">
+import type { Auction } from "~/composables/useAuctions";
+import { cdnUrl } from "~/composables/useStorage";
+
 useHead({
   title: "Live Pokemon Card Auctions | TCGo Marketplace",
   meta: [
@@ -93,27 +156,67 @@ useHead({
 });
 
 const { auctions, loading } = useAuctions();
-const { user } = useAuth();
 
 const publicAuctions = computed(() =>
-  auctions.value.filter((a: any) => !a.isPrivate),
+  auctions.value.filter((a: Auction) => !a.isPrivate),
 );
 
-const isEnding = (endsAt: number) => {
-  return endsAt - Date.now() < 3600000;
-};
+const isEnding = (endsAt: number) => endsAt - Date.now() < 3600000;
 
 const formatTimeLeft = (endsAt: number) => {
   const diff = endsAt - Date.now();
-  if (diff <= 0) return "Ended";
-
+  if (diff <= 0) return "";
   const hours = Math.floor(diff / 3600000);
   const minutes = Math.floor((diff % 3600000) / 60000);
-
   if (hours > 24) {
     const days = Math.floor(hours / 24);
     return `${days}d ${hours % 24}h`;
   }
   return `${hours}h ${minutes}m`;
+};
+
+const statusTimeLabel = (endsAt: number) => {
+  const diff = endsAt - Date.now();
+  if (diff <= 0) return "ENDED";
+  return `LIVE ${formatTimeLeft(endsAt)}`;
+};
+
+const timerClasses = (endsAt: number) => {
+  const diff = endsAt - Date.now();
+  if (diff <= 0)
+    return "bg-zinc-200 text-zinc-600 dark:bg-zinc-700 dark:text-zinc-300";
+  if (diff < 300000) return "bg-pokemon-red text-white animate-pulse";
+  if (diff < 3600000) return "bg-amber-500 text-white";
+  return "bg-emerald-500/90 text-white";
+};
+
+const gradeBadgeClasses = (auction: Auction) => {
+  if (auction.productType === "Graded")
+    return "bg-amber-400 text-amber-950 border border-amber-600";
+  if (auction.productType === "Sealed")
+    return "bg-blue-500 text-white border border-blue-700";
+  return "bg-white text-ink border border-gray-300 dark:bg-zinc-800 dark:text-zinc-200 dark:border-zinc-600";
+};
+
+const bidCount = (auction: Auction) => auction.bidCount ?? 0;
+
+const formatPrice = (price: number): string => {
+  return price.toLocaleString("en-MY", {
+    minimumFractionDigits: 2,
+    maximumFractionDigits: 2,
+  });
+};
+
+const conditionLabel = (auction: Auction): string => {
+  if (auction.productType === "Graded") {
+    const provider =
+      auction.gradingProvider === "Others"
+        ? auction.customGradingProvider
+        : auction.gradingProvider;
+    return `${provider || ""} ${auction.grade || ""}`.trim();
+  }
+  if (auction.productType === "Sealed") return "SEALED";
+  const m = (auction.condition || "").match(/\(([^)]+)\)/);
+  return m ? m[1] : auction.condition || "";
 };
 </script>

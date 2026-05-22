@@ -1,8 +1,8 @@
 <template>
   <!-- Card: Quick Import (full width) -->
-  <div class="bg-white rounded-xl border border-gray-200 p-5 lg:col-span-2">
-    <h3 class="text-sm font-semibold text-gray-900 mb-2">Quick Import</h3>
-    <p class="text-xs text-gray-400 mb-3">
+  <div class="bg-white dark:bg-white/[0.04] rounded-xl border border-gray-200 dark:border-white/[0.08] p-5 lg:col-span-2">
+    <h3 class="text-sm font-semibold text-gray-900 dark:text-zinc-100 mb-2">Quick Import</h3>
+    <p class="text-xs text-gray-400 dark:text-zinc-500 mb-3">
       Paste a Collectr link to auto-fill card details
     </p>
     <div class="flex gap-2">
@@ -10,7 +10,7 @@
         v-model="importUrl"
         type="url"
         placeholder="https://www.getcollectr.com/products/..."
-        class="flex-1 bg-white border border-gray-300 rounded-lg px-4 py-2 text-sm text-gray-900 placeholder-gray-400 focus:border-pokemon-red focus:outline-none focus:ring-1 focus:ring-pokemon-red"
+        class="flex-1 bg-white border border-gray-300 dark:border-white/[0.10] rounded-lg px-4 py-2 text-sm text-gray-900 dark:text-zinc-100 placeholder-gray-400 focus:border-pokemon-red focus:outline-none focus:ring-1 focus:ring-pokemon-red"
         @keydown.enter.prevent="handleImport"
       />
       <button
@@ -31,8 +31,8 @@
   </div>
 
   <!-- Card: Product Type (full width) -->
-  <div class="bg-white rounded-xl border border-gray-200 p-5 lg:col-span-2">
-    <h3 class="text-sm font-semibold text-gray-900 mb-3">
+  <div class="bg-white dark:bg-white/[0.04] rounded-xl border border-gray-200 dark:border-white/[0.08] p-5 lg:col-span-2">
+    <h3 class="text-sm font-semibold text-gray-900 dark:text-zinc-100 mb-3">
       Product Type <span class="text-pokemon-red">*</span>
     </h3>
     <div class="grid grid-cols-3 gap-2">
@@ -45,7 +45,7 @@
         :class="
           modelValue.productType === type
             ? 'border-pokemon-red bg-red-50 text-pokemon-red'
-            : 'border-gray-200 bg-white text-gray-600 hover:border-gray-300'
+            : 'border-gray-200 dark:border-white/[0.08] bg-white text-gray-600 dark:text-zinc-300 hover:border-gray-300 dark:hover:border-white/[0.10]'
         "
       >
         {{ type }}
@@ -54,11 +54,24 @@
   </div>
 
   <!-- Card: Card Details -->
-  <div class="bg-white rounded-xl border border-gray-200 p-5 space-y-4">
-    <h3 class="text-sm font-semibold text-gray-900">Card Details</h3>
+  <div class="bg-white dark:bg-white/[0.04] rounded-xl border border-gray-200 dark:border-white/[0.08] p-5 space-y-4">
+    <h3 class="text-sm font-semibold text-gray-900 dark:text-zinc-100">Card Details</h3>
 
     <div>
-      <label class="block text-sm font-medium text-gray-700 mb-1">
+      <label class="block text-sm font-medium text-gray-700 dark:text-zinc-200 mb-1">
+        TCG / Franchise
+      </label>
+      <select
+        :value="modelValue.tcgType || 'Pokemon'"
+        @change="onInput('tcgType', $event)"
+        class="w-full bg-white border border-gray-300 dark:border-white/[0.10] rounded-lg px-4 py-2.5 text-gray-900 dark:text-zinc-100 focus:border-pokemon-red focus:outline-none focus:ring-1 focus:ring-pokemon-red"
+      >
+        <option v-for="t in TCG_TYPES" :key="t" :value="t">{{ t }}</option>
+      </select>
+    </div>
+
+    <div>
+      <label class="block text-sm font-medium text-gray-700 dark:text-zinc-200 mb-1">
         Card Name <span class="text-pokemon-red">*</span>
       </label>
       <input
@@ -67,13 +80,13 @@
         type="text"
         required
         placeholder="e.g. Charizard VMAX"
-        class="w-full bg-white border border-gray-300 rounded-lg px-4 py-2.5 text-gray-900 placeholder-gray-400 focus:border-pokemon-red focus:outline-none focus:ring-1 focus:ring-pokemon-red"
+        class="w-full bg-white border border-gray-300 dark:border-white/[0.10] rounded-lg px-4 py-2.5 text-gray-900 dark:text-zinc-100 placeholder-gray-400 focus:border-pokemon-red focus:outline-none focus:ring-1 focus:ring-pokemon-red"
       />
     </div>
 
     <div class="grid grid-cols-3 gap-3">
       <div class="col-span-2">
-        <label class="block text-sm font-medium text-gray-700 mb-1">
+        <label class="block text-sm font-medium text-gray-700 dark:text-zinc-200 mb-1">
           Card Set
         </label>
         <input
@@ -81,11 +94,11 @@
           @input="onInput('cardSet', $event)"
           type="text"
           placeholder="e.g. Darkness Ablaze"
-          class="w-full bg-white border border-gray-300 rounded-lg px-4 py-2.5 text-gray-900 placeholder-gray-400 focus:border-pokemon-red focus:outline-none focus:ring-1 focus:ring-pokemon-red"
+          class="w-full bg-white border border-gray-300 dark:border-white/[0.10] rounded-lg px-4 py-2.5 text-gray-900 dark:text-zinc-100 placeholder-gray-400 focus:border-pokemon-red focus:outline-none focus:ring-1 focus:ring-pokemon-red"
         />
       </div>
       <div>
-        <label class="block text-sm font-medium text-gray-700 mb-1">
+        <label class="block text-sm font-medium text-gray-700 dark:text-zinc-200 mb-1">
           Set No.
         </label>
         <input
@@ -93,15 +106,123 @@
           @input="onInput('cardNumber', $event)"
           type="text"
           placeholder="020/189"
-          class="w-full bg-white border border-gray-300 rounded-lg px-4 py-2.5 text-gray-900 placeholder-gray-400 focus:border-pokemon-red focus:outline-none focus:ring-1 focus:ring-pokemon-red"
+          class="w-full bg-white border border-gray-300 dark:border-white/[0.10] rounded-lg px-4 py-2.5 text-gray-900 dark:text-zinc-100 placeholder-gray-400 focus:border-pokemon-red focus:outline-none focus:ring-1 focus:ring-pokemon-red"
         />
       </div>
+    </div>
+
+    <div class="grid grid-cols-2 gap-3">
+      <div>
+        <label class="block text-sm font-medium text-gray-700 dark:text-zinc-200 mb-1">
+          Language
+        </label>
+        <select
+          :value="modelValue.language || 'EN'"
+          @change="onInput('language', $event)"
+          class="w-full bg-white border border-gray-300 dark:border-white/[0.10] rounded-lg px-4 py-2.5 text-gray-900 dark:text-zinc-100 focus:border-pokemon-red focus:outline-none focus:ring-1 focus:ring-pokemon-red"
+        >
+          <option v-for="l in CARD_LANGUAGES" :key="l.code" :value="l.code">
+            {{ l.label }}{{ l.code !== "EN" ? ` (${l.code})` : "" }}
+          </option>
+        </select>
+      </div>
+      <div>
+        <label class="block text-sm font-medium text-gray-700 dark:text-zinc-200 mb-1">
+          Quantity
+        </label>
+        <input
+          :value="modelValue.quantity ?? 1"
+          @input="onNumberInput('quantity', $event)"
+          type="number"
+          min="1"
+          step="1"
+          class="w-full bg-white border border-gray-300 dark:border-white/[0.10] rounded-lg px-4 py-2.5 text-gray-900 dark:text-zinc-100 focus:border-pokemon-red focus:outline-none focus:ring-1 focus:ring-pokemon-red"
+        />
+      </div>
+    </div>
+
+    <!-- Rarity / Variant / Edition — auto-filled by scanner, editable. -->
+    <div class="grid grid-cols-1 sm:grid-cols-3 gap-3">
+      <div>
+        <label class="block text-sm font-medium text-gray-700 dark:text-zinc-200 mb-1">
+          Rarity
+        </label>
+        <select
+          :value="modelValue.rarity || ''"
+          @change="onInput('rarity', $event)"
+          class="w-full bg-white border border-gray-300 dark:border-white/[0.10] rounded-lg px-4 py-2.5 text-gray-900 dark:text-zinc-100 focus:border-pokemon-red focus:outline-none focus:ring-1 focus:ring-pokemon-red"
+        >
+          <option value="">—</option>
+          <option v-for="r in RARITIES" :key="r" :value="r">{{ r }}</option>
+        </select>
+      </div>
+      <div>
+        <label class="block text-sm font-medium text-gray-700 dark:text-zinc-200 mb-1">
+          Variant
+        </label>
+        <select
+          :value="modelValue.variant || ''"
+          @change="onInput('variant', $event)"
+          class="w-full bg-white border border-gray-300 dark:border-white/[0.10] rounded-lg px-4 py-2.5 text-gray-900 dark:text-zinc-100 focus:border-pokemon-red focus:outline-none focus:ring-1 focus:ring-pokemon-red"
+        >
+          <option value="">—</option>
+          <option v-for="v in VARIANTS" :key="v" :value="v">{{ v }}</option>
+        </select>
+      </div>
+      <div>
+        <label class="block text-sm font-medium text-gray-700 dark:text-zinc-200 mb-1">
+          Edition
+        </label>
+        <select
+          :value="modelValue.edition || ''"
+          @change="onInput('edition', $event)"
+          class="w-full bg-white border border-gray-300 dark:border-white/[0.10] rounded-lg px-4 py-2.5 text-gray-900 dark:text-zinc-100 focus:border-pokemon-red focus:outline-none focus:ring-1 focus:ring-pokemon-red"
+        >
+          <option value="">—</option>
+          <option v-for="e in EDITIONS" :key="e" :value="e">{{ e }}</option>
+        </select>
+      </div>
+    </div>
+
+    <div>
+      <label class="block text-sm font-medium text-gray-700 dark:text-zinc-200 mb-1">
+        Artist
+      </label>
+      <input
+        :value="modelValue.artist || ''"
+        @input="onInput('artist', $event)"
+        type="text"
+        placeholder="e.g. Mitsuhiro Arita"
+        class="w-full bg-white border border-gray-300 dark:border-white/[0.10] rounded-lg px-4 py-2.5 text-gray-900 dark:text-zinc-100 placeholder-gray-400 focus:border-pokemon-red focus:outline-none focus:ring-1 focus:ring-pokemon-red"
+      />
+    </div>
+
+    <!-- Optional flags for buyers -->
+    <div class="flex flex-wrap gap-4 pt-1">
+      <label class="inline-flex items-center gap-2 cursor-pointer text-sm text-gray-700 dark:text-zinc-200">
+        <input
+          type="checkbox"
+          :checked="modelValue.negotiable === true"
+          @change="onCheckboxInput('negotiable', $event)"
+          class="w-4 h-4 rounded text-pokemon-red focus:ring-pokemon-red"
+        />
+        Negotiable
+      </label>
+      <label class="inline-flex items-center gap-2 cursor-pointer text-sm text-gray-700 dark:text-zinc-200">
+        <input
+          type="checkbox"
+          :checked="modelValue.pickupAvailable === true"
+          @change="onCheckboxInput('pickupAvailable', $event)"
+          class="w-4 h-4 rounded text-pokemon-red focus:ring-pokemon-red"
+        />
+        Pickup available
+      </label>
     </div>
   </div>
 
   <!-- Card: Description -->
-  <div class="bg-white rounded-xl border border-gray-200 p-5">
-    <label class="block text-sm font-semibold text-gray-900 mb-2">
+  <div class="bg-white dark:bg-white/[0.04] rounded-xl border border-gray-200 dark:border-white/[0.08] p-5">
+    <label class="block text-sm font-semibold text-gray-900 dark:text-zinc-100 mb-2">
       Description
     </label>
     <textarea
@@ -109,16 +230,16 @@
       @input="onInput('description', $event)"
       rows="6"
       placeholder="Additional notes about the card..."
-      class="w-full border border-gray-300 rounded-lg px-4 py-2.5 text-gray-900 placeholder-gray-400 focus:border-pokemon-red focus:outline-none focus:ring-1 focus:ring-pokemon-red resize-none"
+      class="w-full border border-gray-300 dark:border-white/[0.10] rounded-lg px-4 py-2.5 text-gray-900 dark:text-zinc-100 placeholder-gray-400 focus:border-pokemon-red focus:outline-none focus:ring-1 focus:ring-pokemon-red resize-none"
     ></textarea>
   </div>
 
   <!-- Card: Condition (full width) -->
   <div
     v-if="modelValue.productType === 'Ungraded'"
-    class="bg-white rounded-xl border border-gray-200 p-5 space-y-3 lg:col-span-2"
+    class="bg-white dark:bg-white/[0.04] rounded-xl border border-gray-200 dark:border-white/[0.08] p-5 space-y-3 lg:col-span-2"
   >
-    <h3 class="text-sm font-semibold text-gray-900">
+    <h3 class="text-sm font-semibold text-gray-900 dark:text-zinc-100">
       Condition <span class="text-pokemon-red">*</span>
     </h3>
     <div class="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-2">
@@ -131,7 +252,7 @@
         :class="
           modelValue.condition === c
             ? 'border-pokemon-red bg-red-50 text-pokemon-red'
-            : 'border-gray-200 bg-white text-gray-600 hover:border-gray-300'
+            : 'border-gray-200 dark:border-white/[0.08] bg-white text-gray-600 dark:text-zinc-300 hover:border-gray-300 dark:hover:border-white/[0.10]'
         "
       >
         {{ c }}
@@ -142,12 +263,12 @@
   <!-- Card: Grading (full width) -->
   <div
     v-else-if="modelValue.productType === 'Graded'"
-    class="bg-white rounded-xl border border-gray-200 p-5 space-y-4 lg:col-span-2"
+    class="bg-white dark:bg-white/[0.04] rounded-xl border border-gray-200 dark:border-white/[0.08] p-5 space-y-4 lg:col-span-2"
   >
-    <h3 class="text-sm font-semibold text-gray-900">Grading</h3>
+    <h3 class="text-sm font-semibold text-gray-900 dark:text-zinc-100">Grading</h3>
 
     <div>
-      <label class="block text-sm font-medium text-gray-700 mb-2">
+      <label class="block text-sm font-medium text-gray-700 dark:text-zinc-200 mb-2">
         Grading Provider <span class="text-pokemon-red">*</span>
       </label>
       <div class="grid grid-cols-3 sm:grid-cols-6 gap-2">
@@ -160,7 +281,7 @@
           :class="
             modelValue.gradingProvider === p
               ? 'border-pokemon-red bg-red-50 text-pokemon-red'
-              : 'border-gray-200 bg-white text-gray-600 hover:border-gray-300'
+              : 'border-gray-200 dark:border-white/[0.08] bg-white text-gray-600 dark:text-zinc-300 hover:border-gray-300 dark:hover:border-white/[0.10]'
           "
         >
           {{ p }}
@@ -169,7 +290,7 @@
     </div>
 
     <div v-if="modelValue.gradingProvider === 'Others'">
-      <label class="block text-sm font-medium text-gray-700 mb-1">
+      <label class="block text-sm font-medium text-gray-700 dark:text-zinc-200 mb-1">
         Provider Name <span class="text-pokemon-red">*</span>
       </label>
       <input
@@ -178,12 +299,12 @@
         type="text"
         required
         placeholder="e.g. SGC"
-        class="w-full bg-white border border-gray-300 rounded-lg px-4 py-2.5 text-gray-900 placeholder-gray-400 focus:border-pokemon-red focus:outline-none focus:ring-1 focus:ring-pokemon-red"
+        class="w-full bg-white border border-gray-300 dark:border-white/[0.10] rounded-lg px-4 py-2.5 text-gray-900 dark:text-zinc-100 placeholder-gray-400 focus:border-pokemon-red focus:outline-none focus:ring-1 focus:ring-pokemon-red"
       />
     </div>
 
     <div v-if="modelValue.gradingProvider">
-      <label class="block text-sm font-medium text-gray-700 mb-2">
+      <label class="block text-sm font-medium text-gray-700 dark:text-zinc-200 mb-2">
         Grade <span class="text-pokemon-red">*</span>
       </label>
       <div
@@ -199,7 +320,7 @@
           :class="
             modelValue.grade === g
               ? 'border-pokemon-red bg-red-50 text-pokemon-red'
-              : 'border-gray-200 bg-white text-gray-600 hover:border-gray-300'
+              : 'border-gray-200 dark:border-white/[0.08] bg-white text-gray-600 dark:text-zinc-300 hover:border-gray-300 dark:hover:border-white/[0.10]'
           "
         >
           {{ g }}
@@ -212,7 +333,7 @@
         type="text"
         required
         placeholder="Grade"
-        class="w-full bg-white border border-gray-300 rounded-lg px-4 py-2.5 text-gray-900 placeholder-gray-400 focus:border-pokemon-red focus:outline-none focus:ring-1 focus:ring-pokemon-red"
+        class="w-full bg-white border border-gray-300 dark:border-white/[0.10] rounded-lg px-4 py-2.5 text-gray-900 dark:text-zinc-100 placeholder-gray-400 focus:border-pokemon-red focus:outline-none focus:ring-1 focus:ring-pokemon-red"
       />
     </div>
   </div>
@@ -223,6 +344,11 @@ import {
   PRODUCT_TYPES,
   UNGRADED_CONDITIONS,
   GRADING_PROVIDERS,
+  CARD_LANGUAGES,
+  TCG_TYPES,
+  RARITIES,
+  VARIANTS,
+  EDITIONS,
   getGradesForProvider,
 } from "~/composables/useCardConstants";
 
@@ -238,6 +364,19 @@ export interface CardFormData {
   description: string;
   shippingWM: number;
   shippingEM: number;
+  language: string;
+  tcgType: string;
+  // Visual metadata — scanner auto-fills these; users can correct.
+  rarity: string;
+  variant: string;
+  edition: string;
+  artist: string;
+  // Authenticity / cert for graded cards
+  certNumber: string;
+  // Commerce flags
+  quantity: number;
+  negotiable: boolean;
+  pickupAvailable: boolean;
 }
 
 const props = defineProps<{
@@ -307,6 +446,11 @@ const onInput = (key: keyof CardFormData, event: Event) => {
 const onNumberInput = (key: keyof CardFormData, event: Event) => {
   const target = event.target as HTMLInputElement;
   updateField(key, parseFloat(target.value) || 0);
+};
+
+const onCheckboxInput = (key: keyof CardFormData, event: Event) => {
+  const target = event.target as HTMLInputElement;
+  updateField(key, target.checked);
 };
 
 const onProviderSelect = (provider: string) => {

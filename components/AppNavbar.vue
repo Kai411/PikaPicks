@@ -1,280 +1,434 @@
 <template>
-  <nav class="bg-white border-b border-gray-200 shadow-sm">
-    <div class="container mx-auto px-4">
-      <div class="flex items-center justify-between h-16">
-        <NuxtLink to="/landing" class="flex items-center h-full">
-          <img
-            src="~/assets/images/tcgo_sprites.png"
-            alt="TCGo"
-            class="h-full w-[110px] object-cover"
-          />
+  <!-- Top bar (sticky, glassy) -->
+  <nav class="sticky top-0 z-40 glass">
+    <div
+      class="container mx-auto px-4 h-16 flex items-center justify-between gap-4"
+    >
+      <!-- Logo (matches LandingNavbar: square sprite cropped to wordmark slice) -->
+      <NuxtLink to="/landing" class="flex items-center h-full shrink-0">
+        <img
+          src="~/assets/images/tcgo_sprites.png"
+          alt="TCGo"
+          class="h-full w-[110px] object-cover block dark:hidden"
+        />
+        <img
+          src="/tcgo_sprites_white.png"
+          alt="TCGo"
+          class="h-full w-[110px] object-cover hidden dark:block"
+        />
+      </NuxtLink>
+
+      <!-- Desktop nav -->
+      <div
+        class="hidden lg:flex items-center gap-1 flex-1 justify-center max-w-xl"
+      >
+        <NuxtLink
+          v-for="link in desktopLinks"
+          :key="link.to"
+          :to="link.to"
+          class="relative px-4 py-2 rounded-full text-sm font-semibold text-ink-muted dark:text-zinc-400 hover:text-ink dark:hover:text-white transition-colors duration-200 ease-premium"
+          :active-class="activeLinkClass"
+        >
+          {{ link.label }}
         </NuxtLink>
+      </div>
 
-        <!-- Desktop nav -->
-        <div class="hidden lg:flex items-center gap-5">
+      <!-- Right cluster -->
+      <div class="flex items-center gap-1.5 lg:gap-2 shrink-0">
+        <!-- Desktop sell CTAs -->
+        <div v-if="user" class="hidden lg:flex items-center gap-2 ml-1">
           <NuxtLink
-            to="/"
-            class="text-gray-600 hover:text-gray-900 transition-colors text-sm font-medium"
-            active-class="!text-pokemon-red"
+            to="/cards/create"
+            class="px-4 py-2 rounded-full text-sm font-semibold bg-ink text-white dark:bg-white dark:text-ink hover:opacity-90 transition-opacity"
           >
-            Shop
+            Sell
           </NuxtLink>
           <NuxtLink
-            to="/auctions"
-            class="text-gray-600 hover:text-gray-900 transition-colors text-sm font-medium"
-            active-class="!text-pokemon-red"
+            to="/auctions/create"
+            class="px-4 py-2 rounded-full text-sm font-semibold bg-pokemon-red text-white hover:shadow-glow transition-shadow"
           >
-            Auctions
+            Auction
           </NuxtLink>
-          <NuxtLink
-            v-if="user"
-            to="/dashboard/seller"
-            class="text-gray-600 hover:text-gray-900 transition-colors text-sm font-medium"
-            active-class="!text-pokemon-red"
-          >
-            My Listings
-          </NuxtLink>
-          <NuxtLink
-            v-if="user"
-            to="/dashboard/buyer"
-            class="text-gray-600 hover:text-gray-900 transition-colors text-sm font-medium"
-            active-class="!text-pokemon-red"
-          >
-            My Bids
-          </NuxtLink>
-          <NuxtLink
-            v-if="isAdmin"
-            to="/admin/reports"
-            class="text-gray-600 hover:text-gray-900 transition-colors text-sm font-medium"
-            active-class="!text-pokemon-red"
-          >
-            Admin
-          </NuxtLink>
-
-          <!-- Sell buttons -->
-          <div v-if="user" class="flex gap-2">
-            <NuxtLink
-              to="/cards/create"
-              class="bg-pokemon-blue text-white px-3 py-1.5 rounded-lg text-sm font-medium hover:bg-blue-700 transition-colors"
-            >
-              Sell Card
-            </NuxtLink>
-            <NuxtLink
-              to="/auctions/create"
-              class="bg-pokemon-red text-white px-3 py-1.5 rounded-lg text-sm font-medium hover:bg-red-700 transition-colors"
-            >
-              Auction
-            </NuxtLink>
-          </div>
-
-          <!-- Auth -->
-          <div
-            v-if="authLoading"
-            class="w-8 h-8 rounded-full bg-gray-200 animate-pulse"
-          ></div>
-          <div v-else-if="user" class="flex items-center gap-2">
-            <NuxtLink
-              :to="`/profile/${user.uid}`"
-              class="flex items-center gap-2 hover:opacity-80 transition-opacity"
-            >
-              <img
-                :src="profile?.photoURL || user.photoURL || ''"
-                :alt="profile?.customName || user.displayName || 'User'"
-                class="w-8 h-8 rounded-full border border-gray-200 object-cover"
-              />
-            </NuxtLink>
-          </div>
-          <button
-            v-else
-            @click="signInWithGoogle"
-            class="bg-gray-900 text-white px-4 py-1.5 rounded-lg text-sm font-medium hover:bg-gray-700 transition-colors"
-          >
-            Sign In
-          </button>
         </div>
 
-        <!-- Mobile menu button -->
+        <!-- Mobile: Search button (replaces the avatar) + Sell/Auction
+             chooser. The avatar lives at the bottom nav's Profile tab. -->
         <button
-          class="lg:hidden p-2 text-gray-600 hover:text-gray-900 transition-colors"
-          @click="mobileMenuOpen = true"
+          @click="searchOpen = true"
+          aria-label="Search cards"
+          class="lg:hidden inline-flex items-center justify-center w-10 h-10 rounded-full hover:bg-black/[0.04] dark:hover:bg-white/[0.06] text-ink dark:text-white transition-colors"
         >
           <svg
-            class="w-6 h-6"
+            class="w-5 h-5"
+            viewBox="0 0 24 24"
             fill="none"
             stroke="currentColor"
-            viewBox="0 0 24 24"
+            stroke-width="2"
+            stroke-linecap="round"
+            stroke-linejoin="round"
           >
-            <path
-              stroke-linecap="round"
-              stroke-linejoin="round"
-              stroke-width="2"
-              d="M4 6h16M4 12h16M4 18h16"
-            />
+            <circle cx="11" cy="11" r="7" />
+            <path d="m21 21-4.3-4.3" />
           </svg>
         </button>
-      </div>
-    </div>
 
-    <!-- Mobile fullscreen menu -->
-    <Teleport to="body">
-      <Transition
-        enter-active-class="transition-opacity duration-200"
-        enter-from-class="opacity-0"
-        enter-to-class="opacity-100"
-        leave-active-class="transition-opacity duration-200"
-        leave-from-class="opacity-100"
-        leave-to-class="opacity-0"
-      >
-        <div
-          v-if="mobileMenuOpen"
-          class="fixed inset-0 z-50 bg-white flex flex-col"
-        >
-          <!-- Header -->
-          <div
-            class="flex items-center justify-between px-4 h-16 border-b border-gray-200"
+        <div v-if="user" class="lg:hidden relative" @click.stop>
+          <button
+            @click="sellMenuOpen = !sellMenuOpen"
+            class="inline-flex items-center gap-1 px-3.5 py-2 rounded-full text-sm font-semibold bg-pokemon-red text-white shadow-glow"
+            aria-haspopup="true"
+            :aria-expanded="sellMenuOpen"
           >
-            <NuxtLink
-              to="/"
-              class="flex items-center h-full"
-              @click="mobileMenuOpen = false"
+            <svg
+              class="w-4 h-4"
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              stroke-width="2.5"
+              stroke-linecap="round"
             >
-              <img
-                src="~/assets/images/tcgo_sprites.png"
-                alt="TCGo"
-                class="h-full w-[110px] object-cover"
-              />
-            </NuxtLink>
-            <button
-              class="p-2 text-gray-600 hover:text-gray-900 transition-colors"
-              @click="mobileMenuOpen = false"
+              <path d="M12 5v14M5 12h14" />
+            </svg>
+            Sell
+            <svg
+              class="w-3 h-3 -mr-0.5"
+              :class="sellMenuOpen ? 'rotate-180' : ''"
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              stroke-width="2.5"
+              stroke-linecap="round"
+              stroke-linejoin="round"
             >
-              <svg
-                class="w-6 h-6"
-                fill="none"
-                stroke="currentColor"
-                viewBox="0 0 24 24"
-              >
-                <path
-                  stroke-linecap="round"
-                  stroke-linejoin="round"
-                  stroke-width="2"
-                  d="M6 18L18 6M6 6l12 12"
-                />
-              </svg>
-            </button>
-          </div>
-
-          <!-- Nav links -->
-          <div class="flex-1 flex flex-col px-6 py-6 gap-1">
-            <NuxtLink
-              to="/"
-              class="text-lg font-medium text-gray-700 hover:text-pokemon-red py-3 border-b border-gray-100 transition-colors"
-              active-class="!text-pokemon-red"
-              @click="mobileMenuOpen = false"
+              <path d="m6 9 6 6 6-6" />
+            </svg>
+          </button>
+          <Transition
+            enter-active-class="transition duration-150"
+            enter-from-class="opacity-0 -translate-y-1"
+            leave-active-class="transition duration-100"
+            leave-to-class="opacity-0 -translate-y-1"
+          >
+            <div
+              v-if="sellMenuOpen"
+              class="absolute right-0 top-full mt-2 w-48 surface rounded-xl overflow-hidden py-1.5 z-50"
             >
-              Shop
-            </NuxtLink>
-            <NuxtLink
-              to="/auctions"
-              class="text-lg font-medium text-gray-700 hover:text-pokemon-red py-3 border-b border-gray-100 transition-colors"
-              active-class="!text-pokemon-red"
-              @click="mobileMenuOpen = false"
-            >
-              Auctions
-            </NuxtLink>
-            <NuxtLink
-              v-if="user"
-              to="/dashboard/seller"
-              class="text-lg font-medium text-gray-700 hover:text-pokemon-red py-3 border-b border-gray-100 transition-colors"
-              active-class="!text-pokemon-red"
-              @click="mobileMenuOpen = false"
-            >
-              My Listings
-            </NuxtLink>
-            <NuxtLink
-              v-if="user"
-              to="/dashboard/buyer"
-              class="text-lg font-medium text-gray-700 hover:text-pokemon-red py-3 border-b border-gray-100 transition-colors"
-              active-class="!text-pokemon-red"
-              @click="mobileMenuOpen = false"
-            >
-              My Bids
-            </NuxtLink>
-
-            <!-- Sell buttons -->
-            <div v-if="user" class="flex gap-3 mt-4">
               <NuxtLink
                 to="/cards/create"
-                class="flex-1 text-center bg-pokemon-blue text-white px-4 py-2.5 rounded-lg text-sm font-medium hover:bg-blue-700 transition-colors"
-                @click="mobileMenuOpen = false"
+                @click="sellMenuOpen = false"
+                class="block px-4 py-2.5 text-sm font-medium text-ink dark:text-white hover:bg-black/[0.04] dark:hover:bg-white/[0.06]"
               >
-                Sell Card
+                Sell a card
               </NuxtLink>
               <NuxtLink
                 to="/auctions/create"
-                class="flex-1 text-center bg-pokemon-red text-white px-4 py-2.5 rounded-lg text-sm font-medium hover:bg-red-700 transition-colors"
-                @click="mobileMenuOpen = false"
+                @click="sellMenuOpen = false"
+                class="block px-4 py-2.5 text-sm font-medium text-ink dark:text-white hover:bg-black/[0.04] dark:hover:bg-white/[0.06]"
               >
-                Auction
+                Start an auction
               </NuxtLink>
             </div>
-          </div>
+          </Transition>
+        </div>
 
-          <!-- User section at bottom -->
-          <div class="px-6 py-6 border-t border-gray-200">
-            <div v-if="authLoading" class="flex items-center gap-3">
-              <div
-                class="w-10 h-10 rounded-full bg-gray-200 animate-pulse"
-              ></div>
-              <div class="h-4 w-24 bg-gray-200 rounded animate-pulse"></div>
-            </div>
-            <div v-else-if="user" class="flex items-center justify-between">
-              <NuxtLink
-                :to="`/profile/${user.uid}`"
-                class="flex items-center gap-3 hover:opacity-80 transition-opacity"
-                @click="mobileMenuOpen = false"
-              >
-                <img
-                  :src="profile?.photoURL || user.photoURL || ''"
-                  :alt="profile?.customName || user.displayName || 'User'"
-                  class="w-10 h-10 rounded-full border border-gray-200 object-cover"
-                />
-                <div>
-                  <p class="font-medium text-gray-900 text-sm">
-                    {{ profile?.customName || user.displayName }}
-                  </p>
-                  <p class="text-xs text-gray-400">View profile</p>
-                </div>
-              </NuxtLink>
-            </div>
-            <button
-              v-else
-              @click="handleSignIn"
-              class="w-full bg-gray-900 text-white py-3 rounded-lg text-sm font-medium hover:bg-gray-700 transition-colors"
+        <!-- Auth: avatar/sign-in shown on desktop only; mobile gets it via
+             the bottom-nav Profile tab. -->
+        <div
+          v-if="authLoading"
+          class="hidden lg:block w-9 h-9 rounded-full bg-black/5 dark:bg-white/10 animate-pulse"
+        />
+        <NuxtLink
+          v-else-if="user"
+          :to="`/profile/${user.uid}`"
+          class="hidden lg:flex ml-1 items-center hover:opacity-80 transition-opacity"
+        >
+          <img
+            :src="profile?.photoURL || user.photoURL || ''"
+            :alt="profile?.customName || user.displayName || 'User'"
+            class="w-9 h-9 rounded-full ring-2 ring-white dark:ring-zinc-900 object-cover"
+          />
+        </NuxtLink>
+        <button
+          v-else
+          @click="signInWithGoogle"
+          class="hidden lg:inline-flex px-4 py-2 rounded-full text-sm font-semibold bg-ink text-white dark:bg-white dark:text-ink hover:opacity-90 transition-opacity"
+        >
+          Sign In
+        </button>
+      </div>
+    </div>
+  </nav>
+
+  <!-- Mobile bottom tab bar (3 tabs: Shop / Auctions / Profile).
+       Sell + Search both moved to the top bar. -->
+  <nav
+    class="lg:hidden fixed bottom-0 inset-x-0 z-40 glass border-t border-black/[0.06] dark:border-white/[0.08] pb-[16px]"
+  >
+    <div
+      class="grid h-16 px-1"
+      :style="{
+        gridTemplateColumns: `repeat(${mobileTabs.length}, minmax(0, 1fr))`,
+      }"
+    >
+      <NuxtLink
+        v-for="tab in mobileTabs"
+        :key="tab.to"
+        :to="tab.to"
+        class="relative flex flex-col items-center justify-center gap-0.5 text-[10px] font-semibold tracking-wide text-ink-soft dark:text-zinc-500 transition-colors duration-200 ease-premium"
+        active-class="!text-pokemon-red [&_.tab-dot]:!opacity-100"
+      >
+        <component :is="tab.icon" class="w-6 h-6" />
+        <span>{{ tab.label }}</span>
+        <span
+          class="tab-dot absolute -bottom-0.5 w-1 h-1 rounded-full bg-pokemon-red opacity-0 transition-opacity duration-200 ease-premium"
+        />
+      </NuxtLink>
+    </div>
+  </nav>
+
+  <!-- Mobile search modal: filters the shop's card collection by name -->
+  <Teleport to="body">
+    <Transition
+      enter-active-class="transition duration-200"
+      enter-from-class="opacity-0"
+      leave-active-class="transition duration-200"
+      leave-to-class="opacity-0"
+    >
+      <div
+        v-if="searchOpen"
+        class="lg:hidden fixed inset-0 z-50 bg-canvas dark:bg-canvas-inverse flex flex-col"
+      >
+        <div
+          class="flex items-center gap-3 px-4 h-16 border-b border-black/[0.06] dark:border-white/[0.08]"
+        >
+          <button
+            @click="searchOpen = false"
+            class="w-9 h-9 rounded-full flex items-center justify-center hover:bg-black/[0.04] dark:hover:bg-white/[0.06] text-ink dark:text-white"
+            aria-label="Close search"
+          >
+            <svg
+              class="w-5 h-5"
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              stroke-width="2"
+              stroke-linecap="round"
+              stroke-linejoin="round"
             >
-              Sign In with Google
-            </button>
+              <path d="m15 18-6-6 6-6" />
+            </svg>
+          </button>
+          <div
+            class="flex-1 flex items-center gap-2 px-3 h-10 rounded-full bg-black/[0.04] dark:bg-white/[0.06]"
+          >
+            <svg
+              class="w-4 h-4 text-ink-muted shrink-0"
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              stroke-width="2"
+              stroke-linecap="round"
+              stroke-linejoin="round"
+            >
+              <circle cx="11" cy="11" r="7" />
+              <path d="m21 21-4.3-4.3" />
+            </svg>
+            <input
+              ref="searchInput"
+              v-model="searchQuery"
+              type="search"
+              placeholder="Search cards by name or seller…"
+              class="flex-1 bg-transparent outline-none text-sm text-ink dark:text-white placeholder-ink-soft"
+            />
           </div>
         </div>
-      </Transition>
-    </Teleport>
-  </nav>
+
+        <div class="flex-1 overflow-y-auto p-4">
+          <div
+            v-if="searchQuery.trim().length === 0"
+            class="text-center text-sm text-ink-muted dark:text-zinc-400 py-12"
+          >
+            Type to search the shop.
+          </div>
+          <div
+            v-else-if="searchResults.length === 0"
+            class="text-center text-sm text-ink-muted dark:text-zinc-400 py-12"
+          >
+            No cards match "{{ searchQuery }}".
+          </div>
+          <div v-else class="grid grid-cols-2 gap-3">
+            <NuxtLink
+              v-for="card in searchResults"
+              :key="card.id"
+              :to="`/cards/${card.id}`"
+              @click="searchOpen = false"
+              class="surface rounded-xl overflow-hidden hover:shadow-card-hover transition-shadow"
+            >
+              <div class="p-1.5 bg-white dark:bg-white/[0.04]">
+                <img
+                  :src="cdnUrl(card.imageUrls?.[0] || card.imageUrl, 300)"
+                  :alt="card.cardName"
+                  loading="lazy"
+                  class="w-full aspect-[3/4] object-cover rounded"
+                />
+              </div>
+              <div class="px-3 py-2">
+                <p
+                  class="text-sm font-semibold text-ink dark:text-white truncate"
+                >
+                  {{ card.cardName }}
+                </p>
+                <p
+                  v-if="card.cardSet"
+                  class="text-xs text-ink-muted dark:text-zinc-400 truncate"
+                >
+                  {{ card.cardSet }}
+                </p>
+                <p
+                  class="mt-1 tabular-price text-sm font-bold text-ink dark:text-white"
+                >
+                  RM {{ card.price.toFixed(2) }}
+                </p>
+              </div>
+            </NuxtLink>
+          </div>
+        </div>
+      </div>
+    </Transition>
+  </Teleport>
 </template>
 
 <script setup lang="ts">
-const { user, authLoading, signInWithGoogle, signOut } = useAuth();
+import { h, computed } from "vue";
+
+const { user, authLoading, signInWithGoogle } = useAuth();
 const { profile } = useMyProfile();
 const { isAdmin } = useAdmin();
 
-const mobileMenuOpen = ref(false);
+const activeLinkClass =
+  "!text-white dark:!text-ink !bg-ink dark:!bg-white shadow-card";
 
-const handleSignOut = () => {
-  signOut();
-  mobileMenuOpen.value = false;
-};
+const desktopLinks = computed(() => {
+  const links = [
+    { to: "/", label: "Shop" },
+    { to: "/auctions", label: "Auctions" },
+  ];
+  if (user.value) {
+    links.push(
+      { to: "/dashboard/seller", label: "Listings" },
+      { to: "/dashboard/buyer", label: "Bids" },
+    );
+  }
+  if (isAdmin.value) links.push({ to: "/admin/reports", label: "Admin" });
+  return links;
+});
 
-const handleSignIn = () => {
-  signInWithGoogle();
-  mobileMenuOpen.value = false;
+const stroke = {
+  fill: "none",
+  stroke: "currentColor",
+  "stroke-width": "2",
+  "stroke-linecap": "round",
+  "stroke-linejoin": "round",
 };
+const IconShop = () =>
+  h("svg", { viewBox: "0 0 24 24", ...stroke }, [
+    h("path", { d: "M3 9l1.5-5h15L21 9" }),
+    h("path", { d: "M3 9v11a1 1 0 0 0 1 1h16a1 1 0 0 0 1-1V9" }),
+    h("path", { d: "M9 13h6" }),
+  ]);
+const IconGavel = () =>
+  h("svg", { viewBox: "0 0 24 24", ...stroke }, [
+    h("path", { d: "M14 4l6 6-3 3-6-6 3-3z" }),
+    h("path", { d: "M11 7l-7 7 3 3 7-7" }),
+    h("path", { d: "M3 21h12" }),
+  ]);
+const IconPlus = () =>
+  h("svg", { viewBox: "0 0 24 24", ...stroke, "stroke-width": "2.5" }, [
+    h("path", { d: "M12 5v14M5 12h14" }),
+  ]);
+const IconUser = () =>
+  h("svg", { viewBox: "0 0 24 24", ...stroke }, [
+    h("circle", { cx: "12", cy: "8", r: "4" }),
+    h("path", { d: "M4 21a8 8 0 0 1 16 0" }),
+  ]);
+const IconActivity = () =>
+  h("svg", { viewBox: "0 0 24 24", ...stroke }, [
+    h("path", { d: "M22 12h-4l-3 9L9 3l-3 9H2" }),
+  ]);
+
+const mobileTabs = computed(() => {
+  const tabs: {
+    to: string;
+    label: string;
+    icon: any;
+  }[] = [
+    { to: "/", label: "Shop", icon: IconShop },
+    { to: "/auctions", label: "Auctions", icon: IconGavel },
+  ];
+  if (user.value) {
+    tabs.push(
+      { to: "/dashboard/buyer", label: "Activity", icon: IconActivity },
+      {
+        to: `/profile/${user.value.uid}`,
+        label: "Profile",
+        icon: IconUser,
+      },
+    );
+  } else {
+    tabs.push({ to: "/profile", label: "Sign in", icon: IconUser });
+  }
+  return tabs;
+});
+
+const sellMenuOpen = ref(false);
+const searchOpen = ref(false);
+const searchQuery = ref("");
+const searchInput = ref<HTMLInputElement | null>(null);
+
+// Cards subscription is a singleton so this is cheap — same data already
+// loaded by the Shop page.
+const { cards } = useCards();
+
+const searchResults = computed(() => {
+  const term = searchQuery.value.trim().toLowerCase();
+  if (!term) return [];
+  return cards.value
+    .filter((c: any) => !c.sold)
+    .filter((c: any) => {
+      const hay = `${c.cardName} ${c.cardSet} ${c.seller}`.toLowerCase();
+      return hay.includes(term);
+    })
+    .slice(0, 30);
+});
+
+// Close the menus when user clicks anywhere else, and focus the search
+// input when the modal opens.
+const handleDocClick = () => {
+  sellMenuOpen.value = false;
+};
+onMounted(() => {
+  document.addEventListener("click", handleDocClick);
+});
+onBeforeUnmount(() => {
+  document.removeEventListener("click", handleDocClick);
+});
+
+watch(searchOpen, async (open) => {
+  if (open) {
+    await nextTick();
+    searchInput.value?.focus();
+  } else {
+    searchQuery.value = "";
+  }
+});
+
+// Close transient menus on route change.
+const route = useRoute();
+watch(
+  () => route.fullPath,
+  () => {
+    sellMenuOpen.value = false;
+    searchOpen.value = false;
+  },
+);
 </script>

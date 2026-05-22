@@ -2,13 +2,22 @@
 export default defineNuxtConfig({
   compatibilityDate: "2025-07-15",
   ssr: false,
-  devtools: { enabled: true },
+  devtools: { enabled: false },
+  features: {
+    devLogs: false,
+  },
+  routeRules: {
+    "/**": { appManifest: false },
+  },
   modules: ["@nuxtjs/tailwindcss", "@vite-pwa/nuxt"],
   tailwindcss: {
     cssPath: "~/assets/css/tailwind.css",
   },
   pwa: {
     registerType: "autoUpdate",
+    // Inject the SW registration <script> tag into the served HTML. With
+    // ssr:false the module won't otherwise touch the index.html.
+    injectRegister: "script-defer",
     manifest: {
       name: "TCGo Marketplace",
       short_name: "TCGo",
@@ -19,19 +28,19 @@ export default defineNuxtConfig({
       orientation: "portrait",
       icons: [
         {
-          src: "/tcgo.png",
+          src: "/tcgo_sprites.png",
           sizes: "192x192",
           type: "image/png",
           purpose: "any",
         },
         {
-          src: "/tcgo.png",
+          src: "/tcgo_sprites.png",
           sizes: "512x512",
           type: "image/png",
           purpose: "any",
         },
         {
-          src: "/tcgo.png",
+          src: "/tcgo_sprites.png",
           sizes: "512x512",
           type: "image/png",
           purpose: "maskable",
@@ -42,11 +51,27 @@ export default defineNuxtConfig({
       navigateFallback: "/",
       globPatterns: ["**/*.{js,css,html,png,svg,ico}"],
     },
+    // PWA is production-only. Enabling in dev caches Vite module chunks
+    // in the service worker, which then keeps serving stale bundles
+    // through hot-reloads and makes auto-imports randomly "undefined".
+    devOptions: {
+      enabled: false,
+    },
   },
   app: {
     head: {
       title: "TCGo Marketplace - Buy, Sell & Auction Pokemon Cards in Malaysia",
       htmlAttrs: { lang: "en" },
+      script: [
+        {
+          // Apply theme synchronously before paint to avoid a light→dark flash.
+          // Mirrors the logic in composables/useTheme.ts; keep in sync.
+          innerHTML:
+            "(function(){try{var t=localStorage.getItem('tcgo-theme');var d=t==='dark'||((!t||t==='system')&&window.matchMedia('(prefers-color-scheme: dark)').matches);if(d)document.documentElement.classList.add('dark');}catch(e){}})();",
+          type: "text/javascript",
+          tagPosition: "head",
+        },
+      ],
       meta: [
         { charset: "utf-8" },
         { name: "viewport", content: "width=device-width, initial-scale=1" },
@@ -107,6 +132,21 @@ export default defineNuxtConfig({
           href: "/apple-touch-icon.png",
         },
         { rel: "canonical", href: "https://tcgo.shop/" },
+        // PWA manifest — @vite-pwa/nuxt doesn't auto-inject this in
+        // ssr:false mode, so we add it ourselves.
+        { rel: "manifest", href: "/manifest.webmanifest" },
+        // Inter font — preconnect + non-blocking link starts the fetch in
+        // parallel with HTML, not after CSS parses (much faster than @import).
+        { rel: "preconnect", href: "https://fonts.googleapis.com" },
+        {
+          rel: "preconnect",
+          href: "https://fonts.gstatic.com",
+          crossorigin: "",
+        },
+        {
+          rel: "stylesheet",
+          href: "https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap",
+        },
       ],
     },
   },
@@ -121,6 +161,8 @@ export default defineNuxtConfig({
       firebaseAppId: "",
       cloudinaryCloudName: "",
       cloudinaryUploadPreset: "",
+      // Admin WhatsApp for premium upgrade requests. Set via NUXT_PUBLIC_ADMIN_WHATSAPP.
+      adminWhatsApp: "",
     },
   },
 });

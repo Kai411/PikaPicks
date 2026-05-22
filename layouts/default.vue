@@ -1,13 +1,16 @@
 <template>
-  <div class="min-h-screen bg-gray-50 text-gray-900">
-    <AppNavbar class="sticky top-0" style="z-index: 2" />
+  <div
+    class="min-h-screen bg-canvas dark:bg-canvas-inverse text-ink dark:text-zinc-100 transition-colors"
+  >
+    <AppNavbar />
     <div
-      class="sticky top-0 w-full py-1 text-center bg-pokemon-yellow text-[12px] font-bold text-grey"
+      class="sticky top-0 w-full py-1 text-center bg-pokemon-yellow text-[12px] font-bold"
     >
-      You are currently on Beta Access of TCGo
+      TCGo is currently under closed Beta Testing
     </div>
-    <main class="container mx-auto px-4 py-8">
+    <main class="container mx-auto px-4 py-8 pb-28 lg:pb-12">
       <slot />
     </main>
+    <BetaGate />
   </div>
 </template>

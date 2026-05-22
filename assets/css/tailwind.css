@@ -3,6 +3,17 @@
 @tailwind utilities;
 
 @layer base {
+  html {
+    font-feature-settings: "cv02", "cv03", "cv04", "cv11", "ss01";
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+    text-rendering: optimizeLegibility;
+  }
+
+  body {
+    @apply bg-canvas text-ink dark:bg-canvas-inverse dark:text-zinc-100;
+  }
+
   /* Custom select with consistent chevron */
   select {
     appearance: none;
@@ -16,5 +27,77 @@
 
   select::-ms-expand {
     display: none;
+  }
+
+  /* Dark-mode chevron for selects (lighter grey against dark bg) */
+  .dark select {
+    background-image: url("data:image/svg+xml;charset=UTF-8,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 20 20' fill='%23a1a1aa'%3e%3cpath fill-rule='evenodd' d='M5.23 7.21a.75.75 0 011.06.02L10 11.06l3.71-3.83a.75.75 0 111.08 1.04l-4.25 4.39a.75.75 0 01-1.08 0L5.21 8.27a.75.75 0 01.02-1.06z' clip-rule='evenodd'/%3e%3c/svg%3e");
+  }
+
+  /* Form fields: dark-mode defaults so every page picks them up.
+     Pages can still override per-element via dark: utilities. */
+  .dark input:not([type="checkbox"]):not([type="radio"]):not([type="file"]):not([type="range"]),
+  .dark textarea,
+  .dark select {
+    background-color: rgba(255, 255, 255, 0.06);
+    border-color: rgba(255, 255, 255, 0.10);
+    color: #fafafa;
+  }
+  .dark input::placeholder,
+  .dark textarea::placeholder {
+    color: #71717a;
+  }
+  .dark input[type="checkbox"],
+  .dark input[type="radio"] {
+    background-color: rgba(255, 255, 255, 0.06);
+    border-color: rgba(255, 255, 255, 0.20);
+  }
+
+  /* Price numerals line up vertically */
+  .tabular-price {
+    font-variant-numeric: tabular-nums;
+    letter-spacing: -0.01em;
+  }
+}
+
+@layer components {
+  /* Elevated nav surface. backdrop-blur was nuking scroll perf on mid-range
+     hardware — every scroll frame recomputed a GPU blur over the entire
+     navbar area. Swapped to slightly translucent solid bg; visually almost
+     identical at scroll speed, GPU cost ~zero. */
+  .glass {
+    @apply bg-white/95 border-b border-black/[0.06];
+  }
+  .dark .glass {
+    @apply bg-[#111114]/95 border-white/[0.06];
+  }
+
+  /* Plain raised surface — used for cards, panels */
+  .surface {
+    @apply bg-canvas-raised border border-black/[0.06] shadow-card;
+  }
+  .dark .surface {
+    @apply bg-[#1B1B20] border-white/[0.06] shadow-none;
+  }
+
+  /* Eyebrow label — small caps, lots of tracking */
+  .eyebrow {
+    @apply inline-block text-[11px] font-semibold tracking-[0.18em] uppercase text-ink-muted dark:text-zinc-400;
+  }
+
+  /* Pill chip — for conditions, tags, metadata */
+  .chip {
+    @apply inline-flex items-center px-2 py-0.5 rounded-md text-[10px] font-semibold tracking-wide uppercase bg-ink/[0.04] text-ink-muted dark:bg-white/[0.06] dark:text-zinc-300;
+  }
+  .chip-accent {
+    @apply bg-pokemon-red/[0.08] text-pokemon-red;
+  }
+  .chip-gold {
+    @apply bg-amber-500/[0.10] text-amber-700 dark:text-amber-300;
+  }
+
+  /* Hairline divider — for premium feel */
+  .hairline {
+    @apply border-t border-black/[0.06] dark:border-white/[0.06];
   }
 }
