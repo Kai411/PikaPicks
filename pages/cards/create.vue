@@ -185,6 +185,25 @@
                     >
                       {{ item.error }}
                     </p>
+                    <!-- Market price is independent of the meta/failed
+                         chain above — sits outside the v-if/else-if. -->
+                    <p
+                      v-if="item.marketPrice"
+                      class="mt-1 inline-flex items-center gap-1 text-[11px] font-semibold text-emerald-700 bg-emerald-50 dark:text-emerald-300 dark:bg-emerald-500/[0.12] px-1.5 py-0.5 rounded"
+                      :title="`Source: ${item.marketPrice.source === 'tcgplayer' ? 'TCGPlayer (USD)' : 'Cardmarket (EUR)'} · approximate MYR conversion`"
+                    >
+                      <svg
+                        class="w-3 h-3"
+                        viewBox="0 0 24 24"
+                        fill="none"
+                        stroke="currentColor"
+                        stroke-width="2.5"
+                      >
+                        <polyline points="22 7 13.5 15.5 8.5 10.5 2 17" />
+                        <polyline points="16 7 22 7 22 13" />
+                      </svg>
+                      Market RM {{ item.marketPrice.low }}–{{ item.marketPrice.high }}
+                    </p>
                   </div>
                   <button
                     type="button"
@@ -239,7 +258,7 @@
                   <input
                     v-model="manualSearch[item.id]"
                     placeholder="Search card name…"
-                    class="flex-1 border border-gray-300 dark:border-white/[0.10] rounded px-2 py-1.5 text-xs"
+                    class="flex-1 border border-gray-300 dark:border-white/[0.10] rounded-lg px-2.5 py-2 text-sm"
                     @keydown.enter.prevent="retryManualSearch(item.id)"
                   />
                   <button
@@ -258,7 +277,7 @@
                   <div class="grid grid-cols-2 sm:grid-cols-3 gap-2">
                     <select
                       v-model="draftFields[item.id].productType"
-                      class="border border-gray-300 dark:border-white/[0.10] rounded px-2 py-1.5 text-xs"
+                      class="border border-gray-300 dark:border-white/[0.10] rounded-lg px-2.5 py-2 text-sm"
                     >
                       <option value="Ungraded">Ungraded</option>
                       <option value="Graded">Graded</option>
@@ -267,7 +286,7 @@
                     <select
                       v-if="draftFields[item.id].productType === 'Ungraded'"
                       v-model="draftFields[item.id].condition"
-                      class="border border-gray-300 dark:border-white/[0.10] rounded px-2 py-1.5 text-xs"
+                      class="border border-gray-300 dark:border-white/[0.10] rounded-lg px-2.5 py-2 text-sm"
                     >
                       <option value="">Condition…</option>
                       <option
@@ -281,7 +300,7 @@
                     <select
                       v-if="draftFields[item.id].productType === 'Graded'"
                       v-model="draftFields[item.id].gradingProvider"
-                      class="border border-gray-300 dark:border-white/[0.10] rounded px-2 py-1.5 text-xs"
+                      class="border border-gray-300 dark:border-white/[0.10] rounded-lg px-2.5 py-2 text-sm"
                     >
                       <option value="">Provider…</option>
                       <option
@@ -299,7 +318,7 @@
                         draftFields[item.id].gradingProvider !== 'Others'
                       "
                       v-model="draftFields[item.id].grade"
-                      class="border border-gray-300 dark:border-white/[0.10] rounded px-2 py-1.5 text-xs"
+                      class="border border-gray-300 dark:border-white/[0.10] rounded-lg px-2.5 py-2 text-sm"
                     >
                       <option value="">Grade…</option>
                       <option
@@ -319,12 +338,12 @@
                       "
                       v-model="draftFields[item.id].grade"
                       placeholder="Grade"
-                      class="border border-gray-300 dark:border-white/[0.10] rounded px-2 py-1.5 text-xs"
+                      class="border border-gray-300 dark:border-white/[0.10] rounded-lg px-2.5 py-2 text-sm"
                     />
                     <!-- Price: full width on mobile, fits in 3rd col on desktop -->
                     <div class="relative col-span-2 sm:col-span-1">
                       <span
-                        class="absolute left-2 top-1/2 -translate-y-1/2 text-xs font-semibold text-gray-500 dark:text-zinc-400 pointer-events-none"
+                        class="absolute left-2.5 top-1/2 -translate-y-1/2 text-sm font-semibold text-gray-500 dark:text-zinc-400 pointer-events-none"
                         >RM</span
                       >
                       <input
@@ -332,8 +351,12 @@
                         type="number"
                         step="0.01"
                         min="0.01"
-                        placeholder="0.00"
-                        class="w-full border border-gray-300 dark:border-white/[0.10] rounded px-2 py-1.5 pl-8 text-xs"
+                        :placeholder="
+                          item.marketPrice
+                            ? `~${item.marketPrice.low}–${item.marketPrice.high}`
+                            : '0.00'
+                        "
+                        class="w-full border border-gray-300 dark:border-white/[0.10] rounded-lg px-2.5 py-2 pl-9 text-sm"
                       />
                     </div>
                   </div>
@@ -343,7 +366,7 @@
                     v-model="draftFields[item.id].description"
                     rows="2"
                     placeholder="Notes about the card (optional)…"
-                    class="w-full border border-gray-300 dark:border-white/[0.10] rounded px-2 py-1.5 text-xs resize-none"
+                    class="w-full border border-gray-300 dark:border-white/[0.10] rounded-lg px-2.5 py-2 text-sm resize-none"
                   />
 
                   <!-- Extra photos -->
