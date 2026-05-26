@@ -82,7 +82,28 @@
             <div class="flex-1">
               <div class="flex items-start justify-between gap-3">
                 <h1 class="text-2xl font-bold">{{ card.cardName }}</h1>
-                <div class="flex items-center gap-2">
+                <div class="flex items-center gap-1.5">
+                  <!-- Share button -->
+                  <button
+                    @click="handleShare"
+                    :title="copied ? 'Link copied!' : 'Share listing'"
+                    class="relative w-8 h-8 rounded-full flex items-center justify-center text-gray-400 dark:text-zinc-500 hover:text-gray-700 dark:hover:text-zinc-200 hover:bg-black/[0.04] dark:hover:bg-white/[0.06] transition-colors"
+                  >
+                    <!-- share icon -->
+                    <svg v-if="!copied" class="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                      <circle cx="18" cy="5" r="3"/><circle cx="6" cy="12" r="3"/><circle cx="18" cy="19" r="3"/>
+                      <line x1="8.59" y1="13.51" x2="15.42" y2="17.49"/><line x1="15.41" y1="6.51" x2="8.59" y2="10.49"/>
+                    </svg>
+                    <!-- check icon after copy -->
+                    <svg v-else class="w-4 h-4 text-emerald-500" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+                      <polyline points="20 6 9 17 4 12"/>
+                    </svg>
+                    <!-- "Copied!" tooltip -->
+                    <span v-if="copied" class="absolute -bottom-6 left-1/2 -translate-x-1/2 text-[10px] font-medium text-emerald-600 dark:text-emerald-400 whitespace-nowrap pointer-events-none">
+                      Copied!
+                    </span>
+                  </button>
+
                   <FavouriteButton
                     :item-id="card.id"
                     item-type="card"
@@ -297,33 +318,53 @@ const isOwnListing = computed(
   () => user.value && card.value && card.value.sellerUid === user.value.uid,
 );
 
+const { origin } = useRequestURL();
+const pageUrl = computed(() => `${origin}/cards/${cardId}`);
+
 // Per-page SEO
-useHead(() => ({
-  title: card.value
-    ? `${card.value.cardName} - RM ${card.value.price.toFixed(2)} | TCGo Marketplace`
-    : "Card Details | TCGo Marketplace",
-  meta: card.value
-    ? [
-        {
-          name: "description",
-          content: `${card.value.cardName} from ${card.value.cardSet} (${card.value.condition}) for RM ${card.value.price.toFixed(2)}. ${card.value.description || "Available on TCGo Marketplace."}`,
-        },
-        {
-          property: "og:title",
-          content: `${card.value.cardName} - RM ${card.value.price.toFixed(2)}`,
-        },
-        {
-          property: "og:description",
-          content: `${card.value.cardSet} · ${card.value.condition} · Sold by ${card.value.seller}`,
-        },
-        {
-          property: "og:image",
-          content:
-            card.value.imageUrls?.[0] || card.value.imageUrl || "/og.webp",
-        },
-      ]
-    : [],
-}));
+useHead(() => {
+  if (!card.value) return { title: "Card Details | TCGo Marketplace" };
+  const title = `${card.value.cardName} — RM ${card.value.price.toFixed(2)} | TCGo`;
+  const description = `${card.value.cardSet}${card.value.condition ? ` · ${card.value.condition}` : ""} · Listed by ${card.value.seller} on TCGo Marketplace.`;
+  const image = card.value.imageUrls?.[0] || card.value.imageUrl || `${origin}/og.webp`;
+  const url = pageUrl.value;
+  return {
+    title,
+    link: [{ rel: "canonical", href: url }],
+    meta: [
+      { name: "description", content: description },
+      { property: "og:type", content: "website" },
+      { property: "og:url", content: url },
+      { property: "og:title", content: title },
+      { property: "og:description", content: description },
+      { property: "og:image", content: image },
+      { name: "twitter:card", content: "summary_large_image" },
+      { name: "twitter:title", content: title },
+      { name: "twitter:description", content: description },
+      { name: "twitter:image", content: image },
+    ],
+  };
+});
+
+// Share button
+const copied = ref(false);
+const handleShare = async () => {
+  if (!card.value) return;
+  const url = pageUrl.value;
+  if (navigator.share) {
+    try {
+      await navigator.share({
+        title: `${card.value.cardName} — RM ${card.value.price.toFixed(2)}`,
+        text: `${card.value.cardSet}${card.value.condition ? ` · ${card.value.condition}` : ""}`,
+        url,
+      });
+    } catch {}
+  } else {
+    await navigator.clipboard.writeText(url);
+    copied.value = true;
+    setTimeout(() => (copied.value = false), 2000);
+  }
+};
 
 const activeImageIndex = ref(0);
 
@@ -375,7 +416,7 @@ const whatsappLink = computed(() => {
     cleanPhone = "60" + cleanPhone.slice(1);
   }
   const message = encodeURIComponent(
-    `Hi, I'm interested in your card: ${card.value.cardName} (${card.value.cardSet}, ${card.value.condition}) listed at RM ${card.value.price.toFixed(2)} on TCGo Marketplace.`,
+    `Hi, I'm interested in your listing on TCGo:\n${card.value.cardName} (${card.value.cardSet}${card.value.condition ? `, ${card.value.condition}` : ""}) — RM ${card.value.price.toFixed(2)}\n${pageUrl.value}`,
   );
   if (cleanPhone) {
     return `https://wa.me/${cleanPhone}?text=${message}`;

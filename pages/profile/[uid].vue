@@ -188,16 +188,7 @@
           v-else
           class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-3 sm:gap-5"
         >
-          <ProfileItem
-            v-for="card in userCards"
-            :key="card.id"
-            :to="`/cards/${card.id}`"
-            :image="card.imageUrls?.[0] || card.imageUrl"
-            :title="card.cardName"
-            :subtitle="card.cardSet || card.condition"
-            :price="card.price"
-            :status="card.sold ? 'sold' : 'available'"
-          />
+          <CardTile v-for="card in userCards" :key="card.id" :card="card" />
         </div>
       </div>
 
@@ -212,16 +203,7 @@
           v-else
           class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-3 sm:gap-5"
         >
-          <ProfileItem
-            v-for="auction in userAuctions"
-            :key="auction.id"
-            :to="`/auctions/${auction.id}`"
-            :image="auction.imageUrls?.[0] || auction.imageUrl"
-            :title="auction.cardName"
-            :subtitle="auction.cardSet"
-            :price="auction.currentPrice"
-            :status="isActive(auction) ? 'active' : 'ended'"
-          />
+          <CardTile v-for="auction in userAuctions" :key="auction.id" :auction="auction" />
         </div>
       </div>
 
@@ -238,16 +220,7 @@
             <div
               class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-3 sm:gap-5"
             >
-              <ProfileItem
-                v-for="card in favouriteCards"
-                :key="card.id"
-                :to="`/cards/${card.id}`"
-                :image="card.imageUrls?.[0] || card.imageUrl"
-                :title="card.cardName"
-                :subtitle="card.cardSet"
-                :price="card.price"
-                :status="card.sold ? 'sold' : 'available'"
-              />
+              <CardTile v-for="card in favouriteCards" :key="card.id" :card="card" />
             </div>
           </section>
           <section v-if="favouriteAuctions.length">
@@ -255,16 +228,7 @@
             <div
               class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-3 sm:gap-5"
             >
-              <ProfileItem
-                v-for="auction in favouriteAuctions"
-                :key="auction.id"
-                :to="`/auctions/${auction.id}`"
-                :image="auction.imageUrls?.[0] || auction.imageUrl"
-                :title="auction.cardName"
-                :subtitle="auction.cardSet"
-                :price="auction.currentPrice"
-                :status="isActive(auction) ? 'active' : 'ended'"
-              />
+              <CardTile v-for="auction in favouriteAuctions" :key="auction.id" :auction="auction" />
             </div>
           </section>
         </div>
