@@ -17,15 +17,13 @@
     </div>
 
     <template v-else>
-      <NuxtLink
-        to="/"
-        class="text-sm text-gray-500 dark:text-zinc-400 hover:text-gray-700 dark:hover:text-zinc-200 mb-4 inline-block"
-      >
-        ← Back to shop
-      </NuxtLink>
-
       <div class="flex items-center justify-between mb-4">
-        <div></div>
+        <NuxtLink
+          to="/"
+          class="text-sm text-gray-500 dark:text-zinc-400 hover:text-gray-700 dark:hover:text-zinc-200"
+        >
+          ← Back to shop
+        </NuxtLink>
         <NuxtLink
           v-if="isOwnListing && !card.sold"
           :to="`/cards/${card.id}/edit`"
@@ -41,36 +39,68 @@
         <div class="grid grid-cols-1 md:grid-cols-2 gap-0">
           <!-- Images -->
           <div class="bg-gray-100 dark:bg-white/[0.02] p-4">
-            <div
-              class="relative aspect-square rounded-lg overflow-hidden bg-white dark:bg-white/[0.04] flex items-center justify-center"
-            >
-              <img
-                v-if="activeImage"
-                :src="activeImage"
-                :alt="card.cardName"
-                class="w-full h-full object-contain"
-              />
-              <span v-else class="text-gray-400 dark:text-zinc-500"
-                >No Image</span
+            <div class="relative aspect-square rounded-lg overflow-hidden bg-white dark:bg-white/[0.04]">
+              <!-- Scroll-snap strip -->
+              <div
+                ref="scrollContainer"
+                class="absolute inset-0 flex overflow-x-auto overflow-y-hidden snap-x snap-mandatory"
+                style="scrollbar-width: none; -ms-overflow-style: none;"
+                @scroll.passive="onImageScroll"
               >
+                <div
+                  v-if="allImages.length === 0"
+                  class="w-full h-full shrink-0 snap-start flex items-center justify-center"
+                >
+                  <span class="text-gray-400 dark:text-zinc-500">No Image</span>
+                </div>
+                <div
+                  v-for="(img, i) in allImages"
+                  :key="i"
+                  class="w-full h-full shrink-0 snap-start flex items-center justify-center"
+                >
+                  <img :src="img" :alt="card.cardName" class="w-full h-full object-contain" />
+                </div>
+              </div>
+
+              <!-- Prev arrow -->
+              <button
+                v-if="allImages.length > 1 && activeImageIndex > 0"
+                @click="prevImage"
+                class="absolute left-2 top-1/2 -translate-y-1/2 w-8 h-8 rounded-full bg-black/40 hover:bg-black/60 text-white flex items-center justify-center transition-colors z-10"
+              >
+                <svg class="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+                  <polyline points="15 18 9 12 15 6"/>
+                </svg>
+              </button>
+
+              <!-- Next arrow -->
+              <button
+                v-if="allImages.length > 1 && activeImageIndex < allImages.length - 1"
+                @click="nextImage"
+                class="absolute right-2 top-1/2 -translate-y-1/2 w-8 h-8 rounded-full bg-black/40 hover:bg-black/60 text-white flex items-center justify-center transition-colors z-10"
+              >
+                <svg class="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+                  <polyline points="9 18 15 12 9 6"/>
+                </svg>
+              </button>
+
+              <!-- Counter badge -->
               <span
                 v-if="allImages.length > 1"
-                class="absolute bottom-2 right-2 bg-black/70 text-white text-xs font-semibold tabular-nums px-2 py-0.5 rounded-full"
+                class="absolute bottom-2 right-2 bg-black/70 text-white text-xs font-semibold tabular-nums px-2 py-0.5 rounded-full z-10"
               >
                 {{ activeImageIndex + 1 }}/{{ allImages.length }}
               </span>
             </div>
+
+            <!-- Thumbnails -->
             <div v-if="allImages.length > 1" class="flex gap-2 mt-3">
               <button
                 v-for="(img, i) in allImages"
                 :key="i"
-                @click="activeImageIndex = i"
+                @click="scrollToImage(i)"
                 class="w-16 h-16 rounded-lg overflow-hidden border-2 transition-colors"
-                :class="
-                  activeImageIndex === i
-                    ? 'border-pokemon-blue'
-                    : 'border-gray-200 dark:border-white/[0.08]'
-                "
+                :class="activeImageIndex === i ? 'border-pokemon-blue' : 'border-gray-200 dark:border-white/[0.08]'"
               >
                 <img :src="img" class="w-full h-full object-cover" />
               </button>
@@ -367,6 +397,23 @@ const handleShare = async () => {
 };
 
 const activeImageIndex = ref(0);
+const scrollContainer = ref<HTMLElement | null>(null);
+
+const scrollToImage = (index: number) => {
+  activeImageIndex.value = index;
+  nextTick(() => {
+    if (!scrollContainer.value) return;
+    scrollContainer.value.scrollTo({ left: index * scrollContainer.value.offsetWidth, behavior: "smooth" });
+  });
+};
+
+const onImageScroll = () => {
+  if (!scrollContainer.value) return;
+  activeImageIndex.value = Math.round(scrollContainer.value.scrollLeft / scrollContainer.value.offsetWidth);
+};
+
+const prevImage = () => scrollToImage(Math.max(0, activeImageIndex.value - 1));
+const nextImage = () => scrollToImage(Math.min(allImages.value.length - 1, activeImageIndex.value + 1));
 
 const allImages = computed(() => {
   if (!card.value) return [];

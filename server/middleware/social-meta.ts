@@ -114,8 +114,10 @@ export default defineEventHandler(async (event) => {
     const rawImage: string = rawImageUrls[0] || f.imageUrl || "";
     const ogImage = cdnUrl(rawImage, 800) || "https://tcgo.shop/og.webp";
 
+    // For auctions, currentPrice lives in RTDB auction_summaries — use
+    // startingPrice from Firestore as a reasonable fallback for OG previews.
     const price: number | null =
-      isAuction ? (f.currentPrice ?? null) : (f.price ?? null);
+      isAuction ? (f.startingPrice ?? null) : (f.price ?? null);
     const priceStr =
       price != null
         ? `RM ${Number(price).toLocaleString("en-MY", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`
