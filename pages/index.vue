@@ -10,6 +10,8 @@
 
     <!-- ── Main content ───────────────────────────────────────────────── -->
     <div class="flex-1 min-w-0">
+      <PremiumBanner />
+
       <!-- TCG filter pills -->
       <div
         v-if="!loading && tcgCounts.length > 1"

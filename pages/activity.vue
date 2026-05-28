@@ -156,37 +156,99 @@
 
         <!-- Orders tab -->
         <div v-if="activeTab === 'orders'" class="space-y-6">
+          <div
+            v-if="route.query.placed"
+            class="bg-emerald-50 dark:bg-emerald-500/10 border border-emerald-200 dark:border-emerald-500/20 rounded-xl p-4 flex items-center gap-3"
+          >
+            <svg class="w-5 h-5 text-emerald-600 dark:text-emerald-400 shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>
+            <div>
+              <p class="font-semibold text-emerald-800 dark:text-emerald-200 text-sm">
+                {{ route.query.placed }} {{ Number(route.query.placed) === 1 ? "order" : "orders" }} placed
+              </p>
+              <p class="text-xs text-emerald-700 dark:text-emerald-300">
+                Tap WhatsApp on each order to arrange payment & shipping with the seller.
+              </p>
+            </div>
+          </div>
+
           <div v-if="ordersLoadingBuyer || ordersLoadingSeller" class="flex justify-center py-12">
             <div class="animate-spin rounded-full h-6 w-6 border-2 border-ink/10 border-t-pokemon-red"/>
           </div>
           <template v-else>
             <div>
               <h3 class="text-sm font-semibold text-gray-500 dark:text-zinc-400 uppercase tracking-wide mb-3">My Purchases</h3>
-              <p v-if="!buyerOrders.length" class="text-sm text-gray-400 dark:text-zinc-500">No purchases yet.</p>
+              <p v-if="!buyerCompiledOrders.length" class="text-sm text-gray-400 dark:text-zinc-500">No purchases yet.</p>
               <div v-else class="space-y-3">
-                <OrderCard
-                  v-for="order in buyerOrders"
+                <CompiledOrderCard
+                  v-for="order in buyerCompiledOrders"
                   :key="order.id"
                   :order="order"
                   role="buyer"
                   @mark-delivered="markDelivered(order.id)"
+                  @cancel="cancelOrder(order.id)"
                 />
               </div>
             </div>
             <div>
-              <h3 class="text-sm font-semibold text-gray-500 dark:text-zinc-400 uppercase tracking-wide mb-3">Sales via Stripe</h3>
-              <p v-if="!sellerOrders.length" class="text-sm text-gray-400 dark:text-zinc-500">No Stripe sales yet.</p>
+              <h3 class="text-sm font-semibold text-gray-500 dark:text-zinc-400 uppercase tracking-wide mb-3">My Sales</h3>
+              <p v-if="!sellerCompiledOrders.length" class="text-sm text-gray-400 dark:text-zinc-500">No sales yet.</p>
               <div v-else class="space-y-3">
-                <OrderCard
-                  v-for="order in sellerOrders"
+                <CompiledOrderCard
+                  v-for="order in sellerCompiledOrders"
                   :key="order.id"
                   :order="order"
                   role="seller"
-                  @add-tracking="(data) => addTracking(order.id, data.number, data.carrier)"
+                  @confirm="markConfirmed(order.id)"
+                  @ship="openShipDialog(order.id)"
                 />
               </div>
             </div>
           </template>
+
+          <!-- Ship dialog -->
+          <div
+            v-if="shippingOrderId"
+            class="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/40"
+            @click.self="shippingOrderId = null"
+          >
+            <div class="surface rounded-2xl w-full max-w-sm p-5 border border-black/[0.06] dark:border-white/[0.08]">
+              <h3 class="text-base font-bold text-ink dark:text-white mb-3">Mark as shipped</h3>
+              <div class="space-y-3">
+                <div>
+                  <label class="block text-xs font-medium text-gray-500 dark:text-zinc-400 mb-1">Tracking number (optional)</label>
+                  <input
+                    v-model="shipTrackingNumber"
+                    type="text"
+                    placeholder="e.g. EM123456789MY"
+                    class="w-full px-3 py-2 rounded-lg border border-gray-200 dark:border-white/[0.10] bg-white dark:bg-white/[0.04] text-sm text-ink dark:text-white"
+                  />
+                </div>
+                <div>
+                  <label class="block text-xs font-medium text-gray-500 dark:text-zinc-400 mb-1">Carrier (optional)</label>
+                  <input
+                    v-model="shipCarrier"
+                    type="text"
+                    placeholder="e.g. Pos Laju, J&T"
+                    class="w-full px-3 py-2 rounded-lg border border-gray-200 dark:border-white/[0.10] bg-white dark:bg-white/[0.04] text-sm text-ink dark:text-white"
+                  />
+                </div>
+              </div>
+              <div class="flex gap-2 mt-4">
+                <button
+                  @click="shippingOrderId = null"
+                  class="flex-1 py-2 rounded-lg text-sm font-semibold border border-gray-200 dark:border-white/[0.08] text-gray-700 dark:text-zinc-200"
+                >
+                  Cancel
+                </button>
+                <button
+                  @click="confirmShip"
+                  class="flex-1 py-2 rounded-lg text-sm font-semibold bg-indigo-500 text-white hover:bg-indigo-600 transition-colors"
+                >
+                  Mark shipped
+                </button>
+              </div>
+            </div>
+          </div>
         </div>
 
         <!-- History tab -->
@@ -308,15 +370,17 @@ const { user, signInWithGoogle } = useAuth();
 const { auctions, loading } = useAuctions();
 const { cards, loading: cardsLoading, markAsSold } = useCards();
 const {
-  buyerOrders,
-  sellerOrders,
+  buyerCompiledOrders,
+  sellerCompiledOrders,
   loadingBuyer: ordersLoadingBuyer,
   loadingSeller: ordersLoadingSeller,
-  listenBuyerOrders,
-  listenSellerOrders,
+  listenBuyerCompiledOrders,
+  listenSellerCompiledOrders,
+  markConfirmed,
+  markShipped,
   markDelivered,
-  addTracking,
-} = useOrders();
+  cancelOrder,
+} = useCompiledOrders();
 
 // Per-user bid index: auctionId → { highestBid }
 const uid = computed(() => user.value?.uid || "");
@@ -331,16 +395,37 @@ watch(activeTab, (id) => {
 
 onMounted(() => {
   if (user.value) {
-    listenBuyerOrders();
-    listenSellerOrders();
+    listenBuyerCompiledOrders();
+    listenSellerCompiledOrders();
   }
 });
 watch(user, (u) => {
   if (u) {
-    listenBuyerOrders();
-    listenSellerOrders();
+    listenBuyerCompiledOrders();
+    listenSellerCompiledOrders();
   }
 });
+
+// Ship dialog state for sellers marking shipment.
+const shippingOrderId = ref<string | null>(null);
+const shipTrackingNumber = ref("");
+const shipCarrier = ref("");
+
+const openShipDialog = (orderId: string) => {
+  shippingOrderId.value = orderId;
+  shipTrackingNumber.value = "";
+  shipCarrier.value = "";
+};
+
+const confirmShip = async () => {
+  if (!shippingOrderId.value) return;
+  await markShipped(
+    shippingOrderId.value,
+    shipTrackingNumber.value.trim() || undefined,
+    shipCarrier.value.trim() || undefined,
+  );
+  shippingOrderId.value = null;
+};
 
 const myCards = computed(() =>
   cards.value
@@ -395,8 +480,13 @@ const wonBids = computed(() =>
 );
 
 const activeOrdersCount = computed(
-  () => buyerOrders.value.filter((o) => o.status !== "delivered" && o.status !== "cancelled").length
-    + sellerOrders.value.filter((o) => o.status === "paid").length,
+  () =>
+    buyerCompiledOrders.value.filter(
+      (o) => o.status !== "delivered" && o.status !== "cancelled",
+    ).length +
+    sellerCompiledOrders.value.filter(
+      (o) => o.status === "pending" || o.status === "confirmed" || o.status === "paid",
+    ).length,
 );
 
 const tabs = computed(() => [

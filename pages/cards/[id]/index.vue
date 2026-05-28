@@ -284,7 +284,7 @@
               </div>
             </div>
 
-            <!-- Contact Seller + Buy Now -->
+            <!-- Contact Seller + Buy Now + Add to cart -->
             <div v-if="!card.sold && !isOwnListing" class="mt-6 space-y-3">
               <a
                 :href="whatsappLink"
@@ -301,15 +301,15 @@
                 Contact Seller
               </a>
 
-              <!-- Buy Now via Stripe (escrow) -->
+              <!-- Buy Now · creates a Compiled Order, payment arranged with seller via WhatsApp -->
               <div class="border border-gray-200 dark:border-white/[0.08] rounded-xl overflow-hidden">
                 <button
                   @click="buyNowOpen = !buyNowOpen"
                   class="w-full flex items-center justify-between px-4 py-3 text-sm font-semibold text-ink dark:text-white hover:bg-black/[0.02] dark:hover:bg-white/[0.04] transition-colors"
                 >
                   <span class="flex items-center gap-2">
-                    <svg class="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="1" y="4" width="22" height="16" rx="2"/><line x1="1" y1="10" x2="23" y2="10"/></svg>
-                    Buy Now · Pay via Stripe
+                    <svg class="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 9l1.5-5h15L21 9"/><path d="M3 9v11a1 1 0 0 0 1 1h16a1 1 0 0 0 1-1V9"/><path d="M9 13h6"/></svg>
+                    Buy Now
                   </span>
                   <svg class="w-4 h-4 transition-transform" :class="buyNowOpen ? 'rotate-180' : ''" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="m6 9 6 6 6-6"/></svg>
                 </button>
@@ -346,7 +346,7 @@
                     </div>
 
                     <p class="text-xs text-gray-400 dark:text-zinc-500">
-                      Funds held in escrow until you confirm delivery.
+                      You'll arrange payment & shipping details with the seller via WhatsApp after placing the order.
                     </p>
 
                     <div v-if="!user">
@@ -361,12 +361,25 @@
                         class="w-full bg-pokemon-red text-white py-2.5 rounded-lg text-sm font-bold hover:bg-red-700 transition-colors disabled:opacity-60 flex items-center justify-center gap-2"
                       >
                         <span v-if="buyNowLoading" class="animate-spin rounded-full h-4 w-4 border-b-2 border-white"/>
-                        {{ buyNowLoading ? 'Redirecting...' : 'Pay Securely' }}
+                        {{ buyNowLoading ? 'Placing order...' : 'Place order' }}
                       </button>
                     </div>
                   </div>
                 </Transition>
               </div>
+
+              <!-- Add to cart -->
+              <button
+                @click="handleAddToCart"
+                :disabled="inCart"
+                class="w-full inline-flex items-center justify-center gap-2 border border-gray-200 dark:border-white/[0.08] text-ink dark:text-white py-3 rounded-lg text-sm font-semibold hover:bg-black/[0.04] dark:hover:bg-white/[0.06] transition-colors disabled:opacity-60 disabled:cursor-default"
+              >
+                <svg class="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                  <circle cx="9" cy="21" r="1"/><circle cx="20" cy="21" r="1"/>
+                  <path d="M1 1h4l2.68 13.39a2 2 0 0 0 2 1.61h9.72a2 2 0 0 0 2-1.61L23 6H6"/>
+                </svg>
+                {{ inCart ? "In cart" : "Add to cart" }}
+              </button>
 
               <p
                 v-if="card.interestedCount > 0"
@@ -398,10 +411,31 @@ import type { Card } from "~/composables/useCards";
 const route = useRoute();
 const cardId = route.params.id as string;
 
+const router = useRouter();
 const { cards, loading, markInterested } = useCards();
 const { firestore } = useFirebase();
 const { user, signInWithGoogle } = useAuth();
-const { createPendingOrders } = useOrders();
+const { profile: myProfile } = useMyProfile();
+const { createCompiledOrders } = useCompiledOrders();
+const { addToCart, isInCart } = useCart();
+
+const inCart = computed(() => (card.value ? isInCart(card.value.id) : false));
+
+const handleAddToCart = () => {
+  if (!card.value || inCart.value) return;
+  addToCart({
+    id: card.value.id,
+    cardName: card.value.cardName,
+    cardSet: card.value.cardSet || '',
+    condition: card.value.condition || '',
+    price: card.value.price,
+    imageUrl: card.value.imageUrls?.[0] || card.value.imageUrl || '',
+    seller: card.value.seller,
+    sellerUid: card.value.sellerUid,
+    shippingWM: card.value.shippingWM ?? 0,
+    shippingEM: card.value.shippingEM ?? 0,
+  });
+};
 
 // Buy Now state
 const buyNowOpen = ref(false);
@@ -422,34 +456,25 @@ const handleBuyNow = async () => {
   if (!user.value || !card.value) return;
   buyNowLoading.value = true;
   try {
-    const [order] = await createPendingOrders([{
-      cardId: card.value.id,
-      cardName: card.value.cardName,
-      cardSet: card.value.cardSet || '',
-      imageUrl: card.value.imageUrls?.[0] || card.value.imageUrl || '',
-      sellerUid: card.value.sellerUid,
-      sellerName: card.value.seller,
-      price: card.value.price,
-      shipping: buyNowShipping.value,
-    }]);
-    const res = await $fetch<{ url: string }>('/api/stripe/checkout', {
-      method: 'POST',
-      body: {
-        type: 'payment',
-        uid: user.value.uid,
-        email: user.value.email,
-        items: [{
-          orderId: order.id,
-          name: card.value.cardName,
-          price: card.value.price,
-          shipping: buyNowShipping.value,
-          imageUrl: card.value.imageUrls?.[0] || card.value.imageUrl,
-        }],
-      },
-    });
-    if (res.url) window.location.href = res.url;
+    const [order] = await createCompiledOrders(
+      [{
+        cardId: card.value.id,
+        cardName: card.value.cardName,
+        cardSet: card.value.cardSet || '',
+        condition: card.value.condition || '',
+        imageUrl: card.value.imageUrls?.[0] || card.value.imageUrl || '',
+        price: card.value.price,
+        shippingWM: card.value.shippingWM ?? 0,
+        shippingEM: card.value.shippingEM ?? 0,
+        sellerUid: card.value.sellerUid,
+        sellerName: card.value.seller,
+      }],
+      buyNowRegion.value,
+      myProfile.value?.customName || myProfile.value?.displayName || user.value.displayName || 'Buyer',
+    );
+    router.push(`/orders/${order.id}?placed=1`);
   } catch (e: any) {
-    alert(e?.data?.message || 'Checkout failed. Please try again.');
+    alert(e?.message || 'Could not place order. Please try again.');
   } finally {
     buyNowLoading.value = false;
   }
