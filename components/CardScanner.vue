@@ -11,7 +11,7 @@
         <div class="flex items-center gap-3">
           <h2 class="text-base font-semibold">Scan Card</h2>
           <span
-            v-if="user && isPremium"
+            v-if="premiumEnabled && user && isPremium"
             class="text-[11px] font-semibold tracking-wide uppercase px-2 py-0.5 rounded-full bg-amber-500/20 text-amber-300"
           >
             Premium · Unlimited
@@ -90,21 +90,22 @@
           You've used all {{ FREE_SCAN_LIMIT }} scans
         </h3>
         <p class="text-sm text-white/70 mb-2 max-w-xs">
-          Quota resets {{ resetDateLabel }}. Upgrade to Premium for unlimited
-          scans.
+          Quota resets {{ resetDateLabel }}.<template v-if="premiumEnabled"> Upgrade to Premium for unlimited scans.</template>
         </p>
-        <a
-          v-if="adminWhatsAppLink"
-          :href="adminWhatsAppLink"
-          target="_blank"
-          rel="noopener"
-          class="mt-4 inline-flex items-center gap-2 bg-amber-500 text-ink px-6 py-3 rounded-full font-semibold hover:bg-amber-400 transition-colors"
-        >
-          Upgrade via WhatsApp
-        </a>
-        <p v-else class="mt-4 text-xs text-white/50">
-          Premium upgrade isn't configured yet — set NUXT_PUBLIC_ADMIN_WHATSAPP.
-        </p>
+        <template v-if="premiumEnabled">
+          <a
+            v-if="adminWhatsAppLink"
+            :href="adminWhatsAppLink"
+            target="_blank"
+            rel="noopener"
+            class="mt-4 inline-flex items-center gap-2 bg-amber-500 text-ink px-6 py-3 rounded-full font-semibold hover:bg-amber-400 transition-colors"
+          >
+            Upgrade via WhatsApp
+          </a>
+          <p v-else class="mt-4 text-xs text-white/50">
+            Premium upgrade isn't configured yet — set NUXT_PUBLIC_ADMIN_WHATSAPP.
+          </p>
+        </template>
       </div>
 
       <!-- Always-on camera viewfinder. Capture is non-blocking: each scan
@@ -293,12 +294,13 @@ const emit = defineEmits<{
 }>();
 
 const { uploadImage } = useStorage();
-const { searchByNameAndNumber, searchByName } = usePokemonTcg();
+const { lookupByNameAndNumber } = useCardCatalog();
 const { queue, addProcessing, updateItem, pickMatch, processingCount } =
   useScanQueue();
 const { user, signInWithGoogle } = useAuth();
 const { isPremium, remaining, used, tryConsumeScan } = useScanQuota();
 const { profile } = useMyProfile();
+const { premiumEnabled } = useFeatureFlags();
 
 const config = useRuntimeConfig();
 const adminWhatsAppLink = computed(() => {
@@ -565,12 +567,11 @@ const processInBackground = async (
     artist,
   });
 
-  // 3. For non-English cards, skip the TCG API lookup — the API only indexes
-  // English prints, so matching would overwrite the JP set number with an
-  // unrelated English print's number and attach a wrong card image. Use the
-  // user's scanned image + Gemini's English-translated name + the printed
-  // (e.g. JP) set number directly. Rarity / variant / edition stay as
-  // whatever Gemini extracted from the JP face.
+  // 3. For non-English cards, skip the TCGo DB lookup — the Pokémon catalog
+  // is English-first (TCGCSV's JP coverage is partial and Gemini returns
+  // English-translated names anyway, so matching is unreliable). Use the
+  // user's scanned image + Gemini's translated name + printed set number
+  // directly. Seller can still set their own price manually.
   if (language !== "EN") {
     updateItem(id, {
       status: "ready",
@@ -578,20 +579,17 @@ const processInBackground = async (
       cardSet: "",
       cardNumber: number,
       imageUrl: undefined,
+      tcgoPrice: null,
     });
     return;
   }
 
-  // 4. Look up matches in the TCG API (English cards only).
-  let results: any[] = [];
+  // 4. Look up the card in the TCGo DB (Supabase cards_catalog + card_prices).
+  //    First tries exact-ish name + number; falls back to name-only
+  //    suggestions if nothing matches.
+  let lookup: Awaited<ReturnType<typeof lookupByNameAndNumber>>;
   try {
-    const cardNumber = number.includes("/") ? number.split("/")[0] : number;
-    if (name && cardNumber) {
-      results = await searchByNameAndNumber(name, cardNumber);
-    }
-    if (results.length === 0 && name) {
-      results = await searchByName(name);
-    }
+    lookup = await lookupByNameAndNumber(name, number, { language: "EN" });
   } catch {
     updateItem(id, {
       status: "failed",
@@ -600,19 +598,22 @@ const processInBackground = async (
     return;
   }
 
-  if (results.length === 0) {
+  // 5. Resolve to a queue item state:
+  //    - exactly one exact match → auto-pick (status: ready, price attached)
+  //    - multiple exact matches → user picks from candidate list
+  //    - no exact match but suggestions exist → show as needs-pick with hint
+  //    - nothing at all → mark failed
+  if (lookup.exact.length === 1) {
+    pickMatch(id, lookup.exact[0]);
+  } else if (lookup.exact.length > 1) {
+    updateItem(id, { status: "needs-pick", matches: lookup.exact });
+  } else if (lookup.suggestions.length > 0) {
+    updateItem(id, { status: "needs-pick", matches: lookup.suggestions });
+  } else {
     updateItem(id, {
       status: "failed",
-      error: "No matches found — search manually on the drafts page.",
+      error: "No matches found in TCGo DB — fill in manually below.",
     });
-    return;
-  }
-
-  // 5. Single match → auto-pick. Multiple matches → flag for user.
-  if (results.length === 1) {
-    pickMatch(id, results[0]);
-  } else {
-    updateItem(id, { status: "needs-pick", matches: results });
   }
 };
 </script>

@@ -284,8 +284,8 @@
               </div>
             </div>
 
-            <!-- Contact Seller Button -->
-            <div v-if="!card.sold && !isOwnListing" class="mt-6">
+            <!-- Contact Seller + Buy Now + Add to cart -->
+            <div v-if="!card.sold && !isOwnListing" class="mt-6 space-y-3">
               <a
                 :href="whatsappLink"
                 target="_blank"
@@ -300,9 +300,90 @@
                 </svg>
                 Contact Seller
               </a>
+
+              <!-- Buy Now · creates a Compiled Order, payment arranged with seller via WhatsApp -->
+              <div class="border border-gray-200 dark:border-white/[0.08] rounded-xl overflow-hidden">
+                <button
+                  @click="buyNowOpen = !buyNowOpen"
+                  class="w-full flex items-center justify-between px-4 py-3 text-sm font-semibold text-ink dark:text-white hover:bg-black/[0.02] dark:hover:bg-white/[0.04] transition-colors"
+                >
+                  <span class="flex items-center gap-2">
+                    <svg class="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 9l1.5-5h15L21 9"/><path d="M3 9v11a1 1 0 0 0 1 1h16a1 1 0 0 0 1-1V9"/><path d="M9 13h6"/></svg>
+                    Buy Now
+                  </span>
+                  <svg class="w-4 h-4 transition-transform" :class="buyNowOpen ? 'rotate-180' : ''" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="m6 9 6 6 6-6"/></svg>
+                </button>
+
+                <Transition enter-active-class="transition-all duration-200" enter-from-class="opacity-0 -translate-y-1" leave-active-class="transition-all duration-150" leave-to-class="opacity-0 -translate-y-1">
+                  <div v-if="buyNowOpen" class="border-t border-gray-200 dark:border-white/[0.08] p-4 space-y-4">
+                    <!-- Shipping region -->
+                    <div>
+                      <p class="text-xs font-medium text-gray-500 dark:text-zinc-400 mb-1.5">Shipping region</p>
+                      <div class="flex gap-2">
+                        <button
+                          @click="buyNowRegion = 'WM'"
+                          :class="['flex-1 py-1.5 rounded-lg text-xs font-semibold border transition-colors', buyNowRegion === 'WM' ? 'bg-pokemon-red text-white border-pokemon-red' : 'border-gray-300 dark:border-white/[0.10] text-gray-700 dark:text-zinc-200']"
+                        >WM (RM {{ card.shippingWM?.toFixed(2) ?? '0.00' }})</button>
+                        <button
+                          @click="buyNowRegion = 'EM'"
+                          :class="['flex-1 py-1.5 rounded-lg text-xs font-semibold border transition-colors', buyNowRegion === 'EM' ? 'bg-pokemon-red text-white border-pokemon-red' : 'border-gray-300 dark:border-white/[0.10] text-gray-700 dark:text-zinc-200']"
+                        >EM (RM {{ card.shippingEM?.toFixed(2) ?? '0.00' }})</button>
+                      </div>
+                    </div>
+
+                    <!-- Price breakdown -->
+                    <div class="text-sm space-y-1">
+                      <div class="flex justify-between text-gray-600 dark:text-zinc-300">
+                        <span>Item</span><span>RM {{ card.price.toFixed(2) }}</span>
+                      </div>
+                      <div class="flex justify-between text-gray-600 dark:text-zinc-300">
+                        <span>Shipping</span>
+                        <span>RM {{ buyNowShipping.toFixed(2) }}</span>
+                      </div>
+                      <div class="flex justify-between font-bold pt-1 border-t border-gray-100 dark:border-white/[0.06]">
+                        <span>Total</span><span class="text-pokemon-red">RM {{ buyNowTotal.toFixed(2) }}</span>
+                      </div>
+                    </div>
+
+                    <p class="text-xs text-gray-400 dark:text-zinc-500">
+                      You'll arrange payment & shipping details with the seller via WhatsApp after placing the order.
+                    </p>
+
+                    <div v-if="!user">
+                      <button @click="signInWithGoogle" class="w-full bg-gray-900 text-white py-2.5 rounded-lg text-sm font-bold hover:bg-gray-700 transition-colors">
+                        Sign in to buy
+                      </button>
+                    </div>
+                    <div v-else>
+                      <button
+                        @click="handleBuyNow"
+                        :disabled="buyNowLoading"
+                        class="w-full bg-pokemon-red text-white py-2.5 rounded-lg text-sm font-bold hover:bg-red-700 transition-colors disabled:opacity-60 flex items-center justify-center gap-2"
+                      >
+                        <span v-if="buyNowLoading" class="animate-spin rounded-full h-4 w-4 border-b-2 border-white"/>
+                        {{ buyNowLoading ? 'Placing order...' : 'Place order' }}
+                      </button>
+                    </div>
+                  </div>
+                </Transition>
+              </div>
+
+              <!-- Add to cart -->
+              <button
+                @click="handleAddToCart"
+                :disabled="inCart"
+                class="w-full inline-flex items-center justify-center gap-2 border border-gray-200 dark:border-white/[0.08] text-ink dark:text-white py-3 rounded-lg text-sm font-semibold hover:bg-black/[0.04] dark:hover:bg-white/[0.06] transition-colors disabled:opacity-60 disabled:cursor-default"
+              >
+                <svg class="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                  <circle cx="9" cy="21" r="1"/><circle cx="20" cy="21" r="1"/>
+                  <path d="M1 1h4l2.68 13.39a2 2 0 0 0 2 1.61h9.72a2 2 0 0 0 2-1.61L23 6H6"/>
+                </svg>
+                {{ inCart ? "In cart" : "Add to cart" }}
+              </button>
+
               <p
                 v-if="card.interestedCount > 0"
-                class="text-center text-xs text-gray-400 dark:text-zinc-500 mt-2"
+                class="text-center text-xs text-gray-400 dark:text-zinc-500"
               >
                 {{ card.interestedCount }}
                 {{ card.interestedCount === 1 ? "person has" : "people have" }}
@@ -330,9 +411,74 @@ import type { Card } from "~/composables/useCards";
 const route = useRoute();
 const cardId = route.params.id as string;
 
+const router = useRouter();
 const { cards, loading, markInterested } = useCards();
 const { firestore } = useFirebase();
-const { user } = useAuth();
+const { user, signInWithGoogle } = useAuth();
+const { profile: myProfile } = useMyProfile();
+const { createCompiledOrders } = useCompiledOrders();
+const { addToCart, isInCart } = useCart();
+
+const inCart = computed(() => (card.value ? isInCart(card.value.id) : false));
+
+const handleAddToCart = () => {
+  if (!card.value || inCart.value) return;
+  addToCart({
+    id: card.value.id,
+    cardName: card.value.cardName,
+    cardSet: card.value.cardSet || '',
+    condition: card.value.condition || '',
+    price: card.value.price,
+    imageUrl: card.value.imageUrls?.[0] || card.value.imageUrl || '',
+    seller: card.value.seller,
+    sellerUid: card.value.sellerUid,
+    shippingWM: card.value.shippingWM ?? 0,
+    shippingEM: card.value.shippingEM ?? 0,
+  });
+};
+
+// Buy Now state
+const buyNowOpen = ref(false);
+const buyNowRegion = ref<'WM' | 'EM'>('WM');
+const buyNowLoading = ref(false);
+
+const buyNowShipping = computed(() => {
+  if (!card.value) return 0;
+  return buyNowRegion.value === 'WM' ? (card.value.shippingWM ?? 0) : (card.value.shippingEM ?? 0);
+});
+
+const buyNowTotal = computed(() => {
+  if (!card.value) return 0;
+  return card.value.price + buyNowShipping.value;
+});
+
+const handleBuyNow = async () => {
+  if (!user.value || !card.value) return;
+  buyNowLoading.value = true;
+  try {
+    const [order] = await createCompiledOrders(
+      [{
+        cardId: card.value.id,
+        cardName: card.value.cardName,
+        cardSet: card.value.cardSet || '',
+        condition: card.value.condition || '',
+        imageUrl: card.value.imageUrls?.[0] || card.value.imageUrl || '',
+        price: card.value.price,
+        shippingWM: card.value.shippingWM ?? 0,
+        shippingEM: card.value.shippingEM ?? 0,
+        sellerUid: card.value.sellerUid,
+        sellerName: card.value.seller,
+      }],
+      buyNowRegion.value,
+      myProfile.value?.customName || myProfile.value?.displayName || user.value.displayName || 'Buyer',
+    );
+    router.push(`/orders/${order.id}?placed=1`);
+  } catch (e: any) {
+    alert(e?.message || 'Could not place order. Please try again.');
+  } finally {
+    buyNowLoading.value = false;
+  }
+};
 
 const card = computed(
   () => cards.value.find((c: Card) => c.id === cardId) || null,

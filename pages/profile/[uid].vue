@@ -25,7 +25,9 @@
 
     <template v-else>
       <!-- Hero -->
-      <section class="pt-2 pb-4 sm:pb-8 lg:pb-10">
+      <section class="relative pb-4 sm:pb-8 lg:pb-10">
+        <!-- Premium CTA — own profile, free tier only -->
+
         <div
           class="flex flex-col sm:flex-row sm:items-end sm:justify-between gap-4 sm:gap-6"
         >
@@ -43,6 +45,17 @@
                 {{ profile.customName || profile.displayName }}
               </h1>
               <div class="mt-1.5 flex flex-wrap items-center gap-1.5">
+                <span
+                  v-if="premiumEnabled && profile.tier === 'premium'"
+                  class="inline-flex items-center gap-1 px-2 py-0.5 rounded-md text-[10px] font-semibold tracking-wide uppercase bg-amber-400/20 text-amber-700 dark:text-amber-300"
+                >
+                  <svg class="w-3 h-3" viewBox="0 0 24 24" fill="currentColor">
+                    <path
+                      d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"
+                    />
+                  </svg>
+                  Premium
+                </span>
                 <span
                   v-if="profile.whatsappVerified"
                   class="inline-flex items-center gap-1 px-2 py-0.5 rounded-md text-[10px] font-semibold tracking-wide uppercase bg-emerald-500/10 text-emerald-700 dark:text-emerald-300"
@@ -81,14 +94,35 @@
               :title="copied ? 'Link copied!' : 'Share profile'"
               class="relative inline-flex items-center gap-1.5 px-3 py-1.5 sm:px-4 sm:py-2 rounded-full text-xs sm:text-sm font-semibold border border-black/[0.08] dark:border-white/[0.08] text-ink dark:text-white hover:bg-black/[0.04] dark:hover:bg-white/[0.06] transition-colors"
             >
-              <svg v-if="!copied" class="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                <circle cx="18" cy="5" r="3"/><circle cx="6" cy="12" r="3"/><circle cx="18" cy="19" r="3"/>
-                <line x1="8.59" y1="13.51" x2="15.42" y2="17.49"/><line x1="15.41" y1="6.51" x2="8.59" y2="10.49"/>
+              <svg
+                v-if="!copied"
+                class="w-4 h-4"
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                stroke-width="2"
+                stroke-linecap="round"
+                stroke-linejoin="round"
+              >
+                <circle cx="18" cy="5" r="3" />
+                <circle cx="6" cy="12" r="3" />
+                <circle cx="18" cy="19" r="3" />
+                <line x1="8.59" y1="13.51" x2="15.42" y2="17.49" />
+                <line x1="15.41" y1="6.51" x2="8.59" y2="10.49" />
               </svg>
-              <svg v-else class="w-4 h-4 text-emerald-500" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
-                <polyline points="20 6 9 17 4 12"/>
+              <svg
+                v-else
+                class="w-4 h-4 text-emerald-500"
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                stroke-width="2.5"
+                stroke-linecap="round"
+                stroke-linejoin="round"
+              >
+                <polyline points="20 6 9 17 4 12" />
               </svg>
-              {{ copied ? 'Copied!' : 'Share' }}
+              {{ copied ? "Copied!" : "Share" }}
             </button>
 
             <template v-if="isOwnProfile">
@@ -96,9 +130,19 @@
                 to="/profile"
                 class="inline-flex items-center gap-1.5 px-3 py-1.5 sm:px-4 sm:py-2 rounded-full text-xs sm:text-sm font-semibold border border-black/[0.08] dark:border-white/[0.08] text-ink dark:text-white hover:bg-black/[0.04] dark:hover:bg-white/[0.06] transition-colors"
               >
-                <svg class="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <svg
+                  class="w-4 h-4"
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  stroke="currentColor"
+                  stroke-width="2"
+                  stroke-linecap="round"
+                  stroke-linejoin="round"
+                >
                   <circle cx="12" cy="12" r="3" />
-                  <path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 1 1-4 0v-.09a1.65 1.65 0 0 0-1-1.51 1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 1 1 0-4h.09a1.65 1.65 0 0 0 1.51-1 1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06a1.65 1.65 0 0 0 1.82.33h0a1.65 1.65 0 0 0 1-1.51V3a2 2 0 1 1 4 0v.09a1.65 1.65 0 0 0 1 1.51h0a1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82v0a1.65 1.65 0 0 0 1.51 1H21a2 2 0 1 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/>
+                  <path
+                    d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 1 1-4 0v-.09a1.65 1.65 0 0 0-1-1.51 1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 1 1 0-4h.09a1.65 1.65 0 0 0 1.51-1 1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06a1.65 1.65 0 0 0 1.82.33h0a1.65 1.65 0 0 0 1-1.51V3a2 2 0 1 1 4 0v.09a1.65 1.65 0 0 0 1 1.51h0a1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82v0a1.65 1.65 0 0 0 1.51 1H21a2 2 0 1 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"
+                  />
                 </svg>
                 Settings
               </NuxtLink>
@@ -122,21 +166,23 @@
       </section>
 
       <!-- Trust score (Listed + Auctions counts now live in the tab bar) -->
-      <section class="mb-3 sm:mb-5">
+      <section class="mb-3 sm:mb-5 flex gap-2">
         <button
           type="button"
           @click="showTrustInfo = true"
           class="inline-flex items-center gap-2 surface rounded-full px-3 py-1.5 hover:shadow-card-hover transition-shadow ease-premium"
         >
-          <span class="text-[11px] font-semibold tracking-wide uppercase text-ink-muted dark:text-zinc-400">
+          <span
+            class="text-[11px] font-semibold tracking-wide uppercase text-ink-muted dark:text-zinc-400"
+          >
             Trust
           </span>
           <span
             class="tabular-price text-sm font-bold"
             :class="trustScoreColor(profile.trustScore ?? 100)"
           >
-            {{ profile.trustScore ?? 100 }}<span
-              class="text-ink-soft dark:text-zinc-500 font-medium"
+            {{ profile.trustScore ?? 100
+            }}<span class="text-ink-soft dark:text-zinc-500 font-medium"
               >/100</span
             >
           </span>
@@ -151,6 +197,17 @@
             <path d="M12 16v-4M12 8h.01" />
           </svg>
         </button>
+
+        <NuxtLink
+          v-if="premiumEnabled && isOwnProfile && profile.tier !== 'premium'"
+          to="/pricing"
+          class="inline-flex items-center gap-1.5 rounded-full px-3 py-1.5 bg-amber-400/15 dark:bg-amber-400/10 border border-amber-400/40 dark:border-amber-400/25 text-amber-700 dark:text-amber-300 hover:bg-amber-400/25 dark:hover:bg-amber-400/20 transition-colors ease-premium"
+        >
+          <svg class="w-3 h-3" viewBox="0 0 24 24" fill="currentColor">
+            <path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/>
+          </svg>
+          <span class="text-[11px] font-semibold tracking-wide uppercase">Go Premium</span>
+        </NuxtLink>
       </section>
 
       <!-- Underline tabs -->
@@ -197,7 +254,11 @@
           v-else
           class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-3 sm:gap-5"
         >
-          <div v-for="card in userCards" :key="card.id" :class="{ 'opacity-40': card.sold }">
+          <div
+            v-for="card in userCards"
+            :key="card.id"
+            :class="{ 'opacity-40': card.sold }"
+          >
             <CardTile :card="card" />
           </div>
         </div>
@@ -214,7 +275,11 @@
           v-else
           class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-3 sm:gap-5"
         >
-          <div v-for="auction in userAuctions" :key="auction.id" :class="{ 'opacity-40': auction.endsAt <= Date.now() }">
+          <div
+            v-for="auction in userAuctions"
+            :key="auction.id"
+            :class="{ 'opacity-40': auction.endsAt <= Date.now() }"
+          >
             <CardTile :auction="auction" />
           </div>
         </div>
@@ -233,7 +298,11 @@
             <div
               class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-3 sm:gap-5"
             >
-              <div v-for="card in favouriteCards" :key="card.id" :class="{ 'opacity-40': card.sold }">
+              <div
+                v-for="card in favouriteCards"
+                :key="card.id"
+                :class="{ 'opacity-40': card.sold }"
+              >
                 <CardTile :card="card" />
               </div>
             </div>
@@ -243,7 +312,11 @@
             <div
               class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-3 sm:gap-5"
             >
-              <div v-for="auction in favouriteAuctions" :key="auction.id" :class="{ 'opacity-40': auction.endsAt <= Date.now() }">
+              <div
+                v-for="auction in favouriteAuctions"
+                :key="auction.id"
+                :class="{ 'opacity-40': auction.endsAt <= Date.now() }"
+              >
                 <CardTile :auction="auction" />
               </div>
             </div>
@@ -407,6 +480,7 @@ const uid = route.params.uid as string;
 
 const { profile, loading: profileLoading } = useProfile(uid);
 const { user, signOut } = useAuth();
+const { premiumEnabled } = useFeatureFlags();
 const { auctions } = useAuctions();
 const { cards } = useCards();
 const { userFavourites } = useUserFavourites(uid);
@@ -505,11 +579,14 @@ const profileUrl = computed(() => `${origin}/profile/${uid}`);
 const copied = ref(false);
 
 const handleShare = async () => {
-  const name = profile.value?.customName || profile.value?.displayName || "this seller";
+  const name =
+    profile.value?.customName || profile.value?.displayName || "this seller";
   const title = `${name} on TCGo`;
   const text = `Check out ${name}'s cards on TCGo Marketplace`;
   if (navigator.share) {
-    await navigator.share({ title, text, url: profileUrl.value }).catch(() => {});
+    await navigator
+      .share({ title, text, url: profileUrl.value })
+      .catch(() => {});
   } else {
     await navigator.clipboard.writeText(profileUrl.value);
     copied.value = true;
