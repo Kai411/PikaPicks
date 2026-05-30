@@ -6,19 +6,28 @@
     >
       <!-- Logo (matches LandingNavbar: square sprite cropped to wordmark slice).
            Links to /landing (marketing) — user prefers this over the shop
-           home since the marketing surface is where new visitors land. -->
-      <NuxtLink to="/landing" class="flex items-center h-full shrink-0">
-        <img
-          src="~/assets/images/tcgo_sprites.png"
-          alt="TCGo"
-          class="h-full w-[110px] object-cover block dark:hidden"
-        />
-        <img
-          src="/tcgo_sprites_white.png"
-          alt="TCGo"
-          class="h-full w-[110px] object-cover hidden dark:block"
-        />
-      </NuxtLink>
+           home since the marketing surface is where new visitors land.
+           Beta tag sits beside the wordmark, baseline-aligned to its bottom. -->
+      <div class="flex items-end h-full shrink-0 gap-1.5">
+        <NuxtLink to="/landing" class="flex items-center h-full">
+          <img
+            src="~/assets/images/tcgo_sprites.png"
+            alt="TCGo"
+            class="h-full w-[110px] object-cover block dark:hidden"
+          />
+          <img
+            src="/tcgo_sprites_white.png"
+            alt="TCGo"
+            class="h-full w-[110px] object-cover hidden dark:block"
+          />
+        </NuxtLink>
+        <NuxtLink
+          to="/beta"
+          class="mb-3 px-1.5 py-0.5 rounded-full text-[9px] leading-none font-semibold tracking-widest uppercase text-ink-muted dark:text-zinc-500 bg-black/[0.05] dark:bg-white/[0.06] border border-black/[0.08] dark:border-white/[0.08] hover:text-ink dark:hover:text-zinc-300 hover:border-black/20 dark:hover:border-white/20 transition-colors"
+        >
+          Beta
+        </NuxtLink>
+      </div>
 
       <!-- Desktop nav -->
       <div
@@ -238,7 +247,7 @@ const desktopLinks = computed(() => {
   ];
   if (premiumEnabled) links.push({ to: "/pricing", label: "Pricing" });
   if (user.value) {
-    links.push({ to: "/collection", label: "Collection" });
+    links.push({ to: "/collection", label: "Add Cards" });
     links.push({ to: "/activity", label: "Activity" });
   }
   if (isAdmin.value) links.push({ to: "/admin/reports", label: "Admin" });
@@ -296,7 +305,7 @@ const mobileTabs = computed(() => {
   ];
   if (user.value) {
     tabs.push(
-      { to: "/collection", label: "Collection", icon: IconCollection },
+      { to: "/collection", label: "Add", icon: IconCollection },
       { to: "/activity", label: "Activity", icon: IconActivity },
       {
         to: `/profile/${user.value.uid}`,

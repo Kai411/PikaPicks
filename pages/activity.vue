@@ -70,62 +70,102 @@
             <div v-if="ordersLoadingSeller" class="flex justify-center py-12">
               <div class="animate-spin rounded-full h-6 w-6 border-2 border-ink/10 border-t-pokemon-red"/>
             </div>
-            <p v-else-if="!sellerCompiledOrders.length" class="text-sm text-gray-400 dark:text-zinc-500 py-3">
-              No sales yet.
-            </p>
+
             <template v-else>
-              <!-- Mergeable groups: same buyer, multiple confirmed-but-unshipped
-                   orders → offer to combine into one shipment. -->
-              <div
-                v-for="group in mergeableGroups"
-                :key="group.buyerUid"
-                class="rounded-2xl border-2 border-amber-300 dark:border-amber-500/40 bg-amber-50/70 dark:bg-amber-500/[0.07] p-4"
-              >
-                <div class="flex items-start justify-between gap-3 flex-wrap mb-3">
-                  <div class="flex items-start gap-2 min-w-0">
-                    <svg class="w-5 h-5 text-amber-600 dark:text-amber-400 shrink-0 mt-0.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                      <path d="M7 8V5a2 2 0 0 1 2-2h6a2 2 0 0 1 2 2v3"/><path d="M3 8h18l-1.5 11a2 2 0 0 1-2 1.8H6.5a2 2 0 0 1-2-1.8L3 8z"/><path d="M12 12v5"/><path d="M9.5 14.5 12 12l2.5 2.5"/>
-                    </svg>
-                    <div class="min-w-0">
-                      <p class="text-sm font-bold text-amber-900 dark:text-amber-200">
-                        {{ group.orders.length }} orders from {{ group.buyerName }} can be merged
-                      </p>
-                      <p class="text-xs text-amber-700 dark:text-amber-300/80 mt-0.5">
-                        Same buyer, all confirmed &amp; not shipped. Combine into one parcel — buyer pays shipping once.
-                      </p>
+              <!-- Stats dashboard (default view) -->
+              <SellerSalesDashboard
+                v-if="salesView === 'dashboard'"
+                :orders="sellerCompiledOrders"
+                :mergeable-count="mergeableGroups.length"
+                @select="openSalesList"
+              />
+
+              <!-- Drill-down list (after tapping a tile / view all) -->
+              <div v-else class="space-y-4">
+                <div class="flex items-center justify-between gap-3">
+                  <button
+                    @click="salesView = 'dashboard'"
+                    class="inline-flex items-center gap-1 text-sm font-semibold text-gray-600 dark:text-zinc-300 hover:text-ink dark:hover:text-white transition-colors"
+                  >
+                    <svg class="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="m15 18-6-6 6-6"/></svg>
+                    Dashboard
+                  </button>
+                  <h3 class="text-sm font-bold text-ink dark:text-white">{{ salesListTitle }}</h3>
+                </div>
+
+                <!-- Mergeable / All → show merge groups -->
+                <template v-if="salesFilter === 'mergeable' || salesFilter === 'all'">
+                  <p v-if="salesFilter === 'mergeable' && !mergeableGroups.length" class="text-sm text-gray-400 dark:text-zinc-500 py-3">
+                    No mergeable orders right now.
+                  </p>
+                  <div
+                    v-for="group in mergeableGroups"
+                    :key="group.buyerUid"
+                    class="rounded-2xl border-2 border-amber-300 dark:border-amber-500/40 bg-amber-50/70 dark:bg-amber-500/[0.07] p-4"
+                  >
+                    <div class="flex items-start justify-between gap-3 flex-wrap mb-3">
+                      <div class="flex items-start gap-2 min-w-0">
+                        <svg class="w-5 h-5 text-amber-600 dark:text-amber-400 shrink-0 mt-0.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                          <path d="M7 8V5a2 2 0 0 1 2-2h6a2 2 0 0 1 2 2v3"/><path d="M3 8h18l-1.5 11a2 2 0 0 1-2 1.8H6.5a2 2 0 0 1-2-1.8L3 8z"/><path d="M12 12v5"/><path d="M9.5 14.5 12 12l2.5 2.5"/>
+                        </svg>
+                        <div class="min-w-0">
+                          <p class="text-sm font-bold text-amber-900 dark:text-amber-200">
+                            {{ group.orders.length }} orders from {{ group.buyerName }} can be merged
+                          </p>
+                          <p class="text-xs text-amber-700 dark:text-amber-300/80 mt-0.5">
+                            Same buyer, all confirmed &amp; not shipped. Combine into one parcel — buyer pays shipping once.
+                          </p>
+                        </div>
+                      </div>
+                      <button
+                        @click="handleMerge(group)"
+                        :disabled="merging"
+                        class="shrink-0 inline-flex items-center gap-1.5 px-4 py-2 rounded-lg text-sm font-semibold bg-amber-500 text-ink hover:bg-amber-400 transition-colors disabled:opacity-60"
+                      >
+                        <span v-if="merging" class="animate-spin rounded-full h-4 w-4 border-b-2 border-ink"/>
+                        Merge {{ group.orders.length }} orders
+                      </button>
+                    </div>
+                    <div class="grid lg:grid-cols-2 gap-3 items-start">
+                      <CompiledOrderCard
+                        v-for="order in group.orders"
+                        :key="order.id"
+                        :order="order"
+                        role="seller"
+                        @confirm="markConfirmed(order.id)"
+                        @ship="openShipDialog(order.id)"
+                      />
                     </div>
                   </div>
-                  <button
-                    @click="handleMerge(group)"
-                    :disabled="merging"
-                    class="shrink-0 inline-flex items-center gap-1.5 px-4 py-2 rounded-lg text-sm font-semibold bg-amber-500 text-ink hover:bg-amber-400 transition-colors disabled:opacity-60"
-                  >
-                    <span v-if="merging" class="animate-spin rounded-full h-4 w-4 border-b-2 border-ink"/>
-                    Merge {{ group.orders.length }} orders
-                  </button>
-                </div>
-                <div class="grid lg:grid-cols-2 gap-3 items-start">
-                  <CompiledOrderCard
-                    v-for="order in group.orders"
-                    :key="order.id"
-                    :order="order"
-                    role="seller"
-                    @confirm="markConfirmed(order.id)"
-                    @ship="openShipDialog(order.id)"
-                  />
-                </div>
-              </div>
 
-              <!-- Everything else -->
-              <div class="grid lg:grid-cols-2 gap-3 items-start">
-                <CompiledOrderCard
-                  v-for="order in nonMergeableSales"
-                  :key="order.id"
-                  :order="order"
-                  role="seller"
-                  @confirm="markConfirmed(order.id)"
-                  @ship="openShipDialog(order.id)"
-                />
+                  <div v-if="salesFilter === 'all'" class="grid lg:grid-cols-2 gap-3 items-start">
+                    <CompiledOrderCard
+                      v-for="order in nonMergeableSales"
+                      :key="order.id"
+                      :order="order"
+                      role="seller"
+                      @confirm="markConfirmed(order.id)"
+                      @ship="openShipDialog(order.id)"
+                    />
+                  </div>
+                </template>
+
+                <!-- Specific status → filtered grid -->
+                <template v-else>
+                  <p v-if="!filteredSales.length" class="text-sm text-gray-400 dark:text-zinc-500 py-3">
+                    No {{ salesFilterLabel }} orders.
+                  </p>
+                  <div v-else class="grid lg:grid-cols-2 gap-3 items-start">
+                    <CompiledOrderCard
+                      v-for="order in filteredSales"
+                      :key="order.id"
+                      :order="order"
+                      role="seller"
+                      @confirm="markConfirmed(order.id)"
+                      @ship="openShipDialog(order.id)"
+                    />
+                  </div>
+                </template>
               </div>
             </template>
           </div>
@@ -477,6 +517,64 @@ const mergeableOrderIds = computed(() => {
 const nonMergeableSales = computed(() =>
   sellerCompiledOrders.value.filter((o) => !mergeableOrderIds.value.has(o.id)),
 );
+
+// ── Sales dashboard ↔ drill-down list ────────────────────────────────
+type SalesFilter =
+  | "all"
+  | "pending"
+  | "toship"
+  | "mergeable"
+  | "shipped"
+  | "delivered"
+  | "cancelled";
+
+const salesView = ref<"dashboard" | "list">("dashboard");
+const salesFilter = ref<SalesFilter>("all");
+
+const openSalesList = (filter: string) => {
+  salesFilter.value = filter as SalesFilter;
+  salesView.value = "list";
+};
+
+// Reset to the dashboard whenever the user leaves and returns to Sales.
+watch(orderSub, (sub) => {
+  if (sub !== "sales") salesView.value = "dashboard";
+});
+
+const SALES_FILTER_LABELS: Record<SalesFilter, string> = {
+  all: "All sales",
+  pending: "Pending",
+  toship: "To ship",
+  mergeable: "Mergeable",
+  shipped: "Shipped",
+  delivered: "Delivered",
+  cancelled: "Cancelled",
+};
+const salesFilterLabel = computed(() =>
+  SALES_FILTER_LABELS[salesFilter.value].toLowerCase(),
+);
+const salesListTitle = computed(() => SALES_FILTER_LABELS[salesFilter.value]);
+
+// Status-filtered sales (used for everything except mergeable/all, which
+// render the merge groups).
+const filteredSales = computed(() => {
+  switch (salesFilter.value) {
+    case "pending":
+      return sellerCompiledOrders.value.filter((o) => o.status === "pending");
+    case "toship":
+      return sellerCompiledOrders.value.filter(
+        (o) => o.status === "confirmed" || o.status === "paid",
+      );
+    case "shipped":
+      return sellerCompiledOrders.value.filter((o) => o.status === "shipped");
+    case "delivered":
+      return sellerCompiledOrders.value.filter((o) => o.status === "delivered");
+    case "cancelled":
+      return sellerCompiledOrders.value.filter((o) => o.status === "cancelled");
+    default:
+      return sellerCompiledOrders.value;
+  }
+});
 
 // Pending orders auto-merge at creation, so duplicates shouldn't exist.
 // Defensive net: if two pending orders from the same buyer slip through
