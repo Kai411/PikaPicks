@@ -23,6 +23,7 @@
         <p v-else class="text-[11px] text-gray-400 dark:text-zinc-500">No price</p>
 
         <button
+          v-if="!readonly"
           @click="$emit('toggle')"
           :class="[
             'inline-flex items-center justify-center w-7 h-7 rounded-full text-white text-base font-bold transition-colors shrink-0',
@@ -46,6 +47,9 @@ import type { CatalogMatch } from "~/composables/useCardCatalog";
 defineProps<{
   card: CatalogMatch;
   inCollection: boolean;
+  // Hide the +/- button — used when showcasing a collection read-only
+  // (e.g. on a profile page).
+  readonly?: boolean;
 }>();
 
 defineEmits<{

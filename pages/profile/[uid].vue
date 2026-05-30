@@ -323,6 +323,55 @@
           </section>
         </div>
       </div>
+
+      <!-- Collection tab -->
+      <div v-if="activeTab === 'collection'">
+        <div v-if="loadingCollection" class="flex justify-center py-16">
+          <div class="animate-spin rounded-full h-6 w-6 border-2 border-ink/10 border-t-pokemon-red"/>
+        </div>
+        <template v-else>
+          <!-- Summary strip -->
+          <div
+            v-if="collectionCards.length"
+            class="flex flex-wrap items-center gap-x-6 gap-y-1 mb-5 text-sm"
+          >
+            <span class="text-ink-muted dark:text-zinc-400">
+              <span class="font-bold text-ink dark:text-white tabular-nums">{{ collectionCards.length }}</span>
+              {{ collectionCards.length === 1 ? "card" : "cards" }}
+            </span>
+            <span class="text-ink-muted dark:text-zinc-400">
+              est. value
+              <span class="font-bold text-ink dark:text-white tabular-nums">{{ formatMyr(collectionValue) }} MYR</span>
+            </span>
+            <NuxtLink
+              v-if="isOwnProfile"
+              to="/collection"
+              class="ml-auto inline-flex items-center gap-1 text-pokemon-red font-semibold hover:underline"
+            >
+              Add cards
+              <svg class="w-3.5 h-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="m9 18 6-6-6-6"/></svg>
+            </NuxtLink>
+          </div>
+
+          <EmptyState
+            v-if="collectionCards.length === 0"
+            headline="No cards in collection yet"
+            :caption="isOwnProfile ? 'Add cards you own to showcase your collection.' : 'This collector hasn\'t added any cards yet.'"
+          />
+          <div
+            v-else
+            class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-3 sm:gap-5"
+          >
+            <CollectionItemCard
+              v-for="c in collectionCards"
+              :key="c.productId"
+              :card="c"
+              :in-collection="true"
+              readonly
+            />
+          </div>
+        </template>
+      </div>
     </template>
 
     <!-- Report Form Modal -->
@@ -474,6 +523,7 @@
 
 <script setup lang="ts">
 import type { Auction } from "~/composables/useAuctions";
+import type { CatalogMatch } from "~/composables/useCardCatalog";
 
 const route = useRoute();
 const uid = route.params.uid as string;
@@ -497,8 +547,41 @@ const showFavourites = computed(() => {
   return profile.value?.favouritesPublic ?? true;
 });
 
-type TabId = "cards" | "auctions" | "favourites";
-const activeTab = ref<TabId>("cards");
+type TabId = "cards" | "auctions" | "favourites" | "collection";
+const activeTab = ref<TabId>((route.query.tab as TabId) || "cards");
+
+// ── Collection showcase ───────────────────────────────────────────────
+const { getCollectionProductIds } = useUserCollection();
+const { getCardsByIds } = useCardCatalog();
+const collectionCards = ref<CatalogMatch[]>([]);
+const loadingCollection = ref(false);
+
+const loadCollection = async () => {
+  loadingCollection.value = true;
+  try {
+    const ids = await getCollectionProductIds(uid);
+    collectionCards.value = ids.length ? await getCardsByIds(ids) : [];
+  } catch {
+    collectionCards.value = [];
+  } finally {
+    loadingCollection.value = false;
+  }
+};
+onMounted(loadCollection);
+watch(
+  () => uid,
+  () => loadCollection(),
+);
+
+const collectionValue = computed(() =>
+  collectionCards.value.reduce((s, c) => s + (c.price?.market ?? 0), 0),
+);
+
+const formatMyr = (n: number) =>
+  n.toLocaleString("en-MY", {
+    minimumFractionDigits: 2,
+    maximumFractionDigits: 2,
+  });
 
 const userCards = computed(() =>
   cards.value
@@ -538,6 +621,11 @@ const tabs = computed(() => {
       count: favouriteCards.value.length + favouriteAuctions.value.length,
     });
   }
+  base.push({
+    id: "collection",
+    label: "Collection",
+    count: collectionCards.value.length,
+  });
   return base;
 });
 

@@ -1,8 +1,8 @@
 <template>
-  <div class="max-w-5xl mx-auto">
+  <div>
     <div v-if="!user" class="text-center py-16">
       <p class="text-gray-500 dark:text-zinc-400 text-lg mb-4">
-        Sign in to track your collection.
+        Sign in to build your collection.
       </p>
       <button
         @click="signInWithGoogle"
@@ -13,121 +13,176 @@
     </div>
 
     <template v-else>
-      <!-- Header -->
-      <div class="flex flex-wrap items-end justify-between gap-4 mb-6">
-        <div>
-          <h1 class="text-2xl font-bold text-ink dark:text-white">My Collection</h1>
-          <p class="text-sm text-gray-500 dark:text-zinc-400 mt-1">
-            {{ count }} {{ count === 1 ? "card" : "cards" }}
-            <span v-if="totalValue !== null" class="ml-2">
-              · est. value
-              <span class="font-semibold text-ink dark:text-white">{{ formatMyr(totalValue) }} MYR</span>
-            </span>
-          </p>
+      <!-- ── Sticky top: summary + search/filter ─────────────────────── -->
+      <div
+        class="sticky top-16 z-30 -mx-4 px-4 bg-canvas/95 dark:bg-canvas-inverse/95 backdrop-blur border-b border-black/[0.06] dark:border-white/[0.08]"
+      >
+        <!-- Summary strip → links to the full collection on the profile -->
+        <NuxtLink
+          :to="`/profile/${user.uid}?tab=collection`"
+          class="flex items-center justify-between gap-3 py-3 group"
+        >
+          <div class="min-w-0">
+            <p class="font-bold text-ink dark:text-white leading-tight">My Collection</p>
+            <p class="text-xs text-ink-muted dark:text-zinc-400 mt-0.5 flex items-center gap-1.5">
+              <svg class="w-3.5 h-3.5 shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/><rect x="14" y="14" width="7" height="7" rx="1"/></svg>
+              <span class="tabular-nums font-semibold text-ink dark:text-zinc-200">{{ count }}</span>
+              {{ count === 1 ? "card" : "cards" }}
+              <span class="mx-1 opacity-40">·</span>
+              est. value
+              <span class="tabular-nums font-semibold text-ink dark:text-zinc-200">{{ formatMyr(totalValue) }} MYR</span>
+            </p>
+          </div>
+          <span class="shrink-0 inline-flex items-center gap-0.5 text-ink-muted dark:text-zinc-400 group-hover:text-pokemon-red transition-colors">
+            <svg class="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M2 12s3-7 10-7 10 7 10 7-3 7-10 7-10-7-10-7z"/><circle cx="12" cy="12" r="3"/></svg>
+            <svg class="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="m9 18 6-6-6-6"/></svg>
+          </span>
+        </NuxtLink>
+
+        <!-- Search row: [scanner] [search] [filter] -->
+        <div class="flex items-center gap-2 pb-3">
+          <!-- Scanner placeholder — not yet implemented -->
+          <button
+            type="button"
+            disabled
+            title="Card scanner — coming soon"
+            class="shrink-0 inline-flex items-center justify-center w-10 h-10 rounded-lg border border-gray-200 dark:border-white/[0.10] text-gray-400 dark:text-zinc-600 opacity-60 cursor-not-allowed"
+            aria-label="Scan card (coming soon)"
+          >
+            <svg class="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M3 9a2 2 0 0 1 2-2h.93a2 2 0 0 0 1.664-.89l.812-1.22A2 2 0 0 1 10.07 4h3.86a2 2 0 0 1 1.664.89l.812 1.22A2 2 0 0 0 18.07 7H19a2 2 0 0 1 2 2v9a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V9z"/><circle cx="12" cy="13" r="3"/>
+            </svg>
+          </button>
+
+          <!-- Search input — Enter dispatches the search -->
+          <div class="relative flex-1 min-w-0">
+            <svg class="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="7"/><path d="m21 21-4.3-4.3"/></svg>
+            <input
+              v-model="searchInput"
+              type="search"
+              enterkeyhint="search"
+              placeholder='Search — e.g. "pikachu 151", "charizard ir"'
+              class="w-full pl-9 pr-3 py-2.5 rounded-lg border border-gray-200 dark:border-white/[0.10] bg-white dark:bg-white/[0.04] text-sm text-ink dark:text-white focus:border-pokemon-blue focus:outline-none"
+              @keydown.enter.prevent="runSearch"
+            />
+          </div>
+
+          <!-- Filter toggle -->
+          <button
+            type="button"
+            @click="filtersOpen = !filtersOpen"
+            class="relative shrink-0 inline-flex items-center justify-center w-10 h-10 rounded-lg border transition-colors"
+            :class="
+              filtersOpen || hasActiveFilters
+                ? 'border-pokemon-red text-pokemon-red bg-pokemon-red/5'
+                : 'border-gray-200 dark:border-white/[0.10] text-gray-600 dark:text-zinc-300'
+            "
+            aria-label="Sort and filter"
+          >
+            <svg class="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="4" y1="6" x2="20" y2="6"/><line x1="7" y1="12" x2="17" y2="12"/><line x1="10" y1="18" x2="14" y2="18"/></svg>
+            <span v-if="hasActiveFilters" class="absolute -top-0.5 -right-0.5 w-2 h-2 rounded-full bg-pokemon-red"/>
+          </button>
         </div>
+
+        <!-- Expandable Sort + Filter panel -->
+        <Transition
+          enter-active-class="transition-all duration-200"
+          enter-from-class="opacity-0 -translate-y-1"
+          leave-active-class="transition-all duration-150"
+          leave-to-class="opacity-0 -translate-y-1"
+        >
+          <div v-if="filtersOpen" class="pb-3">
+            <div class="surface rounded-xl border border-black/[0.06] dark:border-white/[0.08] p-3 space-y-3">
+              <!-- Sort -->
+              <div>
+                <p class="text-[11px] font-semibold uppercase tracking-wide text-gray-500 dark:text-zinc-400 mb-1.5">Sort</p>
+                <div class="flex flex-wrap gap-1.5">
+                  <button
+                    v-for="opt in sortOptions"
+                    :key="opt.value"
+                    type="button"
+                    @click="sortBy = opt.value"
+                    class="px-2.5 py-1 rounded-full text-xs font-semibold border transition-colors"
+                    :class="
+                      sortBy === opt.value
+                        ? 'bg-pokemon-red text-white border-pokemon-red'
+                        : 'border-gray-200 dark:border-white/[0.10] text-gray-600 dark:text-zinc-300'
+                    "
+                  >
+                    {{ opt.label }}
+                  </button>
+                </div>
+              </div>
+
+              <!-- Filter -->
+              <div>
+                <p class="text-[11px] font-semibold uppercase tracking-wide text-gray-500 dark:text-zinc-400 mb-1.5">Filter</p>
+                <div class="grid grid-cols-1 sm:grid-cols-2 gap-2">
+                  <select
+                    v-model="setFilter"
+                    class="px-3 py-2 rounded-lg border border-gray-200 dark:border-white/[0.10] bg-white dark:bg-white/[0.04] text-sm text-ink dark:text-white"
+                  >
+                    <option value="">All sets</option>
+                    <option v-for="s in sets" :key="s.name" :value="s.name">{{ s.name }} ({{ s.count }})</option>
+                  </select>
+                  <select
+                    v-model="rarityFilter"
+                    class="px-3 py-2 rounded-lg border border-gray-200 dark:border-white/[0.10] bg-white dark:bg-white/[0.04] text-sm text-ink dark:text-white"
+                  >
+                    <option value="">All rarities</option>
+                    <option v-for="r in rarities" :key="r.name" :value="r.name">{{ r.name }} ({{ r.count }})</option>
+                  </select>
+                </div>
+              </div>
+
+              <div class="flex gap-2 pt-1">
+                <button
+                  type="button"
+                  @click="resetFilters"
+                  class="flex-1 py-2 rounded-lg text-sm font-semibold border border-gray-200 dark:border-white/[0.08] text-gray-700 dark:text-zinc-200"
+                >
+                  Reset
+                </button>
+                <button
+                  type="button"
+                  @click="applyFilters"
+                  class="flex-1 py-2 rounded-lg text-sm font-semibold bg-pokemon-red text-white hover:bg-red-700 transition-colors"
+                >
+                  Apply
+                </button>
+              </div>
+            </div>
+          </div>
+        </Transition>
       </div>
 
-      <!-- Search panel -->
-      <div class="surface rounded-2xl border border-black/[0.06] dark:border-white/[0.08] p-4 mb-6">
-        <label class="block text-xs font-semibold uppercase tracking-wide text-gray-500 dark:text-zinc-400 mb-2">
-          Add a card to your collection
-        </label>
-
-        <form @submit.prevent="runSearch" class="space-y-3">
-          <!-- Search input + button row -->
-          <div class="flex gap-2">
-            <div class="relative flex-1">
-              <svg class="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                <circle cx="11" cy="11" r="7"/><path d="m21 21-4.3-4.3"/>
-              </svg>
-              <input
-                v-model="searchInput"
-                type="text"
-                placeholder='Try "pikachu", "pikachu 151", "charizard ir"…'
-                class="w-full pl-9 pr-3 py-2.5 rounded-lg border border-gray-200 dark:border-white/[0.10] bg-white dark:bg-white/[0.04] text-sm text-ink dark:text-white focus:border-pokemon-blue focus:outline-none"
-              />
-            </div>
-            <button
-              type="submit"
-              class="px-4 py-2.5 rounded-lg text-sm font-semibold bg-pokemon-red text-white hover:bg-red-700 transition-colors"
-            >
-              Search
-            </button>
-          </div>
-
-          <!-- Filter row -->
-          <div class="grid grid-cols-1 sm:grid-cols-3 gap-2">
-            <select
-              v-model="setFilter"
-              class="px-3 py-2 rounded-lg border border-gray-200 dark:border-white/[0.10] bg-white dark:bg-white/[0.04] text-sm text-ink dark:text-white"
-            >
-              <option value="">All sets</option>
-              <option v-for="s in sets" :key="s.name" :value="s.name">
-                {{ s.name }} ({{ s.count }})
-              </option>
-            </select>
-            <select
-              v-model="rarityFilter"
-              class="px-3 py-2 rounded-lg border border-gray-200 dark:border-white/[0.10] bg-white dark:bg-white/[0.04] text-sm text-ink dark:text-white"
-            >
-              <option value="">All rarities</option>
-              <option v-for="r in rarities" :key="r.name" :value="r.name">
-                {{ r.name }} ({{ r.count }})
-              </option>
-            </select>
-            <select
-              v-model="sortBy"
-              class="px-3 py-2 rounded-lg border border-gray-200 dark:border-white/[0.10] bg-white dark:bg-white/[0.04] text-sm text-ink dark:text-white"
-            >
-              <option value="best">Best match</option>
-              <option value="name">Name (A–Z)</option>
-              <option value="price_desc">Price (high → low)</option>
-              <option value="price_asc">Price (low → high)</option>
-            </select>
-          </div>
-
-          <!-- Active filter chips (auto-parsed + explicit). Surfaces what
-               the smart parser found so the user can see why results look
-               the way they do. -->
-          <div
-            v-if="activeChips.length"
-            class="flex flex-wrap items-center gap-2 pt-1"
-          >
-            <span class="text-[11px] uppercase tracking-wide text-gray-500 dark:text-zinc-400">
-              Filters:
-            </span>
-            <span
-              v-for="chip in activeChips"
-              :key="chip.label"
-              class="inline-flex items-center gap-1.5 px-2 py-0.5 rounded-full text-[11px] font-semibold bg-pokemon-blue/10 text-pokemon-blue dark:bg-pokemon-blue/20 dark:text-blue-300"
-            >
-              {{ chip.label }}
-              <button
-                v-if="chip.clear"
-                type="button"
-                @click="chip.clear"
-                class="hover:text-blue-700 dark:hover:text-white"
-                aria-label="Clear"
-              >×</button>
-            </span>
-          </div>
-        </form>
-
-        <!-- Results -->
-        <div v-if="searchLoading && searchResults.length === 0" class="flex justify-center py-6">
-          <div class="animate-spin rounded-full h-5 w-5 border-2 border-ink/10 border-t-pokemon-red"/>
+      <!-- ── Search results ──────────────────────────────────────────── -->
+      <div class="pt-5">
+        <div v-if="searchLoading && searchResults.length === 0" class="flex justify-center py-16">
+          <div class="animate-spin rounded-full h-6 w-6 border-2 border-ink/10 border-t-pokemon-red"/>
         </div>
-        <p
-          v-else-if="hasRunSearch && searchResults.length === 0"
-          class="text-sm text-gray-400 dark:text-zinc-500 text-center py-6"
-        >
+
+        <div v-else-if="!hasRunSearch" class="text-center py-16">
+          <p class="text-ink dark:text-white font-semibold">Search the TCGo catalog</p>
+          <p class="text-sm text-gray-500 dark:text-zinc-400 mt-1 max-w-sm mx-auto">
+            Find cards by name, set, or rarity and tap + to add them to your collection.
+          </p>
+        </div>
+
+        <p v-else-if="searchResults.length === 0" class="text-center text-gray-400 dark:text-zinc-500 py-16">
           No matches. Try a different name, set, or rarity.
         </p>
-        <template v-else-if="searchResults.length > 0">
-          <p class="mt-4 text-[11px] text-gray-500 dark:text-zinc-400">
-            Showing {{ searchResults.length }} of {{ searchTotal }} result{{ searchTotal === 1 ? "" : "s" }}
-          </p>
-          <div class="mt-2 grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-3">
+
+        <template v-else>
+          <div class="flex items-center justify-between mb-3">
+            <h2 class="text-sm font-semibold uppercase tracking-wide text-gray-500 dark:text-zinc-400">
+              Search Results
+            </h2>
+            <span class="text-[11px] text-gray-400 dark:text-zinc-500">
+              {{ searchResults.length }} of {{ searchTotal }}
+            </span>
+          </div>
+          <div class="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-3">
             <CollectionItemCard
               v-for="card in searchResults"
               :key="card.productId"
@@ -148,35 +203,6 @@
           </div>
         </template>
       </div>
-
-      <!-- Collection grid -->
-      <div v-if="collectionLoading" class="flex justify-center py-16">
-        <div class="animate-spin rounded-full h-6 w-6 border-2 border-ink/10 border-t-pokemon-red"/>
-      </div>
-
-      <template v-else-if="count === 0">
-        <div class="surface rounded-2xl py-16 text-center">
-          <p class="text-lg font-semibold text-ink dark:text-white">Your collection is empty</p>
-          <p class="mt-1 text-sm text-gray-500 dark:text-zinc-400">
-            Use the search above to add cards you own.
-          </p>
-        </div>
-      </template>
-
-      <template v-else>
-        <h2 class="text-sm font-semibold uppercase tracking-wide text-gray-500 dark:text-zinc-400 mb-3">
-          My cards
-        </h2>
-        <div class="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-3">
-          <CollectionItemCard
-            v-for="card in collectionCards"
-            :key="card.productId"
-            :card="card"
-            in-collection
-            @toggle="handleToggle(card.productId)"
-          />
-        </div>
-      </template>
     </template>
   </div>
 </template>
@@ -188,7 +214,7 @@ import {
   type CatalogSort,
 } from "~/composables/useCardCatalog";
 
-useHead({ title: "My Collection | TCGo Marketplace" });
+useHead({ title: "Add Cards | TCGo Marketplace" });
 
 const SEARCH_PAGE_SIZE = 28;
 
@@ -196,7 +222,6 @@ const { user, signInWithGoogle } = useAuth();
 const { searchCatalog, getCardsByIds, listSets, listRarities } = useCardCatalog();
 const {
   entries,
-  loading: collectionLoading,
   count,
   isInCollection,
   toggleInCollection,
@@ -211,104 +236,57 @@ watch(user, (u) => {
   if (u) listenMyCollection();
 });
 
-// ── Filter dropdowns ──────────────────────────────────────────────────
+// ── Filter dropdown data ──────────────────────────────────────────────
 const sets = ref<Array<{ name: string; count: number }>>([]);
 const rarities = ref<Array<{ name: string; count: number }>>([]);
-
 const loadDropdowns = async () => {
-  // Fire both in parallel; first load is the only one that costs a round-trip.
   const [s, r] = await Promise.all([listSets("EN"), listRarities("EN")]);
   sets.value = s;
   rarities.value = r;
 };
 
-// ── Form state ────────────────────────────────────────────────────────
-// `searchInput` is the live text in the box (does NOT trigger search).
-// `appliedQuery` is what's actually being searched, set on submit.
+// ── Search + filter state ─────────────────────────────────────────────
+const sortOptions: Array<{ value: CatalogSort; label: string }> = [
+  { value: "best", label: "Best match" },
+  { value: "name", label: "Name A–Z" },
+  { value: "price_desc", label: "Price ↓" },
+  { value: "price_asc", label: "Price ↑" },
+];
+
 const searchInput = ref("");
 const appliedQuery = ref("");
 const setFilter = ref("");
 const rarityFilter = ref("");
 const sortBy = ref<CatalogSort>("best");
+const filtersOpen = ref(false);
 
-// The parser feeds derived hints we display as chips alongside dropdown
-// choices. Parser hints take priority over the dropdown when both are set
-// (smart typing wins).
+const hasActiveFilters = computed(
+  () => !!setFilter.value || !!rarityFilter.value || sortBy.value !== "best",
+);
+
 const parsed = computed(() => parseSmartQuery(appliedQuery.value));
+const effectiveSetMatch = computed(() => parsed.value.setHint || setFilter.value || null);
+const effectiveRarityMatch = computed(() => parsed.value.rarityHint || rarityFilter.value || null);
 
-const effectiveSetMatch = computed(
-  () => parsed.value.setHint || setFilter.value || null,
-);
-const effectiveRarityMatch = computed(
-  () => parsed.value.rarityHint || rarityFilter.value || null,
-);
-
-interface FilterChip {
-  label: string;
-  clear?: () => void;
-}
-const activeChips = computed<FilterChip[]>(() => {
-  const chips: FilterChip[] = [];
-  if (parsed.value.name) {
-    chips.push({ label: `Name: ${parsed.value.name}` });
-  }
-  if (parsed.value.setHint) {
-    chips.push({ label: `Set: ${parsed.value.setHint} (from query)` });
-  } else if (setFilter.value) {
-    chips.push({
-      label: `Set: ${setFilter.value}`,
-      clear: () => {
-        setFilter.value = "";
-        runSearch();
-      },
-    });
-  }
-  if (parsed.value.rarityHint) {
-    chips.push({ label: `Rarity: ${parsed.value.rarityHint} (from query)` });
-  } else if (rarityFilter.value) {
-    chips.push({
-      label: `Rarity: ${rarityFilter.value}`,
-      clear: () => {
-        rarityFilter.value = "";
-        runSearch();
-      },
-    });
-  }
-  if (sortBy.value !== "best") {
-    const labels: Record<CatalogSort, string> = {
-      best: "Best match",
-      name: "Name (A–Z)",
-      price_asc: "Price (low → high)",
-      price_desc: "Price (high → low)",
-    };
-    chips.push({
-      label: `Sort: ${labels[sortBy.value]}`,
-      clear: () => {
-        sortBy.value = "best";
-        runSearch();
-      },
-    });
-  }
-  return chips;
-});
-
-// ── Run search (form submit / chip clear) ────────────────────────────
 const searchResults = ref<CatalogMatch[]>([]);
 const searchTotal = ref(0);
 const searchPage = ref(0);
 const searchLoading = ref(false);
 const hasRunSearch = ref(false);
 
-const hasMoreResults = computed(
-  () => searchResults.value.length < searchTotal.value,
-);
+const hasMoreResults = computed(() => searchResults.value.length < searchTotal.value);
 
 const runSearch = async () => {
   appliedQuery.value = searchInput.value;
+  const trimmed = parsed.value.name.trim();
+  // Need a name (≥2) OR a filter to search.
+  if (trimmed.length < 2 && !effectiveSetMatch.value && !effectiveRarityMatch.value) {
+    return;
+  }
   searchPage.value = 0;
   hasRunSearch.value = true;
   searchLoading.value = true;
-  const { results, total } = await searchCatalog(parsed.value.name, {
+  const { results, total } = await searchCatalog(trimmed, {
     limit: SEARCH_PAGE_SIZE,
     page: 0,
     language: "EN",
@@ -325,7 +303,7 @@ const loadMore = async () => {
   if (searchLoading.value || !hasMoreResults.value) return;
   searchLoading.value = true;
   const nextPage = searchPage.value + 1;
-  const { results } = await searchCatalog(parsed.value.name, {
+  const { results } = await searchCatalog(parsed.value.name.trim(), {
     limit: SEARCH_PAGE_SIZE,
     page: nextPage,
     language: "EN",
@@ -338,45 +316,42 @@ const loadMore = async () => {
   searchLoading.value = false;
 };
 
-// ── Collection details ────────────────────────────────────────────────
+const applyFilters = () => {
+  filtersOpen.value = false;
+  runSearch();
+};
+
+const resetFilters = () => {
+  setFilter.value = "";
+  rarityFilter.value = "";
+  sortBy.value = "best";
+  if (hasRunSearch.value) runSearch();
+};
+
+// ── Collection summary (for the sticky header) ────────────────────────
+// Hydrate the pivot productIds so we can sum a live estimated value.
 const collectionCards = ref<CatalogMatch[]>([]);
 const collectionProductIds = computed(() =>
-  [...entries.value]
-    .sort((a, b) => b.addedAt - a.addedAt)
-    .map((e) => e.productId),
+  [...entries.value].sort((a, b) => b.addedAt - a.addedAt).map((e) => e.productId),
 );
-
 watch(
   collectionProductIds,
   async (ids) => {
-    if (ids.length === 0) {
-      collectionCards.value = [];
-      return;
-    }
-    collectionCards.value = await getCardsByIds(ids);
+    collectionCards.value = ids.length ? await getCardsByIds(ids) : [];
   },
   { immediate: true },
 );
+const totalValue = computed(() =>
+  collectionCards.value.reduce((sum, c) => sum + (c.price?.market ?? 0), 0),
+);
 
-const totalValue = computed<number | null>(() => {
-  if (collectionCards.value.length === 0) return null;
-  return collectionCards.value.reduce(
-    (sum, c) => sum + (c.price?.market ?? 0),
-    0,
-  );
-});
-
-// Thousands separators + 2 decimals, e.g. 1234.5 → "1,234.50".
 const formatMyr = (n: number) =>
-  n.toLocaleString("en-MY", {
-    minimumFractionDigits: 2,
-    maximumFractionDigits: 2,
-  });
+  n.toLocaleString("en-MY", { minimumFractionDigits: 2, maximumFractionDigits: 2 });
 
 const handleToggle = async (productId: number) => {
   try {
     await toggleInCollection(productId);
-  } catch (err: any) {
+  } catch (err) {
     console.error("[collection] toggle failed:", err);
   }
 };
