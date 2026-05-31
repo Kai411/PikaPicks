@@ -22,10 +22,15 @@
         <label class="block">
           <div class="border-2 border-dashed border-gray-300 dark:border-white/[0.12] rounded-xl py-10 text-center cursor-pointer hover:border-pokemon-blue transition-colors">
             <svg class="w-10 h-10 mx-auto text-gray-400 mb-2" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
-            <p class="text-sm font-semibold text-ink dark:text-white">Choose a CSV file</p>
-            <p class="text-xs text-gray-400 dark:text-zinc-500 mt-1">Any column layout — you'll map them next</p>
+            <p class="text-sm font-semibold text-ink dark:text-white">Choose a file</p>
+            <p class="text-xs text-gray-400 dark:text-zinc-500 mt-1">CSV, Excel (.xlsx / .xls) or .ods — any column layout, you'll map them next</p>
           </div>
-          <input type="file" accept=".csv,text/csv" class="hidden" @change="handleFile" />
+          <input
+            type="file"
+            accept=".csv,.xlsx,.xls,.ods,text/csv,application/vnd.ms-excel,application/vnd.openxmlformats-officedocument.spreadsheetml.sheet,application/vnd.oasis.opendocument.spreadsheet"
+            class="hidden"
+            @change="handleFile"
+          />
         </label>
         <p v-if="parseError" class="mt-3 text-sm text-red-500">{{ parseError }}</p>
       </div>
@@ -216,13 +221,38 @@ const parseCsv = (text: string): { headers: string[]; rows: string[][] } => {
   return { headers: head, rows: cleaned };
 };
 
+// Excel / OpenDocument and other spreadsheet formats go through SheetJS,
+// which is lazy-loaded only when a non-CSV file is chosen so CSV imports stay
+// lightweight. Returns the same { headers, rows } shape as the CSV parser.
+const parseSpreadsheet = async (
+  file: File,
+): Promise<{ headers: string[]; rows: string[][] }> => {
+  const mod: any = await import("xlsx");
+  const XLSX = mod.default ?? mod;
+  const buf = await file.arrayBuffer();
+  const wb = XLSX.read(buf, { type: "array" });
+  const ws = wb.Sheets[wb.SheetNames[0]];
+  const aoa: any[][] = XLSX.utils.sheet_to_json(ws, {
+    header: 1,
+    blankrows: false,
+    defval: "",
+  });
+  const cleaned = aoa.filter((r) => r.some((c) => String(c ?? "").trim() !== ""));
+  const head = (cleaned.shift() ?? []).map((h) => String(h ?? "").trim());
+  const rows = cleaned.map((r) => r.map((c) => String(c ?? "")));
+  return { headers: head, rows };
+};
+
 const handleFile = async (e: Event) => {
   parseError.value = "";
   const file = (e.target as HTMLInputElement).files?.[0];
   if (!file) return;
   try {
-    const text = await file.text();
-    const { headers: h, rows } = parseCsv(text);
+    const name = file.name.toLowerCase();
+    const isCsv = name.endsWith(".csv") || file.type === "text/csv";
+    const { headers: h, rows } = isCsv
+      ? parseCsv(await file.text())
+      : await parseSpreadsheet(file);
     if (!h.length || !rows.length) {
       parseError.value = "Couldn't find any rows in that file.";
       return;
@@ -232,7 +262,7 @@ const handleFile = async (e: Event) => {
     autoMap();
     step.value = "map";
   } catch {
-    parseError.value = "Couldn't read that file. Make sure it's a .csv.";
+    parseError.value = "Couldn't read that file. Try CSV, Excel (.xlsx/.xls) or .ods.";
   }
 };
 
