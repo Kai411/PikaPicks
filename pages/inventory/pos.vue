@@ -69,7 +69,7 @@
       </div>
 
       <!-- Stash -->
-      <div class="mb-24">
+      <div class="mb-44 lg:mb-24">
         <div class="flex items-center justify-between mb-2">
           <h2 class="text-sm font-semibold uppercase tracking-wide text-gray-500 dark:text-zinc-400">Cart ({{ stash.length }})</h2>
           <button v-if="stash.length" @click="stash = []" class="text-xs text-gray-400 dark:text-zinc-500 hover:text-red-500">Clear</button>
@@ -96,7 +96,7 @@
 
       <!-- Checkout bar -->
       <Transition enter-active-class="transition duration-200" enter-from-class="translate-y-full">
-        <div v-if="stash.length" class="fixed bottom-0 inset-x-0 lg:left-56 z-30 glass border-t border-black/[0.06] dark:border-white/[0.08] px-4 py-3 pb-[max(0.75rem,env(safe-area-inset-bottom))]">
+        <div v-if="stash.length" class="fixed bottom-20 lg:bottom-0 inset-x-0 lg:left-56 z-40 glass border-t border-black/[0.06] dark:border-white/[0.08] px-4 py-3 lg:pb-[max(0.75rem,env(safe-area-inset-bottom))]">
           <div class="max-w-2xl mx-auto flex items-center justify-between gap-3">
             <div>
               <p class="text-[11px] text-gray-500 dark:text-zinc-400">Total · {{ stash.length }} {{ stash.length === 1 ? "item" : "items" }}</p>
@@ -165,17 +165,27 @@ const addItem = (item: InventoryItem) => {
 // ── Feedback (beep + haptic + flash) ─────────────────────────────────
 const showFlash = ref(false);
 let audioCtx: AudioContext | null = null;
-const beep = () => {
+// Create/resume the audio context inside a user gesture (the Start button) so
+// scan beeps actually play — browsers suspend contexts made outside a gesture.
+const primeAudio = async () => {
   try {
     audioCtx = audioCtx || new (window.AudioContext || (window as any).webkitAudioContext)();
+    if (audioCtx.state === "suspended") await audioCtx.resume();
+  } catch {}
+};
+const beep = () => {
+  try {
+    if (!audioCtx) return;
+    if (audioCtx.state === "suspended") audioCtx.resume();
     const o = audioCtx.createOscillator();
     const g = audioCtx.createGain();
     o.connect(g);
     g.connect(audioCtx.destination);
+    o.type = "sine";
     o.frequency.value = 880;
-    g.gain.value = 0.08;
+    g.gain.value = 0.18;
     o.start();
-    o.stop(audioCtx.currentTime + 0.07);
+    o.stop(audioCtx.currentTime + 0.1);
   } catch {}
 };
 const feedback = () => {
@@ -215,6 +225,7 @@ const startCamera = async () => {
       await videoEl.value.play();
     }
     if (!jsQR) jsQR = (await import("jsqr")).default;
+    await primeAudio();
     scanning.value = true;
     loop();
   } catch (e: any) {

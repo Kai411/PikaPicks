@@ -36,6 +36,7 @@ Status legend: ✅ done · 🎯 next · 🔜 then · 🗓️ later · 🧹 clean
 - [x] Checkout — editable **sold price** per line → Mark paid → `markItemSold(soldPrice)` on inventory (+ syncs linked listing)
 - [ ] Surface POS sales in the sales dashboard (dashboard is currently compiledOrders-only; POS records on the inventory item) — needs a unified sales source
 - [ ] POS: qty-aware selling for lots (qty > 1 currently sells the whole item)
+- [ ] **POS: generate a payment QR after scanning** (long shot) — research DuitNow QR / payment-gateway QR for the cart total so the buyer can scan to pay at the table
 - [ ] QR printing **v2** (thermal label export: Niimbot/Brother/Phomemo), **v3** (Web Bluetooth direct print)
 
 ---
