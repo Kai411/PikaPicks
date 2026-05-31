@@ -12,46 +12,88 @@
           Items
         </NuxtLink>
       </div>
-      <h1 class="text-2xl font-bold text-ink dark:text-white mb-1">Import CSV</h1>
+      <h1 class="text-2xl font-bold text-ink dark:text-white mb-1">Bulk add</h1>
       <p class="text-sm text-gray-500 dark:text-zinc-400 mb-6">
-        Upload your inventory spreadsheet — we'll match each row to the catalog and attach card images automatically.
+        Upload a file or paste rows — we'll match each card to the catalog and attach images automatically.
       </p>
 
-      <!-- Step 1: upload -->
-      <div v-if="step === 'upload'" class="surface rounded-2xl border border-black/[0.06] dark:border-white/[0.08] p-6">
-        <label class="block">
-          <div class="border-2 border-dashed border-gray-300 dark:border-white/[0.12] rounded-xl py-10 text-center cursor-pointer hover:border-pokemon-blue transition-colors">
-            <svg class="w-10 h-10 mx-auto text-gray-400 mb-2" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
-            <p class="text-sm font-semibold text-ink dark:text-white">Choose a file</p>
-            <p class="text-xs text-gray-400 dark:text-zinc-500 mt-1">CSV, Excel (.xlsx / .xls) or .ods — any column layout, you'll map them next</p>
-          </div>
-          <input
-            type="file"
-            accept=".csv,.xlsx,.xls,.ods,text/csv,application/vnd.ms-excel,application/vnd.openxmlformats-officedocument.spreadsheetml.sheet,application/vnd.oasis.opendocument.spreadsheet"
-            class="hidden"
-            @change="handleFile"
-          />
-        </label>
-        <p v-if="parseError" class="mt-3 text-sm text-red-500">{{ parseError }}</p>
+      <!-- Step 1: choose a method -->
+      <div v-if="step === 'upload'" class="space-y-4">
+        <TabStrip v-model="uploadMethod" :tabs="methodTabs" />
 
-        <!-- Template helper -->
-        <div class="mt-5 pt-4 border-t border-black/[0.06] dark:border-white/[0.08]">
-          <div class="flex items-start justify-between gap-3 flex-wrap">
-            <div class="min-w-0">
-              <p class="text-sm font-semibold text-ink dark:text-white">Not sure what to include?</p>
-              <p class="text-xs text-gray-500 dark:text-zinc-400 mt-0.5">
-                Download our template — columns:
-                <span class="font-medium text-ink dark:text-zinc-200">Name</span> (required),
-                Set, Number, Condition, Quantity, Price.
-              </p>
+        <!-- Method: file -->
+        <div v-if="uploadMethod === 'file'" class="surface rounded-2xl border border-black/[0.06] dark:border-white/[0.08] p-6">
+          <label class="block">
+            <div class="border-2 border-dashed border-gray-300 dark:border-white/[0.12] rounded-xl py-10 text-center cursor-pointer hover:border-pokemon-blue transition-colors">
+              <svg class="w-10 h-10 mx-auto text-gray-400 mb-2" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
+              <p class="text-sm font-semibold text-ink dark:text-white">Choose a file</p>
+              <p class="text-xs text-gray-400 dark:text-zinc-500 mt-1">CSV, Excel (.xlsx / .xls) or .ods — any column layout, you'll map them next</p>
             </div>
+            <input
+              type="file"
+              accept=".csv,.xlsx,.xls,.ods,text/csv,application/vnd.ms-excel,application/vnd.openxmlformats-officedocument.spreadsheetml.sheet,application/vnd.oasis.opendocument.spreadsheet"
+              class="hidden"
+              @change="handleFile"
+            />
+          </label>
+          <p v-if="parseError" class="mt-3 text-sm text-red-500">{{ parseError }}</p>
+
+          <!-- Template helper -->
+          <div class="mt-5 pt-4 border-t border-black/[0.06] dark:border-white/[0.08]">
+            <div class="flex items-start justify-between gap-3 flex-wrap">
+              <div class="min-w-0">
+                <p class="text-sm font-semibold text-ink dark:text-white">Not sure what to include?</p>
+                <p class="text-xs text-gray-500 dark:text-zinc-400 mt-0.5">
+                  Download our template — columns:
+                  <span class="font-medium text-ink dark:text-zinc-200">Name</span> (required),
+                  Set, Number, Condition, Quantity, Price.
+                </p>
+              </div>
+              <button
+                type="button"
+                @click="downloadTemplate"
+                class="shrink-0 inline-flex items-center gap-1.5 px-3.5 py-2 rounded-lg text-sm font-semibold border border-gray-200 dark:border-white/[0.10] text-gray-700 dark:text-zinc-200 hover:bg-black/[0.04] dark:hover:bg-white/[0.06] transition-colors"
+              >
+                <svg class="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+                Download template
+              </button>
+            </div>
+          </div>
+        </div>
+
+        <!-- Method: paste -->
+        <div v-else class="surface rounded-2xl border border-black/[0.06] dark:border-white/[0.08] p-5 space-y-3">
+          <div>
+            <p class="text-sm font-semibold text-ink dark:text-white">Paste your rows</p>
+            <p class="text-xs text-gray-500 dark:text-zinc-400 mt-0.5">
+              One card per line. Separate columns with a <span class="font-semibold">pipe (|)</span>, tab, or comma in this order:
+            </p>
+          </div>
+          <div class="rounded-lg bg-gray-50 dark:bg-white/[0.04] border border-gray-200 dark:border-white/[0.08] px-3 py-2 text-xs font-mono text-ink dark:text-zinc-200 overflow-x-auto">
+            Name | Set Number | Set Name | Price | Qty
+          </div>
+          <p class="text-[11px] text-gray-400 dark:text-zinc-500">
+            e.g. <span class="font-mono">Chansey IR | 209/198 | Scarlet &amp; Violet 151 | 240.67 | 2</span>
+          </p>
+          <textarea
+            v-model="pasteText"
+            rows="8"
+            spellcheck="false"
+            placeholder="Charizard ex | 125/197 | Obsidian Flames | 180.00 | 1&#10;Pikachu | 025/165 | Scarlet & Violet 151 | 12.50 | 2"
+            class="w-full px-3 py-2 rounded-lg border border-gray-200 dark:border-white/[0.10] bg-white dark:bg-white/[0.04] text-sm font-mono text-ink dark:text-white focus:border-pokemon-blue focus:outline-none resize-y"
+          />
+          <p v-if="parseError" class="text-sm text-red-500">{{ parseError }}</p>
+          <div class="flex items-center justify-between gap-3">
+            <p class="text-[11px] text-gray-400 dark:text-zinc-500">
+              Tip: use <span class="font-semibold">|</span> or tab if a name or set has spaces.
+            </p>
             <button
               type="button"
-              @click="downloadTemplate"
-              class="shrink-0 inline-flex items-center gap-1.5 px-3.5 py-2 rounded-lg text-sm font-semibold border border-gray-200 dark:border-white/[0.10] text-gray-700 dark:text-zinc-200 hover:bg-black/[0.04] dark:hover:bg-white/[0.06] transition-colors"
+              @click="handlePaste"
+              :disabled="!pasteText.trim()"
+              class="shrink-0 px-4 py-2 rounded-lg text-sm font-semibold bg-pokemon-red text-white hover:bg-red-700 transition-colors disabled:opacity-50"
             >
-              <svg class="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
-              Download template
+              Continue
             </button>
           </div>
         </div>
@@ -190,7 +232,7 @@
 import type { CatalogMatch } from "~/composables/useCardCatalog";
 
 definePageMeta({ layout: "inventory" });
-useHead({ title: "Inventory · Import | TCGo" });
+useHead({ title: "Inventory · Bulk add | TCGo" });
 
 const CONDITIONS = [
   "Near Mint (NM)",
@@ -207,6 +249,14 @@ const { addMany } = useInventory();
 
 type Step = "upload" | "map" | "reviewing" | "review";
 const step = ref<Step>("upload");
+
+// Upload method: a file (CSV/Excel/ODS) or pasted rows.
+const uploadMethod = ref<"file" | "paste">("file");
+const methodTabs = [
+  { id: "file", label: "Upload file" },
+  { id: "paste", label: "Paste rows" },
+];
+const pasteText = ref("");
 
 // ── CSV parsing ───────────────────────────────────────────────────────
 const headers = ref<string[]>([]);
@@ -263,6 +313,60 @@ const parseSpreadsheet = async (
   const head = (cleaned.shift() ?? []).map((h) => String(h ?? "").trim());
   const rows = cleaned.map((r) => r.map((c) => String(c ?? "")));
   return { headers: head, rows };
+};
+
+// Pasted rows use a fixed column order (Name, Set Number, Set Name, Price,
+// Qty), delimited by pipe / tab / comma (auto-detected). Routed through the
+// same map → reconcile → review flow as file imports.
+const DEFAULT_PASTE_HEADERS = ["Name", "Set Number", "Set Name", "Price", "Qty"];
+
+const detectDelim = (line: string): "pipe" | "tab" | "comma" | "space" => {
+  if (line.includes("|")) return "pipe";
+  if (line.includes("\t")) return "tab";
+  if (line.includes(",")) return "comma";
+  return "space";
+};
+const splitByMode = (l: string, mode: string): string[] => {
+  switch (mode) {
+    case "pipe": return l.split("|");
+    case "tab": return l.split("\t");
+    case "comma": return l.split(",");
+    default: return l.split(/\s+/);
+  }
+};
+const parsePasted = (text: string): { headers: string[]; rows: string[][] } => {
+  const lines = text.split(/\r?\n/).map((l) => l.trim()).filter(Boolean);
+  if (!lines.length) return { headers: [], rows: [] };
+  const mode = detectDelim(lines[0]);
+  const rows = lines.map((l) => splitByMode(l, mode).map((s) => s.trim()));
+  const maxCols = rows.reduce((m, r) => Math.max(m, r.length), 0);
+  const headers = Array.from(
+    { length: maxCols },
+    (_, i) => DEFAULT_PASTE_HEADERS[i] ?? `Column ${i + 1}`,
+  );
+  return { headers, rows };
+};
+
+const handlePaste = () => {
+  parseError.value = "";
+  const { headers: h, rows } = parsePasted(pasteText.value);
+  if (!rows.length) {
+    parseError.value = "Paste at least one row first.";
+    return;
+  }
+  headers.value = h;
+  parsedRows.value = rows;
+  const max = h.length - 1;
+  const clamp = (i: number) => (i <= max ? i : -1);
+  mapping.value = {
+    name: clamp(0),
+    number: clamp(1),
+    set: clamp(2),
+    price: clamp(3),
+    quantity: clamp(4),
+    condition: -1,
+  };
+  step.value = "map";
 };
 
 // Downloadable starter template matching the inventory data structure, so

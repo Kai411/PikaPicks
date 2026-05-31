@@ -24,7 +24,7 @@
             class="inline-flex items-center gap-1.5 px-3.5 py-2 rounded-lg text-sm font-semibold border border-gray-200 dark:border-white/[0.10] text-gray-700 dark:text-zinc-200 hover:bg-black/[0.04] dark:hover:bg-white/[0.06] transition-colors"
           >
             <svg class="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
-            Import CSV
+            Bulk add
           </NuxtLink>
           <button
             @click="addOpen = !addOpen"
@@ -78,10 +78,10 @@
       <div v-else-if="count === 0" class="surface rounded-2xl py-16 text-center">
         <p class="text-lg font-semibold text-ink dark:text-white">No inventory yet</p>
         <p class="mt-1 text-sm text-gray-500 dark:text-zinc-400">
-          Import a CSV or add cards to start tracking your stock.
+          Bulk add from a file or pasted rows, or add cards to start tracking your stock.
         </p>
         <div class="mt-5 flex items-center justify-center gap-2">
-          <NuxtLink to="/inventory/import" class="px-4 py-2 rounded-lg text-sm font-semibold bg-pokemon-red text-white hover:bg-red-700 transition-colors">Import CSV</NuxtLink>
+          <NuxtLink to="/inventory/import" class="px-4 py-2 rounded-lg text-sm font-semibold bg-pokemon-red text-white hover:bg-red-700 transition-colors">Bulk add</NuxtLink>
           <button @click="addOpen = true" class="px-4 py-2 rounded-lg text-sm font-semibold border border-gray-200 dark:border-white/[0.10] text-gray-700 dark:text-zinc-200">Add manually</button>
         </div>
       </div>

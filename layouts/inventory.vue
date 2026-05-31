@@ -141,7 +141,7 @@ const navItems = [
   { to: "/inventory/items", label: "Items", icon: IconBox },
   { to: "/inventory/listings", label: "Listings", icon: IconTag },
   { to: "/inventory/auctions", label: "Auctions", icon: IconGavel },
-  { to: "/inventory/import", label: "Import", icon: IconUpload },
+  { to: "/inventory/import", label: "Bulk add", icon: IconUpload },
 ];
 
 const soonItems = [{ label: "POS", icon: IconScan }];
