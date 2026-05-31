@@ -95,105 +95,130 @@
           </p>
         </div>
 
-        <div class="surface rounded-2xl border border-black/[0.06] dark:border-white/[0.08] overflow-hidden">
-          <div class="overflow-x-auto">
-            <table class="w-full text-sm">
-              <thead class="text-[11px] uppercase tracking-wide text-gray-400 dark:text-zinc-500 border-b border-black/[0.06] dark:border-white/[0.08]">
-                <tr>
-                  <th class="px-3 py-2 w-12"></th>
-                  <th class="text-left font-semibold px-2 py-2">Card</th>
-                  <th class="text-right font-semibold px-2 py-2">Price</th>
-                  <th class="text-right font-semibold px-2 py-2">Qty</th>
-                  <th class="text-left font-semibold px-2 py-2 hidden sm:table-cell">Status</th>
-                  <th class="px-2 py-2"></th>
-                </tr>
-              </thead>
-              <tbody class="divide-y divide-black/[0.05] dark:divide-white/[0.06]">
-                <tr v-for="item in pagedItems" :key="item.id">
-                  <!-- Thumbnail — click to add/replace photo -->
-                  <td class="px-3 py-2">
-                    <button
-                      type="button"
-                      @click="openPhotoPicker(item)"
-                      class="relative block w-10 h-14 rounded overflow-hidden group/photo bg-gray-100 dark:bg-white/[0.04]"
-                      :title="item.primaryImage ? 'Replace photo' : 'Add photo'"
-                    >
+        <!-- Bulk action bar -->
+        <div
+          v-if="selected.size"
+          class="flex items-center justify-between gap-2 mb-3 px-3 py-2 rounded-xl border border-pokemon-red/30 bg-pokemon-red/[0.06]"
+        >
+          <span class="text-sm font-semibold text-ink dark:text-white">{{ selected.size }} selected</span>
+          <div class="flex items-center gap-1.5">
+            <button @click="bulkList" :disabled="bulkBusy" class="px-3 py-1.5 rounded-lg text-xs font-semibold bg-pokemon-red text-white hover:bg-red-700 transition-colors disabled:opacity-50">List</button>
+            <button @click="bulkMarkSold" :disabled="bulkBusy" class="px-3 py-1.5 rounded-lg text-xs font-semibold border border-gray-200 dark:border-white/[0.10] text-gray-700 dark:text-zinc-200 disabled:opacity-50">Mark sold</button>
+            <button @click="bulkRemove" :disabled="bulkBusy" class="px-3 py-1.5 rounded-lg text-xs font-semibold border border-gray-200 dark:border-white/[0.10] text-red-600 disabled:opacity-50">Remove</button>
+            <button @click="clearSelection" class="px-2 py-1.5 rounded-lg text-xs text-gray-500 dark:text-zinc-400 hover:text-ink dark:hover:text-white">Clear</button>
+          </div>
+        </div>
+
+        <div class="surface rounded-2xl border border-black/[0.06] dark:border-white/[0.08]">
+          <table class="w-full text-sm table-fixed">
+            <thead class="text-[11px] uppercase tracking-wide text-gray-400 dark:text-zinc-500 border-b border-black/[0.06] dark:border-white/[0.08]">
+              <tr>
+                <th class="px-3 py-2 w-9">
+                  <input type="checkbox" :checked="allPageSelected" @change="toggleSelectAllPage" class="rounded align-middle" aria-label="Select all on page" />
+                </th>
+                <th class="px-1 py-2 w-12"></th>
+                <th class="text-left font-semibold px-2 py-2">Card</th>
+                <th class="text-right font-semibold px-1.5 py-2 w-20">Price</th>
+                <th class="text-right font-semibold px-1.5 py-2 w-12">Qty</th>
+                <th class="text-left font-semibold px-2 py-2 w-20 hidden sm:table-cell">Status</th>
+                <th class="px-2 py-2 w-24"></th>
+              </tr>
+            </thead>
+            <tbody class="divide-y divide-black/[0.05] dark:divide-white/[0.06]">
+              <tr v-for="item in pagedItems" :key="item.id" :class="isSelected(item.id) ? 'bg-pokemon-red/[0.03]' : ''">
+                <!-- Select -->
+                <td class="px-3 py-2 align-top">
+                  <input type="checkbox" :checked="isSelected(item.id)" @change="toggleSelect(item.id)" class="rounded mt-1" :aria-label="`Select ${item.cardName}`" />
+                </td>
+                <!-- Thumbnail — click to add/replace photo -->
+                <td class="px-1 py-2 align-top">
+                  <button
+                    type="button"
+                    @click="openPhotoPicker(item)"
+                    class="relative block w-10 h-14 rounded overflow-hidden group/photo bg-gray-100 dark:bg-white/[0.04] border border-black/[0.04] dark:border-white/[0.06]"
+                    :title="item.primaryImage ? 'Replace photo' : 'Add a photo'"
+                  >
+                    <template v-if="item.primaryImage">
                       <CardImage :src="item.primaryImage" :alt="item.cardName" />
-                      <span
-                        v-if="!item.primaryImage"
-                        class="absolute inset-0 flex items-center justify-center text-[8px] font-bold text-pokemon-blue"
-                      >+ Photo</span>
-                      <span
-                        v-else
-                        class="absolute inset-0 flex items-center justify-center bg-black/0 group-hover/photo:bg-black/40 opacity-0 group-hover/photo:opacity-100 transition-all"
-                      >
+                      <span class="absolute inset-0 flex items-center justify-center bg-black/0 group-hover/photo:bg-black/40 opacity-0 group-hover/photo:opacity-100 transition-all">
                         <svg class="w-4 h-4 text-white" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"/><circle cx="12" cy="13" r="4"/></svg>
                       </span>
-                      <span v-if="uploadingPhotoId === item.id" class="absolute inset-0 bg-black/50 flex items-center justify-center">
-                        <span class="animate-spin rounded-full h-4 w-4 border-b-2 border-white"/>
-                      </span>
-                    </button>
-                  </td>
-                  <!-- Card -->
-                  <td class="px-2 py-2 min-w-[150px]">
-                    <p class="font-medium text-ink dark:text-white truncate max-w-[200px]">{{ item.cardName }}</p>
-                    <p class="text-[11px] text-gray-500 dark:text-zinc-400 truncate max-w-[200px]">
-                      {{ [item.setName, item.number].filter(Boolean).join(" · ") }}
-                    </p>
-                    <select
-                      :value="item.condition"
-                      @change="updateItem(item.id, { condition: ($event.target as HTMLSelectElement).value })"
-                      class="mt-1 text-[11px] px-1.5 py-0.5 rounded border border-gray-200 dark:border-white/[0.10] bg-white dark:bg-white/[0.04] text-ink dark:text-white"
-                    >
-                      <option value="">Condition…</option>
-                      <option v-for="c in CONDITIONS" :key="c" :value="c">{{ c }}</option>
-                    </select>
-                  </td>
-                  <!-- Price -->
-                  <td class="px-2 py-2 text-right">
-                    <input
-                      type="number" min="0" step="0.01"
-                      :value="item.listPrice"
-                      @change="updateItem(item.id, { listPrice: Number(($event.target as HTMLInputElement).value) })"
-                      class="w-20 text-sm text-right px-2 py-1 rounded-md border border-gray-200 dark:border-white/[0.10] bg-white dark:bg-white/[0.04] text-ink dark:text-white tabular-nums"
-                    />
-                  </td>
-                  <!-- Qty -->
-                  <td class="px-2 py-2 text-right">
-                    <input
-                      type="number" min="1" step="1"
-                      :value="item.quantity"
-                      @change="updateItem(item.id, { quantity: Math.max(1, Number(($event.target as HTMLInputElement).value)) })"
-                      class="w-12 text-sm text-right px-2 py-1 rounded-md border border-gray-200 dark:border-white/[0.10] bg-white dark:bg-white/[0.04] text-ink dark:text-white tabular-nums"
-                    />
-                  </td>
-                  <!-- Status -->
-                  <td class="px-2 py-2 hidden sm:table-cell">
-                    <span class="text-[10px] font-semibold px-1.5 py-0.5 rounded-full whitespace-nowrap" :class="statusClass(item.status)">
-                      {{ statusLabel(item.status) }}
+                    </template>
+                    <span v-else class="absolute inset-0 flex flex-col items-center justify-center gap-0.5 text-pokemon-blue">
+                      <svg class="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="2"/><line x1="12" y1="8" x2="12" y2="16"/><line x1="8" y1="12" x2="16" y2="12"/></svg>
+                      <span class="text-[8px] font-bold leading-none">Photo</span>
                     </span>
-                  </td>
-                  <!-- Actions -->
-                  <td class="px-2 py-2">
-                    <div class="flex items-center justify-end gap-1.5 whitespace-nowrap">
-                      <template v-if="item.status === 'in_stock'">
-                        <button @click="openListDialog(item)" class="text-[11px] font-semibold text-pokemon-red hover:underline">List</button>
-                        <span class="text-gray-300 dark:text-zinc-700">·</span>
-                        <button @click="handleMarkSold(item.id)" class="text-[11px] text-gray-500 dark:text-zinc-400 hover:text-ink dark:hover:text-white">Sold</button>
-                      </template>
-                      <template v-else-if="item.status === 'listed'">
-                        <NuxtLink v-if="item.listingId" :to="`/cards/${item.listingId}`" class="text-[11px] text-gray-500 dark:text-zinc-400 hover:text-ink dark:hover:text-white">View</NuxtLink>
-                        <span class="text-gray-300 dark:text-zinc-700">·</span>
-                        <button @click="handleUnlist(item.id)" class="text-[11px] text-amber-600 dark:text-amber-400 hover:underline">Unlist</button>
-                      </template>
-                      <span class="text-gray-300 dark:text-zinc-700">·</span>
-                      <button @click="handleRemove(item.id)" class="text-[11px] text-red-500 hover:text-red-700">Remove</button>
-                    </div>
-                  </td>
-                </tr>
-              </tbody>
-            </table>
-          </div>
+                    <span v-if="uploadingPhotoId === item.id" class="absolute inset-0 bg-black/50 flex items-center justify-center">
+                      <span class="animate-spin rounded-full h-4 w-4 border-b-2 border-white"/>
+                    </span>
+                  </button>
+                </td>
+                <!-- Card -->
+                <td class="px-2 py-2 align-top">
+                  <p class="font-medium text-ink dark:text-white leading-snug line-clamp-2 break-words" :title="item.cardName">{{ item.cardName }}</p>
+                  <p class="text-[11px] text-gray-500 dark:text-zinc-400 truncate">
+                    {{ [item.setName, item.number].filter(Boolean).join(" · ") }}
+                  </p>
+                  <select
+                    :value="item.condition"
+                    @change="updateItem(item.id, { condition: ($event.target as HTMLSelectElement).value })"
+                    class="mt-1 max-w-full text-[11px] px-1.5 py-0.5 rounded border border-gray-200 dark:border-white/[0.10] bg-white dark:bg-white/[0.04] text-ink dark:text-white"
+                  >
+                    <option value="">Condition…</option>
+                    <option v-for="c in CONDITIONS" :key="c" :value="c">{{ c }}</option>
+                  </select>
+                </td>
+                <!-- Price -->
+                <td class="px-1.5 py-2 text-right align-top">
+                  <input
+                    type="number" min="0" step="0.01"
+                    :value="item.listPrice"
+                    @change="updateItem(item.id, { listPrice: Number(($event.target as HTMLInputElement).value) })"
+                    class="w-full text-sm text-right px-1.5 py-1 rounded-md border border-gray-200 dark:border-white/[0.10] bg-white dark:bg-white/[0.04] text-ink dark:text-white tabular-nums"
+                  />
+                </td>
+                <!-- Qty -->
+                <td class="px-1.5 py-2 text-right align-top">
+                  <input
+                    type="number" min="1" step="1"
+                    :value="item.quantity"
+                    @change="updateItem(item.id, { quantity: Math.max(1, Number(($event.target as HTMLInputElement).value)) })"
+                    class="w-full text-sm text-right px-1.5 py-1 rounded-md border border-gray-200 dark:border-white/[0.10] bg-white dark:bg-white/[0.04] text-ink dark:text-white tabular-nums"
+                  />
+                </td>
+                <!-- Status -->
+                <td class="px-2 py-2 align-top hidden sm:table-cell">
+                  <span class="text-[10px] font-semibold px-1.5 py-0.5 rounded-full whitespace-nowrap" :class="statusClass(item.status)">
+                    {{ statusLabel(item.status) }}
+                  </span>
+                </td>
+                <!-- Actions (icon buttons) -->
+                <td class="px-2 py-2 align-top">
+                  <div class="flex items-center justify-end gap-0.5">
+                    <template v-if="item.status === 'in_stock'">
+                      <button @click="openListDialog(item)" title="List for sale" class="inline-flex items-center justify-center w-8 h-8 rounded-lg text-pokemon-red hover:bg-pokemon-red/10 transition-colors">
+                        <svg class="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20.59 13.41 11 3.83A2 2 0 0 0 9.59 3H4a1 1 0 0 0-1 1v5.59A2 2 0 0 0 3.83 11l9.58 9.59a2 2 0 0 0 2.83 0l4.35-4.35a2 2 0 0 0 0-2.83z"/><circle cx="7" cy="7" r="1.4" fill="currentColor" stroke="none"/></svg>
+                      </button>
+                      <button @click="handleMarkSold(item.id)" title="Mark sold" class="inline-flex items-center justify-center w-8 h-8 rounded-lg text-gray-500 dark:text-zinc-400 hover:bg-black/[0.05] dark:hover:bg-white/[0.08] hover:text-ink dark:hover:text-white transition-colors">
+                        <svg class="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>
+                      </button>
+                    </template>
+                    <template v-else-if="item.status === 'listed'">
+                      <NuxtLink v-if="item.listingId" :to="`/cards/${item.listingId}`" title="View listing" class="inline-flex items-center justify-center w-8 h-8 rounded-lg text-gray-500 dark:text-zinc-400 hover:bg-black/[0.05] dark:hover:bg-white/[0.08] hover:text-ink dark:hover:text-white transition-colors">
+                        <svg class="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M2 12s3-7 10-7 10 7 10 7-3 7-10 7-10-7-10-7z"/><circle cx="12" cy="12" r="3"/></svg>
+                      </NuxtLink>
+                      <button @click="handleUnlist(item.id)" title="Unlist (back to stock)" class="inline-flex items-center justify-center w-8 h-8 rounded-lg text-amber-600 dark:text-amber-400 hover:bg-amber-500/10 transition-colors">
+                        <svg class="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 7v6h6"/><path d="M21 17a9 9 0 0 0-15-6.7L3 13"/></svg>
+                      </button>
+                    </template>
+                    <button @click="handleRemove(item.id)" title="Remove from inventory" class="inline-flex items-center justify-center w-8 h-8 rounded-lg text-red-500 hover:bg-red-500/10 transition-colors">
+                      <svg class="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/></svg>
+                    </button>
+                  </div>
+                </td>
+              </tr>
+            </tbody>
+          </table>
         </div>
 
         <!-- Pagination -->
@@ -335,11 +360,97 @@ const pagedItems = computed(() =>
 const rangeStart = computed(() => (filteredItems.value.length === 0 ? 0 : page.value * PAGE_SIZE + 1));
 const rangeEnd = computed(() => Math.min(filteredItems.value.length, (page.value + 1) * PAGE_SIZE));
 
-watch(statusFilter, () => (page.value = 0));
+watch(statusFilter, () => {
+  page.value = 0;
+  clearSelection();
+});
 // Clamp page if the list shrinks (e.g. items sold/removed/filtered).
 watch(totalPages, (tp) => {
   if (page.value > tp - 1) page.value = Math.max(0, tp - 1);
 });
+
+// ── Selection + bulk actions ──────────────────────────────────────────
+const selected = ref<Set<string>>(new Set());
+const isSelected = (id: string) => selected.value.has(id);
+const toggleSelect = (id: string) => {
+  const s = new Set(selected.value);
+  s.has(id) ? s.delete(id) : s.add(id);
+  selected.value = s;
+};
+const pageIds = computed(() => pagedItems.value.map((i) => i.id));
+const allPageSelected = computed(
+  () => pageIds.value.length > 0 && pageIds.value.every((id) => selected.value.has(id)),
+);
+const toggleSelectAllPage = () => {
+  const s = new Set(selected.value);
+  if (allPageSelected.value) pageIds.value.forEach((id) => s.delete(id));
+  else pageIds.value.forEach((id) => s.add(id));
+  selected.value = s;
+};
+const clearSelection = () => (selected.value = new Set());
+const selectedItems = computed(() => items.value.filter((i) => selected.value.has(i.id)));
+
+const bulkBusy = ref(false);
+
+const bulkRemove = async () => {
+  if (!selected.value.size || bulkBusy.value) return;
+  if (!confirm(`Remove ${selected.value.size} items from inventory?`)) return;
+  bulkBusy.value = true;
+  try {
+    await Promise.all([...selected.value].map((id) => removeItem(id)));
+    clearSelection();
+  } finally {
+    bulkBusy.value = false;
+  }
+};
+
+const bulkMarkSold = async () => {
+  if (!selected.value.size || bulkBusy.value) return;
+  if (!confirm(`Mark ${selected.value.size} items as sold?`)) return;
+  bulkBusy.value = true;
+  try {
+    await Promise.all(selectedItems.value.map((i) => markItemSold(i.id)));
+    clearSelection();
+  } finally {
+    bulkBusy.value = false;
+  }
+};
+
+const bulkList = async () => {
+  if (bulkBusy.value) return;
+  const targets = selectedItems.value.filter((i) => i.status === "in_stock");
+  const priced = targets.filter((i) => i.listPrice > 0);
+  if (!priced.length) {
+    alert("Selected items need a price (> 0) before they can be listed.");
+    return;
+  }
+  if (!profile.value?.phone && !profile.value?.whatsappNumber) {
+    alert("Add your contact number in your profile before listing.");
+    return;
+  }
+  const skipped = targets.length - priced.length;
+  let msg = `List ${priced.length} item${priced.length === 1 ? "" : "s"} for sale at their set prices?`;
+  if (skipped) msg += `\n${skipped} skipped (no price set).`;
+  if (!confirm(msg)) return;
+  bulkBusy.value = true;
+  try {
+    for (const i of priced) {
+      await listItem(i.id, {
+        sellerName: profile.value?.customName || user.value!.displayName || "Anonymous",
+        sellerUid: user.value!.uid,
+        price: i.listPrice,
+        condition: i.condition || CONDITIONS[0],
+        shippingWM: profile.value?.shippingWM ?? 8,
+        shippingEM: profile.value?.shippingEM ?? 12,
+      });
+    }
+    clearSelection();
+  } catch (e: any) {
+    alert(e?.message || "Bulk list failed.");
+  } finally {
+    bulkBusy.value = false;
+  }
+};
 
 const statusLabel = (s: string) =>
   s === "in_stock" ? "In stock" : s === "listed" ? "Listed" : "Sold";

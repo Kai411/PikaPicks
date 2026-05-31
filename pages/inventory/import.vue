@@ -33,6 +33,28 @@
           />
         </label>
         <p v-if="parseError" class="mt-3 text-sm text-red-500">{{ parseError }}</p>
+
+        <!-- Template helper -->
+        <div class="mt-5 pt-4 border-t border-black/[0.06] dark:border-white/[0.08]">
+          <div class="flex items-start justify-between gap-3 flex-wrap">
+            <div class="min-w-0">
+              <p class="text-sm font-semibold text-ink dark:text-white">Not sure what to include?</p>
+              <p class="text-xs text-gray-500 dark:text-zinc-400 mt-0.5">
+                Download our template — columns:
+                <span class="font-medium text-ink dark:text-zinc-200">Name</span> (required),
+                Set, Number, Condition, Quantity, Price.
+              </p>
+            </div>
+            <button
+              type="button"
+              @click="downloadTemplate"
+              class="shrink-0 inline-flex items-center gap-1.5 px-3.5 py-2 rounded-lg text-sm font-semibold border border-gray-200 dark:border-white/[0.10] text-gray-700 dark:text-zinc-200 hover:bg-black/[0.04] dark:hover:bg-white/[0.06] transition-colors"
+            >
+              <svg class="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+              Download template
+            </button>
+          </div>
+        </div>
       </div>
 
       <!-- Step 2: map columns -->
@@ -241,6 +263,25 @@ const parseSpreadsheet = async (
   const head = (cleaned.shift() ?? []).map((h) => String(h ?? "").trim());
   const rows = cleaned.map((r) => r.map((c) => String(c ?? "")));
   return { headers: head, rows };
+};
+
+// Downloadable starter template matching the inventory data structure, so
+// sellers know exactly what to put. Two sample rows show the expected format.
+const downloadTemplate = () => {
+  const rows = [
+    ["Name", "Set", "Number", "Condition", "Quantity", "Price"],
+    ["Charizard ex", "Obsidian Flames", "125/197", "Near Mint (NM)", "1", "180.00"],
+    ["Pikachu", "Scarlet & Violet 151", "025/165", "Lightly Played (LP)", "2", "12.50"],
+  ];
+  const esc = (c: string) => (/[",\n]/.test(c) ? `"${c.replace(/"/g, '""')}"` : c);
+  const csv = rows.map((r) => r.map(esc).join(",")).join("\r\n");
+  const blob = new Blob(["﻿" + csv], { type: "text/csv;charset=utf-8;" });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement("a");
+  a.href = url;
+  a.download = "tcgo-inventory-template.csv";
+  a.click();
+  URL.revokeObjectURL(url);
 };
 
 const handleFile = async (e: Event) => {
