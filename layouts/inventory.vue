@@ -48,7 +48,7 @@
           </NuxtLink>
 
           <!-- Coming soon (roadmap signposts) -->
-          <div class="pt-3 mt-2 border-t border-black/[0.06] dark:border-white/[0.08]">
+          <div v-if="soonItems.length" class="pt-3 mt-2 border-t border-black/[0.06] dark:border-white/[0.08]">
             <p class="px-3 pb-1 text-[10px] font-semibold uppercase tracking-wide text-ink-soft dark:text-zinc-600">Coming soon</p>
             <div
               v-for="item in soonItems"
@@ -138,13 +138,14 @@ const IconBox = () =>
 
 const navItems = [
   { to: "/inventory", label: "Dashboard", icon: IconDashboard, exact: true },
+  { to: "/inventory/pos", label: "POS", icon: IconScan },
   { to: "/inventory/items", label: "Items", icon: IconBox },
   { to: "/inventory/listings", label: "Listings", icon: IconTag },
   { to: "/inventory/auctions", label: "Auctions", icon: IconGavel },
   { to: "/inventory/import", label: "Bulk add", icon: IconUpload },
 ];
 
-const soonItems = [{ label: "POS", icon: IconScan }];
+const soonItems: { label: string; icon: any }[] = [];
 
 const isActive = (item: { to: string; exact?: boolean }) => {
   if (item.exact) return route.path === item.to;
