@@ -7,7 +7,10 @@
     </div>
 
     <div class="p-2.5">
-      <p class="font-semibold text-sm text-ink dark:text-white truncate" :title="card.name">
+      <p
+        class="font-semibold text-sm text-ink dark:text-white truncate"
+        :title="card.name"
+      >
         {{ card.name }}
       </p>
       <p class="text-[11px] text-gray-500 dark:text-zinc-400 truncate">
@@ -16,11 +19,14 @@
       <div class="flex items-center justify-between mt-2">
         <p
           v-if="card.price"
-          class="text-sm font-semibold text-ink dark:text-white tabular-nums"
+          class="text-md font-[900] text-ink dark:text-white tabular-nums"
         >
-          {{ card.price.market.toFixed(2) }} MYR
+          {{ card.price.market.toFixed(2) }}
+          <span class="text-xs font-semibold">MYR</span>
         </p>
-        <p v-else class="text-[11px] text-gray-400 dark:text-zinc-500">No price</p>
+        <p v-else class="text-[11px] text-gray-400 dark:text-zinc-500">
+          No price
+        </p>
 
         <button
           v-if="!readonly"
@@ -31,10 +37,14 @@
               ? 'bg-gray-400 hover:bg-pokemon-red'
               : 'bg-pokemon-blue hover:bg-blue-700',
           ]"
-          :aria-label="inCollection ? 'Remove from collection' : 'Add to collection'"
+          :aria-label="
+            inCollection ? 'Remove from collection' : 'Add to collection'
+          "
           :title="inCollection ? 'Remove from collection' : 'Add to collection'"
         >
-          <span class="leading-none -mt-0.5">{{ inCollection ? "−" : "+" }}</span>
+          <span class="leading-none -mt-0.5">{{
+            inCollection ? "−" : "+"
+          }}</span>
         </button>
       </div>
     </div>
